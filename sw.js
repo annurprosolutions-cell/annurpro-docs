@@ -1,8 +1,8 @@
 /* Service worker — Annur Invoice. Naikkan CACHE setiap rilis (sama dengan version dalam config.js). */
-const CACHE = 'annur-invoice-v0.7.0';
+const CACHE = 'annur-invoice-v0.8.0';
 const CORE = [
   './', './config.js', './css/app.css', './js/core.js', './js/auth.js', './js/license.js', './js/schema.js', './js/google.js',
-  './js/workspace.js', './js/store.js', './js/idb.js', './js/settings.js', './js/ui-settings.js', './js/images.js', './js/sign.js', './js/ui-images.js', './js/calc.js', './js/doc.js', './js/template.js', './js/pdf.js', './js/records.js', './js/issue.js', './js/ui-editor.js', './js/ui-records.js', './js/app.js',
+  './js/workspace.js', './js/store.js', './js/idb.js', './js/settings.js', './js/ui-settings.js', './js/images.js', './js/sign.js', './js/ui-images.js', './js/calc.js', './js/doc.js', './js/template.js', './js/pdf.js', './js/records.js', './js/issue.js', './js/ui-editor.js', './js/ui-records.js', './js/ui-billing.js', './js/app.js',
   './vendor/html2canvas-1.4.1.min.js', './vendor/jspdf-2.5.1.umd.min.js',
   './css/doc.css', './fonts/carlito-latin-400-normal.woff2', './fonts/carlito-latin-700-normal.woff2',
   './manifest.webmanifest', './brand/annurpro-icon-64.png', './icons/icon-192.png', './icons/apple-touch-icon.png'

@@ -34,15 +34,22 @@ const LOGO = makePng(240, 120, (x) => (x < 120 ? [11, 29, 77] : [198, 40, 40]));
 const CLIENT = 'e2e-client.apps.googleusercontent.com';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };
 
-const env = { GOOGLE_CLIENT_ID: CLIENT, DB: createD1(), BUY_URL_SUB: 'https://bcl.test/form' };
+const BCL_KEY = 'e2e-' + 'k'.repeat(40);
+const BCL_TX = {};
+const env = { GOOGLE_CLIENT_ID: CLIENT, DB: createD1(), BUY_URL_SUB: 'https://bcl.test/form', BCL_WEBHOOK_KEY: BCL_KEY, BCL_API_TOKEN: 'bcl_e2e',
+  BCL_API_URL: 'https://api.bcl.test/v1', OWNER_EMAILS: 'pemilik@contoh.my' };
 const fakeFetch = async (url) => {
+  if (String(url).startsWith('https://api.bcl.test/v1/transactions/')) {
+    const id = decodeURIComponent(String(url).split('/transactions/')[1]);
+    return BCL_TX[id] ? new Response(JSON.stringify({ success: true, data: BCL_TX[id] }), { status: 200 }) : new Response('{}', { status: 404 });
+  }
   const tok = decodeURIComponent(String(url).split('access_token=')[1] || '');
   return new Response(JSON.stringify({ aud: CLIENT, email: tok === 'ya29.TOK-E2E-LONG' ? 'pemilik@contoh.my' : '', email_verified: 'true' }), { status: tok === 'ya29.TOK-E2E-LONG' ? 200 : 400 });
 };
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://' + req.headers.host);
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/bcl/')) {
     const chunks = []; for await (const c of req) chunks.push(c);
     const r = await handle(new Request(url, { method: req.method, headers: req.headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : Buffer.concat(chunks) }), env, { fetch: fakeFetch });
     res.writeHead(r.status, Object.fromEntries(r.headers)); res.end(Buffer.from(await r.arrayBuffer())); return;
@@ -650,6 +657,72 @@ try {
       await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
       assert.match(await page.getByLabel('Alamat', { exact: true }).inputValue(), /Shah Alam/);
       await page.getByRole('button', { name: 'Utama' }).first().click();
+      await navBar().getByRole('button', { name: 'Tetapan' }).click();
+
+      // ================= Fasa 8 =================
+      // S-11: arahan bayar, sejarah kredit
+      await page.getByRole('button', { name: /Langganan & Kredit/ }).click();
+      await page.getByRole('heading', { name: 'Langganan & Kredit' }).waitFor();
+      assert.equal(await page.locator('.copyrow code').innerText(), 'pemilik@contoh.my');
+      assert.equal(await page.getByRole('link', { name: 'Buka borang langganan' }).getAttribute('href'), 'https://bcl.test/form');
+      await page.locator('table.ltab').first().waitFor({ timeout: 8000 });
+      const ltxt = await page.locator('table.ltab').first().innerText();
+      assert.match(ltxt, /Terbit dokumen/); assert.match(ltxt, /Kredit percubaan/);
+      await shot('s11-sebelum', true);
+      // bayaran BCL sebenar ke Worker → langganan aktif
+      BCL_TX['BCL-E2E-0001'] = { record_id: 'r1', main_data: { order_number: 'BCL-E2E-0001', status: 3, is_paid: true, amount: '20.00', subtotal_amount: '20.00', items: [{ item: 'Langganan Bulanan', quantity: 1, price: '20.00' }], payer_email: 'pasangan@x.my' },
+        custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } };
+      const wh = await fetch(BASE + '/bcl/' + BCL_KEY, { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ event: 'payment-success', data: { record_id: 'r1', main_data: { order_number: 'BCL-E2E-0001', amount: '20.00' }, custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } } }) }).then((r) => r.json());
+      assert.equal(wh.ok, true); assert.equal(wh.months, 1);
+      await page.getByRole('button', { name: 'Saya sudah bayar, semak semula' }).click();
+      await until(async () => /Tanpa had/.test(await page.locator('.lic').innerText()), 6000, 'langganan aktif');
+      assert.match(await page.locator('.lic').innerText(), /Langganan Bulanan/);
+      await until(async () => /Langganan Bulanan/.test(await page.locator('section', { hasText: 'Bayaran' }).last().innerText()), 6000, 'bayaran disenarai');
+      await shot('s11-selepas', true);
+      // terbit semasa langganan: tiada caj
+      const credSub = await env.DB.prepare('SELECT credits FROM tenants').first('credits');
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.getByLabel('Nama (Bill To)').fill('Pelanggan Langganan');
+      await page.locator('[name="it:0:desc"]').fill('Servis'); await page.locator('[name="it:0:price"]').fill('80');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      assert.match(await page.getByRole('dialog').innerText(), /Langganan aktif: tiada kredit digunakan/);
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Invois diterbit').waitFor({ timeout: 60000 });
+      assert.equal(await env.DB.prepare('SELECT credits FROM tenants').first('credits'), credSub, 'langganan: kredit tidak ditolak');
+      await page.getByRole('button', { name: 'Selesai' }).click();
+
+      // S-14 Dashboard pemilik
+      await page.goto(BASE + '/admin/');
+      await page.getByRole('button', { name: 'Sambung Google' }).click();
+      await page.getByText('Dashboard Pemilik').first().waitFor();
+      await page.locator('.stats').waitFor({ timeout: 8000 });
+      assert.match(await page.locator('.stats').innerText(), /Berlangganan\s*1/);
+      const trow = page.locator('tr[data-email="pemilik@contoh.my"]');
+      assert.match(await trow.innerText(), /Langganan/);
+      const expBefore = await env.DB.prepare('SELECT expires FROM subscriptions').first('expires');
+      page.once('dialog', (d) => d.accept());
+      await trow.getByRole('button', { name: '+1 bln' }).click();
+      await until(async () => (await env.DB.prepare('SELECT expires FROM subscriptions').first('expires')) > expBefore, 6000, '+1 bulan');
+      const credAdm = await env.DB.prepare('SELECT credits FROM tenants').first('credits');
+      const answers = ['25', 'Ganti rugi ujian'];
+      const onDlg = (d) => d.accept(answers.shift());
+      page.on('dialog', onDlg);
+      await page.locator('tr[data-email="pemilik@contoh.my"]').getByRole('button', { name: 'Kredit ±' }).click();
+      await until(async () => (await env.DB.prepare('SELECT credits FROM tenants').first('credits')) === credAdm + 25, 6000, 'laras kredit');
+      page.off('dialog', onDlg);
+      await page.getByRole('button', { name: /Bayaran \(1\)/ }).click();
+      assert.match(await page.locator('.atab').innerText(), /BCL-E2E-0001/);
+      await page.getByRole('button', { name: 'Log webhook' }).click();
+      assert.match(await page.locator('.atab').innerText(), /OK/);
+      await page.getByRole('button', { name: 'Tindakan' }).click();
+      await page.locator('#voOrder').fill('BCL-TIADA-999');
+      await page.getByRole('button', { name: /Sahkan/ }).click();
+      await page.locator('pre.detail').waitFor();
+      assert.match(await page.locator('pre.detail').innerText(), /api-bcl-404/);
+      await shot('s14-desktop', true);
+      await page.goto(BASE + '/');
+      await page.locator('.lic .big').waitFor({ timeout: 8000 });
       await navBar().getByRole('button', { name: 'Tetapan' }).click();
     }
 

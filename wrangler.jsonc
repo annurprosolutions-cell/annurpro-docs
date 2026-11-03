@@ -26,7 +26,14 @@
     "GRACE_DAYS": "7",
     "EDIT_WINDOW_HOURS": "24",
     "BUY_URL_SUB": "",
-    "BUY_URL_PACK": ""
+    "BUY_URL_PACK": "",
+    "BCL_FORM_ID": "",
+    "BCL_API_URL": "https://api.bcl.my/v1",
+    "YEARLY_MIN_AMOUNT": "150",
+    "PACKS": "{\"10\":110,\"20\":230,\"50\":600}",
+    "PRICE_MONTH": "20",
+    "PRICE_YEAR": "200",
+    "BCL_ACCEPT_TEST": "0"
   }
   // Rahsia (set dalam dashboard, JANGAN tulis di sini): BCL_API_TOKEN, BCL_WEBHOOK_KEY, ADMIN_TOKEN
 }

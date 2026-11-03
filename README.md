@@ -16,7 +16,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 5 | Enjin dokumen: kalkulator SST (sen, cukai peringkat kod), editor Invois/Quotation/DO, pratonton A4 berbilang halaman, draf di peranti, pelanggan dari borang | Siap |
 | 6 | Terbit: `/api/issue` (nombor atomik + caj kredit), `/api/void`, `/api/issues`, `/api/ledger`; PDF (html2canvas + jsPDF dalam `vendor/`) ke Drive; kongsi; cuba semula; S-12 | Siap |
 | 7 | Rekod penuh (tapis, cari, menu), edit 24 jam, batal, salin, tukar Quotation→Invois / →DO, Pelanggan (CRUD, arkib) | Siap |
-| 8 | Bayaran BCL (webhook, langganan), S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Seterusnya |
+| 8 | Webhook BCL + pengesahan API, langganan & pek kredit, S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Siap (perlu langkah 6 di bawah) |
+| 9 | Pengukuhan: luar talian, had kadar, demo, halaman jualan, panduan, verifikasi OAuth | Seterusnya |
 
 ## Struktur
 
@@ -46,7 +47,9 @@ js/pdf.js              HTML A4 → PDF (dimuat bila perlu dari vendor/)
 vendor/                html2canvas 1.4.1 dan jsPDF 2.5.1 (MIT, lesen disertakan)
 js/ui-settings.js      skrin S-02 wizard, S-08 Profil, S-10 Dokumen & Cukai
 js/app.js              UI: render() + data-act
-worker/index.mjs       API: /api/ping, /api/check, /api/issue, /api/void, /api/issues, /api/ledger
+worker/index.mjs       API: /api/ping, /api/check, /api/issue, /api/void, /api/issues, /api/ledger, /api/payments, /api/admin/*, webhook /bcl/<kunci>
+admin/                 dashboard pemilik platform (S-14)
+js/ui-billing.js       skrin S-11 Langganan & Kredit
 schema.sql             jadual D1 (docs/05-BSD.md §3B)
 tests/                 node --test (unit) + e2e.mjs (Playwright)
 ```
@@ -97,6 +100,23 @@ Susunan penting kerana setiap langkah memberi maklumat kepada langkah seterusnya
 3. Lengkapkan wizard. Skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan**.
 4. Tetapan → Profil Syarikat dan Dokumen, Penomboran & Cukai boleh disunting dan disimpan; semak Google Sheet (tab `Syarikat`) berubah.
 
+### 6. BCL: bayaran langganan (Fasa 8)
+Rahsia (API token, kunci webhook) **jangan dihantar dalam chat**. Letakkan terus dalam Cloudflare sebagai *Secret*.
+
+1. **Borang BCL**: cipta borang `Annur Invoice – Langganan` dengan dua item: **Langganan Bulanan** RM20 dan **Langganan Tahunan** RM200. Benarkan kuantiti. Nama item mesti mengandungi perkataan *Bulanan* atau *Tahunan* (Worker mengenal pasti pelan daripada nama; jika tiada, amaun RM150 ke atas dikira 12 bulan).
+2. **Medan wajib** jenis e-mel bernama **E-mel Google untuk sistem**. Pilihan: medan **Nama syarikat**.
+3. **Redirect selepas bayar**: alamat app (`https://annur-invoice.<subdomain>.workers.dev/`).
+4. Salin **pautan borang** dan bagi kepada Claude (bukan rahsia). Ia dimasukkan sebagai `BUY_URL_SUB` dalam `wrangler.jsonc`. Jika mahu, bagi juga **Form ID** untuk `BCL_FORM_ID` (hanya terima bayaran dari borang ini).
+5. **API token**: BCL → tetapan API → cipta token dengan kebenaran *API Read* sahaja. Cloudflare → Worker `annur-invoice` → **Settings → Variables and Secrets → Add** → Type **Secret** → nama `BCL_API_TOKEN` → tampal token.
+6. **Kunci webhook**: jana rentetan rawak panjang. Contoh: buka app dalam Chrome, tekan F12 → Console, taip `crypto.randomUUID().replaceAll('-','') + crypto.randomUUID().replaceAll('-','')` dan tekan Enter. Simpan sebagai Secret `BCL_WEBHOOK_KEY`.
+7. **Webhook BCL**: URL `https://annur-invoice.<subdomain>.workers.dev/bcl/<kunci webhook tadi>`, acara **Payment Success**.
+8. **Ujian RM1**: tambah item sementara *Langganan Bulanan (ujian)* RM1, bayar dengan e-mel Google anda dalam medan tadi, kemudian dalam app: **Tetapan → Langganan & Kredit → Saya sudah bayar, semak semula**. Status patut jadi *Tanpa had*. Buang item RM1 selepas itu.
+9. **Dashboard pemilik**: `https://annur-invoice.<subdomain>.workers.dev/admin/`, log masuk dengan e-mel dalam `OWNER_EMAILS` (dalam `wrangler.jsonc`). Dari sini anda boleh tambah bulan, laras kredit, lihat bayaran dan log webhook, dan sahkan pesanan yang terlepas webhook.
+
+BCL tidak menghantar semula webhook yang gagal secara automatik. Semak tab **Log webhook** di dashboard sekali seminggu; untuk yang gagal, guna BCL → Webhook Logs → Resend, atau **Tindakan → Sahkan pesanan** di dashboard.
+
+Secret Cloudflare kekal selepas setiap deploy. Pembolehubah biasa (vars) pula ditimpa oleh nilai dalam `wrangler.jsonc`, sebab itu nilai bukan rahsia disimpan dalam fail.
+
 ### Masalah biasa
 | Gejala | Punca dan penyelesaian |
 |--------|------------------------|
@@ -107,6 +127,9 @@ Susunan penting kerana setiap langkah memberi maklumat kepada langkah seterusnya
 | Skrin Utama kata "Semakan lesen gagal" | `GOOGLE_CLIENT_ID` pada Worker tidak sama dengan `config.js`, atau D1 belum disambung (`/api/ping` tunjuk `db:false`). |
 | Deploy gagal pada `database_id` | `ISI_DATABASE_ID_D1` belum diganti. |
 | Popup log masuk disekat | Benarkan popup untuk laman ini. |
+| Bayar tetapi langganan tidak aktif | E-mel dalam medan BCL berbeza dengan akaun Google, atau webhook gagal. Semak dashboard → Log webhook; guna Sahkan pesanan dengan e-mel yang betul. |
+| Log webhook: `tiada-token-api` | Secret `BCL_API_TOKEN` belum ditetapkan. |
+| Dashboard: Akses ditolak | E-mel Google bukan dalam `OWNER_EMAILS`. |
 
 ## Rilis
 

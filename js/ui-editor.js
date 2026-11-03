@@ -273,6 +273,7 @@
         } catch (e) { /* pengguna batal */ }
       },
       payClose() { UI.pay = null; UI.modal = ''; ctx.render(); },
+      payPlans() { UI.pay = null; UI.modal = ''; saveNow(true); UI.ed = null; ctx.go('langganan'); },
       async payRecheck() { await ctx.recheck(); UI.pay = null; UI.modal = ''; ctx.render(); ctx.toast(UI.lic && UI.lic.canIssue ? 'Kelayakan dikemas kini. Cuba terbit semula.' : 'Belum ada perubahan. Selesaikan bayaran dahulu.', !(UI.lic && UI.lic.canIssue)); },
       async edClose() { await saveNow(true); UI.ed = null; UI.view = 'home'; ctx.render(); },
       async openDraft(el) { const rec = await AI.drafts.get(el.dataset.id); if (rec) open(rec); else ctx.toast('Draf tidak dijumpai.', true); },
@@ -302,6 +303,7 @@
           <div class="sheet-acts">
             ${sub ? `<a class="btn primary" href="${esc(sub)}" target="_blank" rel="noopener">Langgan</a>` : '<p class="note warn">Pautan bayaran belum disediakan. Hubungi sokongan.</p>'}
             ${pack ? `<a class="btn" href="${esc(pack)}" target="_blank" rel="noopener">Beli kredit</a>` : ''}
+            <button class="btn" data-act="payPlans">Lihat pelan &amp; cara bayar</button>
             <button class="btn" data-act="payRecheck">Saya sudah bayar, semak semula</button>
             <button class="btn ghost" data-act="payClose">Tutup</button></div></div></div>`;
       }

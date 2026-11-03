@@ -33,6 +33,7 @@
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
     up: '<path d="M12 19V5M5 12l7-7 7 7"/>', down: '<path d="M12 5v14M19 12l-7 7-7-7"/>',
     left: '<path d="M19 12H5M12 19l-7-7 7-7"/>', right: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     chev: '<path d="M9 18l6-6-6-6"/>',
@@ -168,10 +169,7 @@
     },
     resumeSetup() { S.startWizard(); render(); },
     async recheck() { toast('Menyemak lesen...'); await runCheck(); },
-    buy(el) {
-      const u = (UI.lic && UI.lic.buyUrls && UI.lic.buyUrls[el.dataset.k || 'sub']) || '';
-      if (u) root.open(u, '_blank', 'noopener'); else toast('Pautan pembayaran belum disediakan. Hubungi sokongan.', true);
-    }
+    buy() { B.actions.openLangganan(); }
   };
 
   // ---------- paparan ----------
@@ -298,6 +296,7 @@
         <button class="mrow" data-act="openProfil" ${ready ? '' : 'disabled'}>${icon('building')}<div><b>Profil Syarikat</b><small class="muted">Nama, alamat, bank, penandatangan, warna</small></div>${icon('chev')}</button>
         <button class="mrow" data-act="openDocset" ${ready ? '' : 'disabled'}>${icon('hash')}<div><b>Dokumen, Penomboran & Cukai</b><small class="muted">Prefix, nota, terma, SST</small></div>${icon('chev')}</button>
         <button class="mrow" data-act="openImej" ${ready ? '' : 'disabled'}>${icon('image')}<div><b>Logo, Cop & Tandatangan</b><small class="muted">Muat naik gambar, susun kedudukan cop dan tandatangan</small></div>${icon('chev')}</button>
+        <button class="mrow" data-act="openLangganan">${icon('card')}<div><b>Langganan &amp; Kredit</b><small class="muted">Status pelan, bayaran, sejarah kredit</small></div>${icon('chev')}</button>
       </section>
       <p class="fine center">${esc(CFG.appName)} v${esc(CFG.version)} · ${esc(CFG.vendor)}</p>`;
   }
@@ -317,6 +316,7 @@
     if (UI.view === 'home') main = viewHome();
     else if (UI.view === 'rekod') main = E.views.rekod();
     else if (UI.view === 'pelanggan') main = R.views.pelanggan();
+    else if (UI.view === 'langganan') main = B.views.langganan();
     else if (UI.view === 'profil') main = S.views.profil();
     else if (UI.view === 'docset') main = S.views.docset();
     else if (UI.view === 'imej') main = I.views.imej();
@@ -361,7 +361,7 @@
   }
   let R = null;
   const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), imgOf: I.imgOf, worker, onIssued, recheck: () => runCheck(),
-    recordsSection: () => R.section() });
+    recordsSection: () => R.section(), go: (v) => { if (v === 'langganan') B.actions.openLangganan(); else { UI.view = v; render(); } } });
   R = AI.RecordsUI({ UI, esc, icon, toast, render, store: () => store, email: () => auth.lastEmail(), worker, openEditor: (d) => { UI.modal = ''; E.open(d); } });
   const newDoc = E.actions.newDoc;
   E.actions.newDoc = (el) => {
@@ -369,7 +369,8 @@
     if (UI.view === 'editor') E.saveNow(true);
     newDoc(el);
   };
-  Object.assign(actions, S.actions, I.actions, E.actions, R.actions);
+  const B = AI.BillingUI({ UI, esc, icon, toast, render, email: () => auth.lastEmail(), worker, recheck: () => runCheck(), support: CFG.support });
+  Object.assign(actions, S.actions, I.actions, E.actions, R.actions, B.actions);
 
   // ---------- mula ----------
   function boot() {

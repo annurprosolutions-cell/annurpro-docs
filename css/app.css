@@ -386,3 +386,19 @@ a.btn { text-decoration: none; }
 .page-head .btn.primary { min-height: 40px; }
 .sheet p .badge { vertical-align: middle; }
 .sheet { max-height: calc(100vh - 24px); overflow: auto; }
+
+/* ---------- S-11 Langganan & Kredit ---------- */
+.plans { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 14px; }
+.plan { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 14px; display: grid; gap: 4px; }
+.plan.best { border-color: var(--primary); background: var(--blue-soft); }
+.plan .price { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.plan .price small { font-size: 13px; font-weight: 500; color: var(--mute); }
+.paysteps { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 10px; }
+.copyrow { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+.copyrow code { font-size: 14px; padding: 6px 10px; word-break: break-all; }
+.acts-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+table.ltab { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.ltab th { text-align: left; font-size: 12px; color: var(--mute); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+table.ltab td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
+table.ltab .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.ltab .neg { color: var(--red); } table.ltab .pos { color: var(--green); }

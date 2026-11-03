@@ -247,6 +247,240 @@ async function ledger(req, env, deps) {
   return json({ ok: true, entries: r.results });
 }
 
+// ---------- bayaran BCL (docs/05-BSD.md §3B, rujukan: skill micro-saas-builder references/bcl.md) ----------
+// Tambah bulan kalendar dengan hari tambatan: 31 Jan + 1 = 28/29 Feb, pembaharuan seterusnya kembali ke 31.
+export const addMonths = (iso, n, day) => {
+  const [y, m, d] = iso.split('-').map(Number), want = Math.max(d, day | 0);
+  const t = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+  t.setUTCDate(Math.min(want, last));
+  return t.toISOString().slice(0, 10);
+};
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// E-mel log masuk Google: medan borang yang menyebut google/emel; jika tiada, e-mel pembayar
+export function pickEmail(custom, fallback) {
+  const entries = Object.entries(custom || {}).map(([k, v]) => [k, String(v == null ? '' : v).trim().toLowerCase()]).filter(([, v]) => EMAIL_RE.test(v));
+  const hit = entries.find(([k]) => /google|login|log ?masuk|akaun|sistem|e-?mel|email/i.test(k)) || entries[0];
+  const v = hit ? hit[1] : String(fallback || '').trim().toLowerCase();
+  return EMAIL_RE.test(v) ? v : '';
+}
+export function pickBusiness(custom) {
+  const e = Object.entries(custom || {}).find(([k, v]) => /syarikat|company|perniagaan|business|kedai/i.test(k) && String(v || '').trim());
+  return e ? String(e[1]).trim().slice(0, 120) : '';
+}
+const qtyOf = (it) => Math.min(120, Math.max(1, parseInt(it.quantity, 10) || 1));
+const nameOf = (it) => [it.item, it.name, it.option, it.sku, it.title].filter(Boolean).join(' ');
+const priceOf = (it) => parseFloat(it.price != null ? it.price : it.unit_price != null ? it.unit_price : it.amount);
+const packsOf = (env) => { try { const p = JSON.parse(env.PACKS || '{}'); return p && typeof p === 'object' ? p : {}; } catch (e) { return {}; } };
+// Item → { months, credits }. Langganan: nama menyebut tahun (12) / bulan (1) × kuantiti. Kredit: nama menyebut kredit/credit;
+// bilangan kredit daripada PACKS (harga → kredit), atau nombor dalam nama ("110 kredit"). Tiada padanan: ikut amaun.
+export function planFromItems(items, amount, env, alt) {
+  const sum = (list) => {
+    let months = 0, credits = 0, known = false;
+    for (const it of list || []) {
+      const n = nameOf(it || {}), q = qtyOf(it || {});
+      if (/kredit|credit/i.test(n)) {
+        const packs = packsOf(env), p = priceOf(it);
+        const c = (Number.isFinite(p) && packs[String(Math.round(p))]) || parseInt((n.match(/(\d+)\s*(kredit|credit)/i) || [])[1], 10) || 0;
+        if (c) { credits += c * q; known = true; }
+      } else if (/tahun|year|annual|12 ?bulan/i.test(n)) { months += 12 * q; known = true; }
+      else if (/bulan|month/i.test(n)) { months += q; known = true; }
+    }
+    return known ? { months: Math.min(months, 120), credits } : null;
+  };
+  return sum(items) || sum(alt) || { months: parseFloat(amount) >= (parseFloat(env.YEARLY_MIN_AMOUNT) || 150) ? 12 : 1, credits: 0, guessed: true };
+}
+
+// BCL tidak menandatangani webhook: sentiasa ambil semula transaksi daripada API sebelum memberi apa-apa
+export async function verifyOrder(env, order, fetchFn) {
+  if (!env.BCL_API_TOKEN) return { paid: false, reason: 'tiada-token-api' };
+  const base = String(env.BCL_API_URL || 'https://api.bcl.my/v1').replace(/\/$/, '');
+  let res;
+  try { res = await fetchFn(`${base}/transactions/${encodeURIComponent(order)}`, { headers: { authorization: 'Bearer ' + env.BCL_API_TOKEN, accept: 'application/json', 'user-agent': 'AnnurInvoice-Billing/1.0' } }); }
+  catch (e) { return { paid: false, reason: 'api-bcl-gagal' }; }
+  if (!res.ok) return { paid: false, reason: 'api-bcl-' + res.status };
+  let j; try { j = await res.json(); } catch (e) { return { paid: false, reason: 'api-bcl-json' }; }
+  const d = (j && j.data) || j || {}, t = d.main_data || d;
+  const code = Number(t.status);
+  const paid = code === 3 || t.is_paid === true || Number(t.is_paid) === 1 || /^(success|successful|approved|completed)$/i.test(String(t.status || ''));
+  if (String(t.order_number || d.record_id || order) !== String(order)) return { paid: false, reason: 'pesanan-tidak-sepadan' };
+  return { paid, amount: t.amount, subtotal: t.subtotal_amount, items: t.items, payer_email: t.payer_email, custom: d.custom_fields_data || t.custom_fields_data || null,
+    test: t.transaction_type === 'test', formId: d.formable_id != null ? d.formable_id : d.form_id };
+}
+
+// Lanjut langganan dalam satu transaksi bersama rekod bayaran & kredit (PK order_no = idempoten)
+async function applyPayment(env, o, info) {
+  const db = env.DB, c = cfg(env), nowIso = new Date(o.now).toISOString(), t = todayMY(o.now);
+  const { tenant } = await ensureTenant(db, info.email, c, nowIso);
+  if (info.business && !tenant.business_name) await db.prepare('UPDATE tenants SET business_name = ? WHERE email = ?').bind(info.business, info.email).run();
+  const stmts = [db.prepare('INSERT INTO payments (order_no, email, kind, item, months, credits, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(info.order, info.email, info.credits && !info.months ? 'kredit' : 'langganan', info.item.slice(0, 200), info.months || null, info.credits || null, info.amount, 'paid', nowIso)];
+  let expires = null;
+  if (info.months) {
+    const cur = await db.prepare('SELECT plan, expires, day FROM subscriptions WHERE email = ?').bind(info.email).first();
+    const active = cur && cur.expires >= t, base = active ? cur.expires : t;
+    const day = active && cur.day ? cur.day : Number(base.slice(8));
+    expires = addMonths(base, info.months, day);
+    const plan = info.months >= 12 || (active && cur.plan === 'tahunan') ? 'tahunan' : 'bulanan';
+    stmts.push(db.prepare('INSERT INTO subscriptions (email, plan, expires, day, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO UPDATE SET plan = excluded.plan, expires = excluded.expires, day = excluded.day, updated_at = excluded.updated_at')
+      .bind(info.email, plan, expires, day, nowIso));
+  }
+  if (info.credits) {
+    stmts.push(db.prepare('UPDATE tenants SET credits = credits + ? WHERE email = ?').bind(info.credits, info.email));
+    stmts.push(db.prepare("INSERT INTO credit_ledger (email, delta, reason, ref, balance_after, note, created_at) SELECT ?, ?, 'pack', ?, credits, ?, ? FROM tenants WHERE email = ?")
+      .bind(info.email, info.credits, info.order, 'Pek kredit', nowIso, info.email));
+  }
+  try { await db.batch(stmts); }
+  catch (e) {
+    if (await db.prepare('SELECT 1 AS x FROM payments WHERE order_no = ?').bind(info.order).first()) return { ok: true, duplicate: true };
+    throw e;
+  }
+  return { ok: true, email: info.email, months: info.months, credits: info.credits, expires };
+}
+
+// Proses satu pesanan (daripada webhook atau "sahkan pesanan" pemilik)
+export async function processOrder(env, o, order, hint) {
+  hint = hint || {};
+  if (await env.DB.prepare('SELECT 1 AS x FROM payments WHERE order_no = ?').bind(order).first()) return { ok: true, duplicate: true };
+  const v = await verifyOrder(env, order, o.fetch);
+  if (!v.paid) return { ok: false, reason: v.reason || 'belum-dibayar' };
+  if (v.test && env.BCL_ACCEPT_TEST !== '1') return { ok: true, ignored: 'transaksi-ujian' };
+  if (env.BCL_FORM_ID && v.formId != null && String(v.formId) !== String(env.BCL_FORM_ID)) return { ok: true, ignored: 'borang-lain' };
+  // jumlah dalam webhook mesti sama dengan API (webhook palsu dengan pesanan lain ditolak)
+  if (hint.amount != null && v.amount != null && Math.abs(parseFloat(v.amount) - parseFloat(hint.amount)) > 0.009 &&
+      !(v.subtotal != null && Math.abs(parseFloat(v.subtotal) - parseFloat(hint.amount)) < 0.01)) return { ok: false, reason: 'jumlah-tidak-sepadan' };
+  const email = (hint.email && EMAIL_RE.test(hint.email) ? hint.email.toLowerCase() : '') || pickEmail(v.custom || hint.custom, v.payer_email || hint.payer_email);
+  if (!email) return { ok: false, reason: 'tiada-emel' };
+  const plan = planFromItems(v.items, v.subtotal != null ? v.subtotal : v.amount, env, hint.items);
+  const item = (v.items || hint.items || []).map((it) => `${nameOf(it)} x${qtyOf(it)}`).join(', ') || (plan.guessed ? 'ikut amaun' : '');
+  return applyPayment(env, o, { order, email, months: plan.months, credits: plan.credits, amount: parseFloat(v.amount) || 0, item, business: pickBusiness(v.custom || hint.custom) });
+}
+
+export async function processBcl(body, env, o) {
+  const ev = String((body && body.event) || ''), d = (body && body.data) || {}, md = d.main_data || {};
+  const order = String(md.order_number || d.record_id || '');
+  if (ev !== 'payment-success') return { ok: true, ignored: ev || 'tiada-event' };
+  if (!order) return { ok: false, reason: 'tiada-rekod' };
+  if (md.transaction_type === 'test' && env.BCL_ACCEPT_TEST !== '1') return { ok: true, ignored: 'transaksi-ujian' };
+  const formId = d.formable_id != null ? d.formable_id : d.form_id;
+  if (env.BCL_FORM_ID && formId != null && String(formId) !== String(env.BCL_FORM_ID)) return { ok: true, ignored: 'borang-lain' };
+  return processOrder(env, o, order, { amount: md.amount, custom: d.custom_fields_data, payer_email: md.payer_email, items: md.items });
+}
+
+const safeEqual = (a, b) => { a = String(a || ''); b = String(b || ''); if (!a || a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; };
+
+async function bclWebhook(req, env, deps, key) {
+  if (!env.BCL_WEBHOOK_KEY || !safeEqual(key, env.BCL_WEBHOOK_KEY)) return json({ ok: false, error: 'tidak dijumpai' }, 404);
+  if (req.method !== 'POST') return json({ ok: false, error: 'kaedah tidak disokong' }, 405);
+  let body; try { body = JSON.parse(await req.text()); } catch (e) { return json({ ok: false, error: 'JSON tidak sah' }, 400); }
+  const o = { now: deps.now(), fetch: deps.fetch };
+  const order = String(((body.data || {}).main_data || {}).order_number || (body.data || {}).record_id || '');
+  const work = processBcl(body, env, o).catch((e) => ({ ok: false, reason: 'ralat', message: String(e && e.message) })).then(async (r) => {
+    try {
+      await env.DB.prepare('INSERT INTO webhook_log (ts, order_no, ok, detail) VALUES (?, ?, ?, ?)').bind(new Date(o.now).toISOString(), order, r.ok ? 1 : 0, JSON.stringify(Object.assign({ event: body.event }, r)).slice(0, 2000)).run();
+      await env.DB.prepare('DELETE FROM webhook_log WHERE ts < ?').bind(new Date(o.now - 90 * 864e5).toISOString()).run();
+    } catch (e) { /* log gagal tidak menjejaskan bayaran */ }
+    return r;
+  });
+  if (deps.waitUntil) { deps.waitUntil(work); return json({ ok: true, received: true }); }
+  return json(await work);
+}
+
+// ---------- pengguna: bayaran sendiri ----------
+async function myPayments(req, env, deps) {
+  const email = await authEmail(req, env, deps.fetch);
+  const r = await env.DB.prepare('SELECT order_no, kind, item, months, credits, amount, created_at FROM payments WHERE email = ? ORDER BY created_at DESC LIMIT 50').bind(email).all();
+  return json({ ok: true, payments: r.results });
+}
+
+// ---------- pentadbir platform (R-03) ----------
+async function adminAuth(req, env, deps) {
+  const h = req.headers.get('authorization') || '';
+  const tok = (h.match(/^Bearer\s+(\S+)$/i) || [])[1] || '';
+  if (env.ADMIN_TOKEN && safeEqual(tok, env.ADMIN_TOKEN)) return 'admin-token';
+  const email = await authEmail(req, env, deps.fetch);
+  const owners = String(env.OWNER_EMAILS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+  if (!owners.includes(email)) { const e = new Error('Akses ditolak'); e.status = 403; e.reason = 'bukan-pemilik'; throw e; }
+  return email;
+}
+async function adminOverview(req, env, deps) {
+  await adminAuth(req, env, deps);
+  const db = env.DB, c = cfg(env), now = deps.now(), t = todayMY(now);
+  const tenants = (await db.prepare(`SELECT t.email, t.business_name, t.credits, t.created_at, t.last_seen, s.plan, s.expires,
+      (SELECT COUNT(*) FROM doc_issues d WHERE d.email = t.email) AS docs, (SELECT MAX(issued_at) FROM doc_issues d WHERE d.email = t.email) AS last_issue
+      FROM tenants t LEFT JOIN subscriptions s ON s.email = t.email ORDER BY t.created_at DESC LIMIT 2000`).all()).results;
+  tenants.forEach((x) => {
+    const left = x.expires ? daysBetween(t, x.expires) : null;
+    x.daysLeft = left;
+    x.state = x.expires && left >= 0 ? 'langganan' : x.expires && left >= -c.graceDays ? 'ihsan' : x.expires ? 'tamat' : x.credits >= c.perDoc ? 'kredit' : 'habis';
+  });
+  const payments = (await db.prepare('SELECT * FROM payments ORDER BY created_at DESC LIMIT 300').all()).results;
+  const logs = (await db.prepare('SELECT * FROM webhook_log ORDER BY id DESC LIMIT 200').all()).results;
+  const since30 = new Date(now - 30 * 864e5).toISOString(), since7 = new Date(now - 7 * 864e5).toISOString();
+  const active = tenants.filter((x) => x.state === 'langganan' || x.state === 'ihsan');
+  const priceM = parseFloat(env.PRICE_MONTH) || 20, priceY = parseFloat(env.PRICE_YEAR) || 200;
+  const stats = {
+    tenants: tenants.length, subscribed: active.length, creditOnly: tenants.filter((x) => x.state === 'kredit').length,
+    mrr: Math.round(active.reduce((s, x) => s + (x.plan === 'tahunan' ? priceY / 12 : priceM), 0) * 100) / 100,
+    revenue30: Math.round(payments.filter((p) => p.created_at >= since30).reduce((s, p) => s + (p.amount || 0), 0) * 100) / 100,
+    docs30: (await db.prepare('SELECT COUNT(*) AS n FROM doc_issues WHERE issued_at >= ?').bind(since30).first('n')),
+    failedWebhooks7: logs.filter((l) => !l.ok && l.ts >= since7).length,
+    expiring14: tenants.filter((x) => x.state === 'langganan' && x.daysLeft <= 14).length
+  };
+  return json({ ok: true, today: t, stats, tenants, payments, logs });
+}
+async function adminSubscription(req, env, deps) {
+  const by = await adminAuth(req, env, deps);
+  const b = await readJson(req, 4096);
+  const email = String(b.email || '').trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) throw bad('E-mel tidak sah');
+  const db = env.DB, c = cfg(env), now = deps.now(), nowIso = new Date(now).toISOString(), t = todayMY(now);
+  await ensureTenant(db, email, c, nowIso);
+  const cur = await db.prepare('SELECT plan, expires, day FROM subscriptions WHERE email = ?').bind(email).first();
+  let expires, day, plan = ['bulanan', 'tahunan', 'pilot'].includes(b.plan) ? b.plan : (cur && cur.plan) || 'bulanan';
+  if (b.addMonths != null) {
+    const n = Number(b.addMonths);
+    if (!Number.isInteger(n) || n < 1 || n > 120) throw bad('addMonths mesti 1 hingga 120');
+    const active = cur && cur.expires >= t, base = active ? cur.expires : t;
+    day = active && cur.day ? cur.day : Number(base.slice(8));
+    expires = addMonths(base, n, day);
+    if (n >= 12 && !b.plan) plan = 'tahunan';
+  } else if (b.expires) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.expires))) throw bad('expires mesti YYYY-MM-DD');
+    expires = String(b.expires); day = Number(expires.slice(8));
+  } else throw bad('Beri addMonths atau expires');
+  await db.prepare('INSERT INTO subscriptions (email, plan, expires, day, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO UPDATE SET plan = excluded.plan, expires = excluded.expires, day = excluded.day, updated_at = excluded.updated_at')
+    .bind(email, plan, expires, day, nowIso).run();
+  await db.prepare('INSERT INTO webhook_log (ts, order_no, ok, detail) VALUES (?, ?, 1, ?)').bind(nowIso, 'admin', JSON.stringify({ admin: by, email, plan, expires })).run();
+  return json({ ok: true, email, plan, expires });
+}
+async function adminCredits(req, env, deps) {
+  const by = await adminAuth(req, env, deps);
+  const b = await readJson(req, 4096);
+  const email = String(b.email || '').trim().toLowerCase(), delta = Number(b.delta), note = String(b.note || '').trim().slice(0, 200);
+  if (!EMAIL_RE.test(email)) throw bad('E-mel tidak sah');
+  if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 10000) throw bad('delta mesti integer bukan sifar (maks 10000)');
+  if (note.length < 3) throw bad('Nyatakan sebab pelarasan');
+  const db = env.DB, nowIso = new Date(deps.now()).toISOString();
+  await ensureTenant(db, email, cfg(env), nowIso);
+  const ref = 'adm-' + deps.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  try {
+    await db.batch([db.prepare('UPDATE tenants SET credits = credits + ? WHERE email = ?').bind(delta, email),
+      db.prepare("INSERT INTO credit_ledger (email, delta, reason, ref, balance_after, note, created_at) SELECT ?, ?, ?, ?, credits, ?, ? FROM tenants WHERE email = ?")
+        .bind(email, delta, delta > 0 ? 'adjust' : 'refund', ref, note + ' (oleh ' + by + ')', nowIso, email)]);
+  } catch (e) { if (/CHECK|constraint/i.test(String(e.message))) throw bad('Baki tidak boleh negatif'); throw e; }
+  return json({ ok: true, email, credits: await db.prepare('SELECT credits FROM tenants WHERE email = ?').bind(email).first('credits') });
+}
+async function adminVerifyOrder(req, env, deps) {
+  await adminAuth(req, env, deps);
+  const b = await readJson(req, 2048);
+  const order = String(b.order || '').trim();
+  if (!/^[A-Za-z0-9_-]{3,80}$/.test(order)) throw bad('No. pesanan tidak sah');
+  const r = await processOrder(env, { now: deps.now(), fetch: deps.fetch }, order, { email: String(b.email || '').trim() });
+  await env.DB.prepare('INSERT INTO webhook_log (ts, order_no, ok, detail) VALUES (?, ?, ?, ?)').bind(new Date(deps.now()).toISOString(), order, r.ok ? 1 : 0, JSON.stringify(Object.assign({ manual: true }, r))).run();
+  return json(r, r.ok ? 200 : 422);
+}
+
 // ---------- penghala ----------
 export async function handle(req, env, deps) {
   deps = Object.assign({ fetch: (...a) => fetch(...a), now: () => Date.now() }, deps || {});
@@ -270,7 +504,12 @@ export async function handle(req, env, deps) {
       Object.entries(cors).forEach(([k, v]) => res.headers.set(k, v));
       return res;
     }
-    const routes = { 'POST /api/issue': issue, 'POST /api/void': voidDoc, 'GET /api/issues': listIssues, 'GET /api/ledger': ledger };
+    if (path.startsWith('/bcl/')) {
+      if (!env.DB) return json({ ok: false, reason: 'tiada-db' }, 500);
+      return bclWebhook(req, env, deps, path.slice(5));
+    }
+    const routes = { 'POST /api/issue': issue, 'POST /api/void': voidDoc, 'GET /api/issues': listIssues, 'GET /api/ledger': ledger, 'GET /api/payments': myPayments,
+      'GET /api/admin/overview': adminOverview, 'POST /api/admin/subscription': adminSubscription, 'POST /api/admin/credits': adminCredits, 'POST /api/admin/verify-order': adminVerifyOrder };
     const fn = routes[req.method + ' ' + path];
     if (fn) {
       if (!env.DB) return json({ ok: false, reason: 'tiada-db', error: 'D1 belum disambung pada Worker' }, 500, cors);

@@ -92,11 +92,11 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 7.4 S-07 Pelanggan: CRUD, arkib, amaran duplikasi.
 
 ### Fasa 8 – Bayaran & dashboard pemilik (F-16, F-17, F-19)
-- [ ] 8.1 `POST /bcl/<key>`: respons 200 segera, kerja dalam `ctx.waitUntil`; ambil semula transaksi BCL, semak status/amaun/order; `payments` idempoten; kesan item (bulanan, tahunan, pek kredit dari v1.1) ikut `PACKS`/nama item/`YEARLY_MIN_AMOUNT`.
-- [ ] 8.2 Logik pelanjutan: tambat `day`, kuantiti, had 120, ihsan 7 hari (BSD §3B); ujian unit lengkap termasuk 31 Jan + 1 bulan.
-- [ ] 8.3 S-11 Langganan & Kredit: status, butang beli, sejarah ledger (`/api/ledger`).
-- [ ] 8.4 `admin/index.html` S-14: cari, tambah/lanjut bulan, laras kredit (dengan sebab), bayaran, log webhook + hantar semula, statistik (pelanggan berbayar, percubaan, hasil 30 hari, dokumen diterbit).
-- [ ] 8.5 Dashboard dilindungi `OWNER_EMAILS`; ujian akses ditolak.
+- [x] 8.1 `POST /bcl/<key>`: respons 200 segera, kerja dalam `ctx.waitUntil`; ambil semula transaksi BCL, semak status/amaun/order; `payments` idempoten; kesan item (bulanan, tahunan, pek kredit dari v1.1) ikut `PACKS`/nama item/`YEARLY_MIN_AMOUNT`.
+- [x] 8.2 Logik pelanjutan: tambat `day`, kuantiti, had 120, ihsan 7 hari (BSD §3B); ujian unit lengkap termasuk 31 Jan + 1 bulan.
+- [x] 8.3 S-11 Langganan & Kredit: status, butang beli, sejarah ledger (`/api/ledger`).
+- [x] 8.4 `admin/index.html` S-14: cari, tambah/lanjut bulan, laras kredit (dengan sebab), bayaran, log webhook + hantar semula, statistik (pelanggan berbayar, percubaan, hasil 30 hari, dokumen diterbit).
+- [x] 8.5 Dashboard dilindungi `OWNER_EMAILS`; ujian akses ditolak.
 
 ### Fasa 9 – Pengukuhan (F-14, F-20)
 - [ ] 9.1 Service worker (precache `./`, jangan cache respons redirect, navigasi fallback), versi cache dinaikkan setiap rilis; banner luar talian.
