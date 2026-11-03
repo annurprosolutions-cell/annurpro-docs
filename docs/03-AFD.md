@@ -52,7 +52,7 @@ Pengguna baru masuk daripada halaman jualan atau demo, log masuk dengan Google, 
 ### Journey E: Tetapan logo/cop/tandatangan (R-01)
 1. S-09 pilih **Tukar** pada Cop, pilih gambar, tandakan "Buang latar putih".
 2. Seret cop/tandatangan dalam pratonton, gunakan anak panah 1px (Shift = 10px) dan slider saiz; **Simpan**.
-3. Dokumen baharu menggunakan kedudukan baharu; dokumen lama (PDF terbit) tidak berubah.
+3. Gambar baharu dimuat naik ke `_Tetapan` bila Simpan ditekan; fail lama dibuang ke tong sampah Drive selepas rujukan baharu disimpan. Dokumen baharu menggunakan kedudukan baharu; dokumen lama (PDF terbit) tidak berubah.
 
 ### Journey F: Pemilik platform urus pelanggan (R-03)
 1. Buka `/admin/`, log masuk Google (emel dalam `OWNER_EMAILS`).

@@ -30,6 +30,9 @@
     quote: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
     truck: '<path d="M1 3h15v13H1zM16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
     google: '<path fill="#fff" stroke="none" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" stroke="none" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" opacity=".85"/><path fill="#fff" stroke="none" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z" opacity=".7"/><path fill="#fff" stroke="none" d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6z" opacity=".55"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+    up: '<path d="M12 19V5M5 12l7-7 7 7"/>', down: '<path d="M12 5v14M19 12l-7 7-7-7"/>',
+    left: '<path d="M19 12H5M12 19l-7-7 7-7"/>', right: '<path d="M5 12h14M12 5l7 7-7 7"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
     chev: '<path d="M9 18l6-6-6-6"/>',
@@ -81,6 +84,7 @@
     const pend = await AI.idb.get('kv', 'pending:' + email);
     if (pend && pend.length) { store.restore(pend); store.flush().catch(() => {}); }
     else UI.sync = { state: 'saved', info: {} };
+    I.loadAll();
     if (ws.duplicates) toast('Ada lebih daripada satu Sheet Annur Invoice dalam Drive. Yang terkini digunakan.');
   }
 
@@ -142,7 +146,7 @@
       catch (e) { UI.busy = false; UI.error = e.message; render(); }
     },
     signOut() {
-      auth.signOut(); store = null; UI.lic = null; UI.ws = null; UI.data = null; UI.modal = ''; UI.form = {}; UI.formErr = {};
+      auth.signOut(); store = null; I.reset(); UI.lic = null; UI.ws = null; UI.data = null; UI.modal = ''; UI.form = {}; UI.formErr = {};
       UI.sync = { state: 'idle', info: {} }; UI.view = 'login'; UI.error = ''; render();
     },
     // S-17: sambung semula Google (mesti dari klik) kemudian sambung tulisan tertangguh
@@ -289,7 +293,7 @@
       <section class="card menu">
         <button class="mrow" data-act="openProfil" ${ready ? '' : 'disabled'}>${icon('building')}<div><b>Profil Syarikat</b><small class="muted">Nama, alamat, bank, penandatangan, warna</small></div>${icon('chev')}</button>
         <button class="mrow" data-act="openDocset" ${ready ? '' : 'disabled'}>${icon('hash')}<div><b>Dokumen, Penomboran & Cukai</b><small class="muted">Prefix, nota, terma, SST</small></div>${icon('chev')}</button>
-        <div class="mrow off">${icon('image')}<div><b>Logo, Cop & Tandatangan</b><small class="muted">Akan datang</small></div></div>
+        <button class="mrow" data-act="openImej" ${ready ? '' : 'disabled'}>${icon('image')}<div><b>Logo, Cop & Tandatangan</b><small class="muted">Muat naik gambar, susun kedudukan cop dan tandatangan</small></div>${icon('chev')}</button>
       </section>
       <p class="fine center">${esc(CFG.appName)} v${esc(CFG.version)} · ${esc(CFG.vendor)}</p>`;
   }
@@ -311,6 +315,7 @@
     else if (UI.view === 'pelanggan') main = soon('Pelanggan', 'Fasa 7', 'Simpan pelanggan untuk isi Bill To dengan satu klik.');
     else if (UI.view === 'profil') main = S.views.profil();
     else if (UI.view === 'docset') main = S.views.docset();
+    else if (UI.view === 'imej') main = I.views.imej();
     else if (UI.view === 'editor') main = soon(({ invoice: 'Invois', quotation: 'Quotation', do: 'Delivery Order' })[UI.newType] + ' baharu', 'Fasa 5', 'Editor dokumen dengan pratonton langsung.');
     else main = viewSettings();
     app.innerHTML = `<div class="shell">
@@ -327,14 +332,20 @@
     clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast'; }, 3000);
   }
 
-  // ---------- skrin tetapan (js/ui-settings.js) ----------
-  const S = AI.SettingsUI({ UI, esc, icon, toast, render, store: () => store, createWorkspace, renameWorkspace, saveBusinessName, email: () => auth.lastEmail() });
-  Object.assign(actions, S.actions);
+  // ---------- gambar (js/ui-images.js) dan skrin tetapan (js/ui-settings.js) ----------
+  const I = AI.ImagesUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), header: () => S.docHeader(Object.assign({}, UI.data && UI.data.syarikat, UI.form)) });
+  const S = AI.SettingsUI({ UI, esc, icon, toast, render, store: () => store, createWorkspace, renameWorkspace, saveBusinessName, email: () => auth.lastEmail(),
+    imgOf: I.imgOf, signStatic: I.signStatic });
+  Object.assign(actions, S.actions, I.actions);
 
   // ---------- mula ----------
   function boot() {
-    document.addEventListener('input', (e) => S.onInput(e.target));
-    document.addEventListener('change', (e) => { if (e.target.type === 'checkbox' || e.target.type === 'radio' || e.target.tagName === 'SELECT') S.onInput(e.target); });
+    I.bind(document);
+    document.addEventListener('input', (e) => { if (!I.onInput(e.target)) S.onInput(e.target); });
+    document.addEventListener('change', (e) => {
+      if (I.onChange(e.target)) return;
+      if (e.target.type === 'checkbox' || e.target.type === 'radio' || e.target.tagName === 'SELECT') S.onInput(e.target);
+    });
     root.addEventListener('beforeunload', (e) => { if (UI.dirty) { e.preventDefault(); e.returnValue = ''; } });
     document.addEventListener('click', (e) => {
       const el = e.target.closest('[data-act]');

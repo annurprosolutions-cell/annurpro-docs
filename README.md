@@ -12,7 +12,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 1 | Log masuk Google, `/api/check` (akaun + 50 kredit percubaan sekali), kad lesen, notis, cache 7 hari, shell app + navigasi | Siap |
 | 2 | Ruang kerja Sheet/Drive (`ensureWorkspace`), lapisan storan (queue, debounce, cuba semula, konflik), pill status, dialog S-17, IndexedDB (cache, draf, tulisan tertangguh) | Siap |
 | 3 | Wizard persediaan 5 langkah (folder & Sheet ikut nama syarikat), Profil Syarikat, Dokumen/Penomboran/Cukai, tukar nama folder atas persetujuan | Siap |
-| 4 | Logo, cop & tandatangan (muat naik, buang latar putih, seret/nudge/saiz) | Seterusnya |
+| 4 | Logo, cop, tandatangan & tandatangan DO: muat naik ke `_Tetapan`, buang latar putih, penyusun seret/nudge/saiz/reset | Siap |
+| 5 | Enjin dokumen: kalkulator SST, editor Invois/Quotation/DO, pratonton, draf | Seterusnya |
 
 ## Struktur
 
@@ -28,6 +29,9 @@ js/workspace.js        ensureWorkspace(): cipta/jumpa Sheet + folder (idempotent
 js/store.js            Store: baca ikut nama lajur, tulis berbaris, konflik
 js/idb.js              IndexedDB: cache, draf, tulisan tertangguh
 js/settings.js         validasi tetapan, prefix, contoh nombor, kod cukai (tulen)
+js/images.js           semakan fail, buang latar putih, potong, ImageStore (Drive + cache)
+js/sign.js             kedudukan cop & tandatangan (tulen) dan HTML ruang tandatangan
+js/ui-images.js        skrin S-09: muat naik, penyusun seret/nudge/saiz
 js/ui-settings.js      skrin S-02 wizard, S-08 Profil, S-10 Dokumen & Cukai
 js/app.js              UI: render() + data-act
 worker/index.mjs       API: /api/ping, /api/check

@@ -43,9 +43,12 @@
       const sst = str(v.sst_berdaftar).toUpperCase() === 'YA' && str(v.sst_no) ? `<div>SST No: ${esc(v.sst_no)}</div>` : '';
       const no = AI.sampleNumber(AI.prefixFor(v, 'invoice'), today());
       const bank = str(v.bank_nama) || str(v.bank_akaun) ? `<div class="dh-bank"><b>Bank:</b> ${esc(v.bank_nama)} ${esc(v.bank_akaun)}${str(v.bank_pemegang) ? ' · ' + esc(v.bank_pemegang) : ''}</div>` : '';
-      const sign = str(v.tt_nama) ? `<div class="dh-sign"><span></span><b>${esc(v.tt_nama)}</b><small>${esc(v.tt_jawatan)}</small></div>` : '';
+      const imgSign = ctx.signStatic ? ctx.signStatic() : '';
+      const hasImgs = /class="sitem/.test(imgSign);
+      const sign = str(v.tt_nama) || hasImgs ? `<div class="dh-sign">${hasImgs ? imgSign : '<span></span>'}${str(v.tt_nama) ? `<b>${esc(v.tt_nama)}</b><small>${esc(v.tt_jawatan)}</small>` : ''}</div>` : '';
+      const lg = ctx.imgOf && ctx.imgOf('logo');
       return `<div class="dh" style="--acc:${esc(accent)}" aria-label="Pratonton dokumen">
-        <div class="dh-top"><div class="dh-logo">LOGO</div><div class="dh-co">
+        <div class="dh-top"><div class="dh-logo ${lg ? 'has' : ''}">${lg ? `<img src="${esc(lg.url)}" alt="Logo">` : 'LOGO'}</div><div class="dh-co">
           <b>${esc(str(v.nama) || 'NAMA SYARIKAT ANDA')}</b> <small>${reg}</small>
           ${addr.map((l) => `<div>${esc(l)}</div>`).join('') || '<div class="muted">Alamat syarikat</div>'}
           ${contact ? `<div>${contact}</div>` : ''}${sst}
@@ -408,6 +411,7 @@
       </div></div>`;
     }
 
+    ctx.header = () => docHeader(Object.assign({}, sk(), f()));
     return { views: { setup: viewSetup, profil: viewProfil, docset: viewDocset }, actions, onInput, live, startWizard, renameModal, docHeader };
   };
 

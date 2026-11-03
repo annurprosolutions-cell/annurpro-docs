@@ -252,3 +252,47 @@ table.tax .fld label { position: absolute; width: 1px; height: 1px; overflow: hi
 .color-row input[type="color"] { width: 52px; height: 44px; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 2px; background: #fff; margin-bottom: 14px; }
 .color-row .fld { flex: 1; }
 table.tax td:first-child { min-width: 150px; word-break: break-word; font-size: 13px; }
+
+/* ---------- S-09 gambar, cop & tandatangan ---------- */
+.itiles { display: grid; gap: 14px; }
+.itile { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.itile:last-child { border-bottom: 0; padding-bottom: 0; }
+.ithumb { height: 112px; border: 1px dashed #cbd5e1; border-radius: var(--r-sm); display: grid; place-items: center; overflow: hidden; background: #fff; color: #94a3b8; }
+.ithumb.chk { background-image: linear-gradient(45deg, #eef1f6 25%, transparent 25%, transparent 75%, #eef1f6 75%), linear-gradient(45deg, #eef1f6 25%, transparent 25%, transparent 75%, #eef1f6 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.ithumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.ithumb img.ghost { opacity: .35; }
+.ithumb span { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; }
+.imeta { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.imeta small { line-height: 1.4; }
+.iacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.iacts .btn.sm { cursor: pointer; }
+.sw.sm { min-height: 36px; font-size: 14px; }
+.tol { display: grid; gap: 4px; font-size: 13px; } .tol.off { opacity: .45; }
+.tol input[type="range"], .size input[type="range"] { width: 100%; accent-color: var(--primary); }
+.pend { color: var(--amber); font-weight: 600; }
+@media (max-width: 420px) { .itile { grid-template-columns: 1fr; } .ithumb { height: 140px; } }
+
+.sign-ed { display: grid; gap: 12px; }
+.seg { display: inline-flex; background: var(--soft); border-radius: var(--r-sm); padding: 3px; width: fit-content; }
+.seg button { border: 0; background: none; padding: 8px 16px; min-height: 40px; border-radius: 10px; font-weight: 600; color: var(--mute); cursor: pointer; }
+.seg button.on { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(15, 23, 42, .12); }
+.seg button:disabled { opacity: .4; cursor: default; }
+.sbox { position: relative; width: 100%; max-width: 520px; aspect-ratio: 260 / 140; border: 1px dashed #94a3b8; border-radius: var(--r-sm); background: #fff; overflow: hidden; touch-action: none; user-select: none; }
+.sbox::after { content: "Ruang tandatangan"; position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: #cbd5e1; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
+.sbox.static { max-width: 200px; border: 0; border-bottom: 1px solid #94a3b8; border-radius: 0; background: none; overflow: visible; margin-bottom: 4px; }
+.sbox.static::after { content: none; }
+.sitem { position: absolute; cursor: grab; touch-action: none; outline-offset: 0; }
+.sitem img { display: block; width: 100%; height: auto; pointer-events: none; -webkit-user-drag: none; }
+.sitem.sel { outline: 2px solid var(--primary-h); }
+.sitem.drag { cursor: grabbing; outline-style: dashed; }
+.sitem:focus-visible { outline: 3px solid rgba(39, 71, 166, .5); }
+img.sitem.static { position: absolute; pointer-events: none; cursor: default; height: auto; }
+.nudge-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.nudge { display: inline-grid; grid-template-columns: repeat(4, 44px); gap: 6px; }
+.nudge button { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; border-radius: var(--r-sm); display: grid; place-items: center; cursor: pointer; color: var(--ink); touch-action: manipulation; }
+.nudge button:active { background: var(--blue-soft); }
+.size { flex: 1; min-width: 180px; display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.empty.small { padding: 12px 4px; }
+.dh-logo.has { border: 0; background: none; }
+.dh-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.dh-sign .sbox.static { min-height: 40px; }

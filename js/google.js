@@ -33,18 +33,23 @@
     const sleep = opts.sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
     const retries = opts.retries == null ? 3 : opts.retries;
 
-    const req = async (method, url, body) => {
+    // opt: { raw: true, contentType } hantar `body` mentah (bait); { bytes: true } pulang { bytes, type } bukan JSON
+    const req = async (method, url, body, opt) => {
+      opt = opt || {};
       for (let attempt = 0; ; attempt++) {
         const tok = await opts.token();
         const headers = { Authorization: 'Bearer ' + tok };
-        if (body !== undefined) headers['Content-Type'] = 'application/json';
+        if (body !== undefined) headers['Content-Type'] = opt.raw ? (opt.contentType || 'application/octet-stream') : 'application/json';
         let res;
         try {
-          res = await fetchFn(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+          res = await fetchFn(url, { method, headers, body: body !== undefined ? (opt.raw ? body : JSON.stringify(body)) : undefined });
         } catch (e) {
           const err = new Error('Tiada sambungan internet'); err.network = true; throw err;
         }
-        if (res.ok) return res.status === 204 ? {} : res.json();
+        if (res.ok) {
+          if (opt.bytes) return { bytes: new Uint8Array(await res.arrayBuffer()), type: res.headers.get('content-type') || '' };
+          return res.status === 204 ? {} : res.json();
+        }
         if ([429, 500, 502, 503].includes(res.status) && attempt < retries) { await sleep(1000 * Math.pow(2, attempt)); continue; }
         let msg = 'HTTP ' + res.status;
         try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch (e) { /* bukan JSON */ }
@@ -66,6 +71,10 @@
     this.createFolder = (name, parentId, mark) => this.createFile(Object.assign({ name, mimeType: MIME_FOLDER },
       parentId ? { parents: [parentId] } : {}, mark ? { appProperties: { [AI.APP_MARK]: mark } } : {}));
     this.updateFile = (id, meta) => req('PATCH', `${DRIVE}/files/${encodeURIComponent(id)}?fields=id,name`, meta);
+    this.trash = (id) => this.updateFile(id, { trashed: true });
+    // kandungan fail: muat naik (media) dan muat turun (alt=media)
+    this.uploadBytes = (id, bytes, mime) => req('PATCH', `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(id)}?uploadType=media&fields=id`, bytes, { raw: true, contentType: mime });
+    this.downloadBytes = (id) => req('GET', `${DRIVE}/files/${encodeURIComponent(id)}?alt=media`, undefined, { bytes: true });
 
     // ---------- Sheets ----------
     this.info = async (id) => {

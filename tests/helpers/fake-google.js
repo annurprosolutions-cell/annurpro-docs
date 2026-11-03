@@ -44,8 +44,16 @@ function fakeGoogle(token) {
     const auth = (init.headers || {}).Authorization || (init.headers || {}).authorization;
     if (auth !== 'Bearer ' + token) return err(401, 'Invalid Credentials');
     if (failQueue.length) { const s = failQueue.shift(); return err(s, 'Simulasi ralat ' + s); }
-    const body = init.body ? JSON.parse(init.body) : null;
     const p = u.pathname;
+    // muat naik kandungan mentah (uploadType=media)
+    const up = p.match(/^\/upload\/drive\/v3\/files\/([^/]+)$/);
+    if (up && method === 'PATCH') {
+      const f = files.get(decodeURIComponent(up[1])); if (!f) return err(404, 'File not found');
+      f.bytes = Uint8Array.from(init.body instanceof Uint8Array || Buffer.isBuffer(init.body) ? init.body : Buffer.from(init.body || ''));
+      f.contentType = (init.headers || {})['Content-Type'] || 'application/octet-stream'; touch(f.id);
+      return resp(200, { id: f.id });
+    }
+    const body = init.body ? JSON.parse(init.body) : null;
 
     // ---------- Drive ----------
     if (p === '/drive/v3/files' && method === 'GET') {
@@ -62,6 +70,12 @@ function fakeGoogle(token) {
       return resp(200, { id, name: body.name, webViewLink: 'https://drive.google.com/' + id });
     }
     const fm = p.match(/^\/drive\/v3\/files\/([^/]+)$/);
+    if (fm && method === 'GET' && u.searchParams.get('alt') === 'media') {
+      const f = files.get(decodeURIComponent(fm[1]));
+      if (!f || !f.bytes) return err(404, 'File not found');
+      if (f.trashed) return err(404, 'File not found');
+      return new Response(f.bytes, { status: 200, headers: { 'content-type': f.contentType || 'application/octet-stream' } });
+    }
     if (fm && method === 'PATCH') {
       const f = files.get(fm[1]); if (!f) return err(404, 'File not found');
       Object.assign(f, body); if (body.name && books.get(f.id)) books.get(f.id).title = body.name; touch(f.id);

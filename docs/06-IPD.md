@@ -67,8 +67,8 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 3.4 Pengaktifan automatik kod SST bila `sst_berdaftar` = YA; `sst_no` wajib.
 
 ### Fasa 4 – Gambar (F-04)
-- [ ] 4.1 `images.js`: ubah saiz ≤ 800px, buang latar putih (ambang boleh laras), simpan PNG ke `_Tetapan`, ganti dan padam fail lama.
-- [ ] 4.2 S-09: seret/nudge/slider/reset; DO signatory berasingan; kedudukan sama dalam pratonton dan PDF.
+- [x] 4.1 `images.js`: ubah saiz ≤ 800px, buang latar putih (toleransi boleh laras, potong ke kandungan), simpan PNG ke `_Tetapan`, ganti dan buang fail lama ke tong sampah Drive hanya selepas rujukan baharu disimpan.
+- [x] 4.2 S-09: seret/nudge/slider/reset; DO signatory berasingan; kedudukan sama dalam pratonton dan PDF.
 
 ### Fasa 5 – Enjin dokumen (F-05, F-07 – F-09, F-13, F-14)
 - [ ] 5.1 `calc.js` (tulen): `lineAmount`, `taxSummary`, `totals`, pusingan ikut BSD §3A; `words.js` (English). Ujian: tiada cukai, SST 6%, SST 8%, campuran, diskaun, nilai sempadan (0.005), nilai besar.

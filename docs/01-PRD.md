@@ -119,4 +119,5 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
 | 03/11/2026 | Dokumen dipindah ke repo `annurpro-docs`; pembinaan Fasa 0 dan Fasa 1 dimulakan |
+| 03/11/2026 | Fasa 4: logo, cop, tandatangan dan tandatangan DO disimpan sebagai PNG dalam `_Tetapan`; kedudukan cop/tandatangan boleh disusun (seret, nudge, saiz, reset) |
 | 03/11/2026 | Nama folder & Sheet ikut nama syarikat pengguna: `[Nama Syarikat] – Annur Invoice` (pilihan A). Folder dicipta selepas nama syarikat diisi dalam wizard, bukan sejurus log masuk |
