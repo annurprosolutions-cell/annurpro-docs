@@ -121,8 +121,8 @@
       let body = '';
       if (key === 'syarikat') {
         body = `<p class="muted">Maklumat ini dipaparkan pada setiap Invois, Quotation dan DO.</p>
-          ${field('nama', 'Nama syarikat', { required: true, max: 120, placeholder: 'cth AZN POWER SOLUTION' })}
-          ${field('ssm', 'No. pendaftaran (SSM)', { upper: true, placeholder: 'cth LA0050194-P' })}
+          ${field('nama', 'Nama syarikat', { required: true, max: 120, placeholder: 'cth AnnurPro Solutions' })}
+          ${field('ssm', 'No. pendaftaran (SSM)', { upper: true, placeholder: 'cth 202401012345 (1234567-A)' })}
           ${field('alamat', 'Alamat', { rows: 3, hint: 'Satu baris = satu baris pada dokumen.' })}
           <div class="grid2">${field('tel', 'No. telefon', { type: 'tel', inputmode: 'tel' })}${field('emel', 'E-mel', { type: 'email', inputmode: 'email' })}</div>
           <div class="folder-note">${ctx.icon('folder')}<div><small class="muted">Folder dan Google Sheet akan dicipta dalam Drive anda:</small><b data-live="folder">${esc(str(v._folder) || AI.workspaceName(v.nama))}</b>
@@ -131,7 +131,7 @@
         if (!str(f().kod_syarikat)) f().kod_syarikat = AI.suggestCode(v.nama);
         const d = AI.derivePrefixes(f().kod_syarikat);
         body = `<p class="muted">Nombor dokumen dikeluarkan secara berturutan setiap bulan, contohnya <b data-live="no-invoice">${esc(AI.sampleNumber(AI.prefixFor(Object.assign({}, v, f()), 'invoice'), today()))}</b>.</p>
-          ${field('kod_syarikat', 'Kod syarikat', { required: true, upper: true, max: 6, placeholder: 'cth AZN', hint: '2 hingga 6 huruf atau nombor. Asas kepada prefix nombor dokumen.' })}
+          ${field('kod_syarikat', 'Kod syarikat', { required: true, upper: true, max: 6, placeholder: 'cth APS', hint: '2 hingga 6 huruf atau nombor. Asas kepada prefix nombor dokumen.' })}
           <div class="prefix-grid">
             ${[['invoice', 'prefix_invois', 'Invois'], ['quotation', 'prefix_quotation', 'Quotation'], ['do', 'prefix_do', 'Delivery Order']].map(([t, k, l]) => `<div class="pcard">
               ${field(k, 'Prefix ' + l, { upper: true, max: 12, placeholder: d[t] })}<span data-live="ph-${k}" hidden></span>
@@ -139,13 +139,13 @@
           </div><p class="fine">Biarkan prefix kosong untuk guna kod syarikat. Prefix boleh diubah kemudian dalam Tetapan.</p>`;
       } else if (key === 'penandatangan') {
         body = `<p class="muted">Nama dan jawatan di bawah ruang tandatangan.</p>
-          ${field('tt_nama', 'Nama penandatangan', { placeholder: 'cth SITI FATIMAH BINTI JAMAL' })}
-          ${field('tt_jawatan', 'Jawatan', { placeholder: 'cth MANAGING DIRECTOR' })}
+          ${field('tt_nama', 'Nama penandatangan', { placeholder: 'cth Ahmad bin Abdullah' })}
+          ${field('tt_jawatan', 'Jawatan', { placeholder: 'cth Director' })}
           <p class="note info">Gambar logo, cop dan tandatangan boleh dimuat naik dalam Tetapan selepas persediaan.</p>`;
       } else if (key === 'bank') {
         body = `<p class="muted">Dipaparkan pada invois supaya pelanggan tahu ke mana untuk bayar.</p>
           ${field('bank_nama', 'Nama bank', { upper: true, list: 'bankList', placeholder: 'cth MAYBANK' })}${banks()}
-          ${field('bank_akaun', 'No. akaun', { inputmode: 'numeric', placeholder: 'cth 557102161049' })}
+          ${field('bank_akaun', 'No. akaun', { inputmode: 'numeric', placeholder: 'cth 5123 4567 8901' })}
           ${field('bank_pemegang', 'Nama pemegang akaun', { upper: true })}`;
       } else {
         const reg = str(v.sst_berdaftar).toUpperCase() === 'YA';

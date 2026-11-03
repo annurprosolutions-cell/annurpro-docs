@@ -71,11 +71,11 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 4.2 S-09: seret/nudge/slider/reset; DO signatory berasingan; kedudukan sama dalam pratonton dan PDF.
 
 ### Fasa 5 – Enjin dokumen (F-05, F-07 – F-09, F-13, F-14)
-- [ ] 5.1 `calc.js` (tulen): `lineAmount`, `taxSummary`, `totals`, pusingan ikut BSD §3A; `words.js` (English). Ujian: tiada cukai, SST 6%, SST 8%, campuran, diskaun, nilai sempadan (0.005), nilai besar.
-- [ ] 5.2 S-04 editor: segmented jenis, Bill To (combobox), medan ikut jenis (Quotation validity; DO Ship To/PO), jadual item kad/baris, kad jumlah.
-- [ ] 5.3 Templat HTML dokumen A4 (Invois, Quotation, DO) dengan Carlito, aksen pengguna, cop/tandatangan, berbilang halaman, nota, bank.
-- [ ] 5.4 Draf tempatan (IndexedDB), senarai draf dalam S-06.
-- [ ] 5.5 Simpan pelanggan baharu daripada borang.
+- [x] 5.1 `calc.js` (tulen): `lineAmount`, `taxSummary`, `totals`, pusingan ikut BSD §3A; `words.js` (English). Ujian: tiada cukai, SST 6%, SST 8%, campuran, diskaun, nilai sempadan (0.005), nilai besar.
+- [x] 5.2 S-04 editor: segmented jenis, Bill To (combobox), medan ikut jenis (Quotation validity; DO Ship To/PO), jadual item kad/baris, kad jumlah.
+- [x] 5.3 Templat HTML dokumen A4 (Invois, Quotation, DO) dengan Carlito, aksen pengguna, cop/tandatangan, berbilang halaman, nota, bank.
+- [x] 5.4 Draf tempatan (IndexedDB), senarai draf dalam S-06.
+- [x] 5.5 Simpan pelanggan baharu daripada borang.
 
 ### Fasa 6 – Terbit (F-06, F-11, F-17)
 - [ ] 6.1 Worker `POST /api/issue` ikut BSD §3B (idempoten ikut `doc_id`, atomik, regex prefix/tarikh); ujian: dua `issue` serentak, kredit tepat 5, baki 4 ditolak, ulang sama dapat nombor sama tanpa caj, langganan aktif tiada caj.

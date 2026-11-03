@@ -296,3 +296,61 @@ img.sitem.static { position: absolute; pointer-events: none; cursor: default; he
 .dh-logo.has { border: 0; background: none; }
 .dh-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .dh-sign .sbox.static { min-height: 40px; }
+
+/* ---------- S-04 editor dokumen ---------- */
+.editor .page-head { margin-bottom: 10px; }
+.doc-seg { margin-bottom: 12px; }
+.ed-tabs { display: inline-flex; margin: 0 0 12px 8px; }
+.ed-grid { display: grid; gap: 16px; }
+.ed-form { min-width: 0; }
+.ed-preview { min-width: 0; }
+.cust { position: relative; }
+.sugg { list-style: none; margin: -6px 0 10px; padding: 4px; border: 1px solid var(--line); border-radius: var(--r-sm); background: #fff; box-shadow: var(--shadow); }
+.sugg button { width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; min-height: 44px; }
+.sugg button:hover, .sugg button:focus-visible { background: var(--soft); }
+.sugg small { color: var(--mute); }
+[data-sugg] > .btn { margin: -4px 0 12px; }
+.items { display: grid; gap: 12px; margin-bottom: 12px; }
+.itcard { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px; background: var(--soft); }
+.itcard .inp { background: #fff; }
+.ithead { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ithead .amt { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.itbtns { display: flex; gap: 4px; }
+.ithead .amt + .itbtns { margin-left: 8px; }
+.ithead b + .itbtns { margin-left: auto; }
+.ib { width: 36px; height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 10px; display: grid; place-items: center; cursor: pointer; color: var(--ink); }
+.ib:disabled { opacity: .35; cursor: default; }
+.ib.danger { color: var(--red); }
+.ib .ic { width: 18px; height: 18px; }
+.itgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.itgrid .fld { margin-bottom: 8px; }
+.itgrid .span2 { grid-column: 1 / -1; }
+@media (min-width: 640px) { .itgrid { grid-template-columns: 90px 110px 1fr 1fr; } .itgrid.do { grid-template-columns: 120px 140px; } }
+.btn.dashed { border: 2px dashed #cbd5e1; background: transparent; color: var(--mute); }
+.btn.dashed:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--blue-soft); }
+.tcard { background: var(--navy); color: #fff; }
+.tc-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-variant-numeric: tabular-nums; color: #c9d2e3; }
+.tc-row.big { color: #fff; font-size: 22px; padding-top: 8px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, .15); }
+.tc-row.big span { font-size: 14px; align-self: center; }
+.tc-words { font-size: 11px; color: #c9d2e3; margin-top: 6px; letter-spacing: .02em; }
+.ed-acts { display: none; }
+.ed-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: rgba(255, 255, 255, .97); border-top: 1px solid var(--line); padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 8px; }
+.ed-bar > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ed-bar small { color: var(--mute); font-size: 11px; }
+.ed-bar b { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shell.v-editor .bottom { display: none; }
+.shell.v-editor .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.editor.tab-form .ed-preview { display: none; }
+.editor.tab-preview .ed-form { display: none; }
+.badge.grey { background: var(--soft); color: var(--mute); }
+.dopen { background: none; border: 0; text-align: left; padding: 0; cursor: pointer; display: flex; flex-direction: column; min-width: 0; flex: 1; color: var(--ink); min-height: 44px; justify-content: center; }
+.dopen small { display: block; }
+@media (min-width: 1024px) {
+  .ed-tabs { display: none; }
+  .editor.tab-form .ed-preview, .editor.tab-preview .ed-form { display: block; }
+  .ed-grid { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); align-items: start; }
+  .ed-preview { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; padding: 4px; }
+  .ed-bar { display: none; }
+  .ed-acts { display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 16px; padding: 12px; background: rgba(255, 255, 255, .96); border-radius: var(--r); box-shadow: var(--shadow); }
+  .shell.v-editor .content { padding-bottom: 28px; max-width: 1500px; }
+}

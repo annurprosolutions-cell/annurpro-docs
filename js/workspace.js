@@ -22,7 +22,7 @@
     return data;
   };
 
-  // Nama folder & Sheet ikut nama syarikat pengguna (pilihan A): "AZN POWER SOLUTION – Annur Invoice"
+  // Nama folder & Sheet ikut nama syarikat pengguna (pilihan A): "AnnurPro Solutions – Annur Invoice"
   AI.cleanName = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 60).trim();
   AI.workspaceName = (company) => { const n = AI.cleanName(company); return n ? n + ' – ' + AI.ROOT_FOLDER : AI.ROOT_FOLDER; };
 

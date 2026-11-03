@@ -171,6 +171,26 @@ try {
       await shot('s09-telefon', true);
       page.once('dialog', (d) => d.accept());
       await page.getByRole('button', { name: 'Tetapan' }).first().click();
+
+      // S-04 pada telefon (SST 8% aktif): tab Borang/Pratonton, bar jumlah, tiada skrol mendatar
+      await page.locator('.bottom').getByRole('button', { name: 'Dokumen baharu' }).click();
+      await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
+      assert.equal(await page.locator('.bottom').isVisible(), false, 'nav bawah disembunyikan dalam editor');
+      await page.getByLabel('Nama (Bill To)').fill('Contoh Trading Sdn Bhd');
+      await page.locator('[name="it:0:desc"]').fill('Consulting');
+      await page.locator('[name="it:0:price"]').fill('100');
+      assert.equal(await page.locator('[name="it:0:tax_code"]').inputValue(), 'SST-PERKHIDMATAN-8');
+      await until(async () => (await page.locator('[data-total-short]').innerText()) === 'RM108.00', 3000, 'SST 8% dalam bar');
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar editor telefon');
+      await shot('s04-telefon-borang', false);
+      await page.getByRole('tab', { name: 'Pratonton' }).click();
+      await page.locator('.pv-page').first().waitFor();
+      assert.match(await page.locator('[data-pv]').innerText(), /Cukai Perkhidmatan 8%/);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar pratonton telefon');
+      await shot('s04-telefon-pratonton', false);
+      await page.getByRole('button', { name: 'Utama' }).first().click();
+      await page.locator('.bottom').getByRole('button', { name: 'Tetapan' }).click();
+
     } else {
       // ---------- peranti kedua: jumpa ruang kerja, persediaan lengkap → terus Utama ----------
       await page.locator('.lic .big').waitFor({ timeout: 8000 });
@@ -320,6 +340,86 @@ try {
       await page.locator('.dh-logo img').waitFor({ timeout: 5000 });
       await shot('s08-logo', true);
       await page.getByRole('button', { name: 'Tetapan' }).first().click();
+
+      // ---------- S-04 Editor dokumen (desktop, tanpa SST) ----------
+      const pv = () => page.locator('[data-pv]').innerText();
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
+      await page.locator('[data-pv] .a4').first().waitFor();
+      assert.match(await pv(), /INVOICE/); assert.match(await pv(), /AZN\/\d{4}-XXX/); assert.match(await pv(), /DRAF/);
+      assert.match(await pv(), /AZN Power Solution Sdn Bhd/);
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByText('Nama pelanggan (Bill To) wajib diisi.').first().waitFor();
+      await page.getByLabel('Nama (Bill To)').fill('Contoh Trading Sdn Bhd');
+      await page.getByLabel('Alamat', { exact: true }).fill('Lot 5, Jalan Industri\n40000 Shah Alam');
+      await page.locator('[name="it:0:desc"]').fill('Website maintenance');
+      await page.locator('[name="it:0:qty"]').fill('2');
+      await page.locator('[name="it:0:price"]').fill('150');
+      await until(async () => /RM300\.00/.test(await page.locator('[data-totals]').innerText()), 3000, 'jumlah 300');
+      assert.match(await page.locator('[data-totals]').innerText(), /RINGGIT MALAYSIA THREE HUNDRED ONLY/);
+      assert.match(await pv(), /300\.00/); assert.doesNotMatch(await pv(), /Disc \(RM\)/);
+      await page.getByRole('button', { name: 'Tambah item' }).click();
+      await page.locator('[name="it:1:desc"]').fill('Hosting');
+      await page.locator('[name="it:1:price"]').fill('99.90');
+      await page.locator('[name="it:1:disc"]').fill('9.90');
+      await until(async () => /RM390\.00/.test(await page.locator('[data-totals]').innerText()), 3000, 'jumlah 390');
+      assert.match(await pv(), /Disc \(RM\)/);
+
+      // simpan pelanggan baharu ke Sheet
+      await page.getByRole('button', { name: 'Simpan ke senarai pelanggan' }).click();
+      await until(() => (G.tab(sid, 'Pelanggan') || []).slice(1).some((r) => r.includes('Contoh Trading Sdn Bhd')), 6000, 'pelanggan disimpan');
+
+      // susun semula item
+      await page.getByRole('button', { name: 'Turunkan item 1' }).click();
+      assert.equal(await page.locator('[name="it:0:desc"]').inputValue(), 'Hosting');
+      assert.ok((await pv()).indexOf('Hosting') < (await pv()).indexOf('Website maintenance'));
+
+      // tukar jenis: Quotation, DO, kembali Invois (data kekal)
+      await page.locator('.doc-seg').getByRole('button', { name: 'Quotation' }).click();
+      await page.getByLabel('Tempoh sah (validity)').waitFor();
+      assert.match(await pv(), /QUOTATION/); assert.match(await pv(), /Validity/);
+      await page.locator('.doc-seg').getByRole('button', { name: 'Delivery Order' }).click();
+      await until(async () => /DELIVERY ORDER/.test(await pv()), 3000, 'DO');
+      assert.doesNotMatch(await pv(), /Price \(RM\)/); assert.match(await pv(), /Received By/i); assert.match(await pv(), /Total quantity: 3/);
+      await page.getByLabel('Sama dengan Bill To').uncheck();
+      await page.getByLabel('Alamat hantar').fill('Tapak Projek, Jalan 2');
+      await until(async () => /Deliver To[\s\S]*Tapak Projek/i.test(await pv()), 3000, 'ship to');
+      await shot('s04-do', false);
+      await page.locator('.doc-seg').getByRole('button', { name: 'Invois' }).click();
+      await until(async () => /RM390\.00/.test(await page.locator('[data-totals]').innerText()), 3000, 'jumlah kekal');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.locator('#toast.show', { hasText: 'Dokumen lengkap' }).waitFor();
+      await shot('s04-invois', false);
+
+      // berbilang halaman A4
+      await page.evaluate(() => { const d = window.AI.app.UI.ed.d; for (let i = 0; i < 45; i++) d.items.push({ desc: 'Komponen ' + (i + 1), qty: '1', unit: 'PCS', price: '10', disc: '', tax_code: 'TIADA' }); window.AI.app.render(); });
+      assert.ok((await page.locator('[data-pv] .a4').count()) >= 2, 'berbilang halaman');
+      assert.match(await pv(), /\(continued\)/);
+      await page.evaluate(() => { window.AI.app.UI.ed.d.items.splice(2); window.AI.app.render(); });
+
+      // draf: simpan, Rekod, buka semula, padam
+      await page.locator('.ed-acts').getByRole('button', { name: 'Simpan draf' }).click();
+      await page.locator('#toast.show', { hasText: 'Draf disimpan di peranti ini.' }).waitFor();
+      await page.getByRole('button', { name: 'Utama' }).first().click();
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await page.getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).waitFor();
+      assert.match(await page.locator('.dlist').innerText(), /RM390\.00/);
+      await page.getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).click();
+      await page.getByRole('heading', { name: 'Invois (draf)' }).waitFor();
+      assert.equal(await page.locator('[name="it:1:desc"]').inputValue(), 'Website maintenance');
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      page.once('dialog', (dg) => dg.accept());
+      await page.getByRole('button', { name: 'Padam draf' }).click();
+      await page.getByText('Tiada draf.').waitFor();
+
+      // cadangan pelanggan dalam invois baharu
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.getByLabel('Nama (Bill To)').fill('contoh');
+      await page.locator('.sugg').getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).click();
+      assert.match(await page.getByLabel('Alamat', { exact: true }).inputValue(), /Shah Alam/);
+      assert.equal(await page.locator('.sugg').count(), 0);
+      await page.getByRole('button', { name: 'Utama' }).first().click();
+      await navBar().getByRole('button', { name: 'Tetapan' }).click();
     }
 
     await page.getByRole('button', { name: 'Log keluar' }).click();

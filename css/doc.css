@@ -1,0 +1,68 @@
+/* Templat dokumen A4 (794 × 1123 px) — dikongsi pratonton dan PDF. Lihat js/template.js. */
+@font-face { font-family: "Carlito"; src: url("../fonts/carlito-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Carlito"; src: url("../fonts/carlito-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+.a4 { --acc: #0f172a; position: relative; width: 794px; height: 1123px; background: #fff; color: #111827; overflow: hidden;
+  font-family: "Carlito", Calibri, "Segoe UI", Arial, sans-serif; font-size: 11.5px; line-height: 15px; }
+.dv-page { position: absolute; inset: 0; padding: 40px 44px 36px; display: flex; flex-direction: column; }
+.dv-lbl { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+
+.dv-head { display: flex; gap: 16px; align-items: flex-start; }
+.dv-logo { width: 96px; height: 72px; flex: none; display: flex; align-items: flex-start; }
+.dv-logo:empty { display: none; }
+.dv-logo img { max-width: 96px; max-height: 72px; object-fit: contain; }
+.dv-co { flex: 1; min-width: 0; }
+.dv-coname { font-size: 17px; line-height: 21px; font-weight: 700; margin-bottom: 2px; }
+.dv-coname span { font-size: 11px; font-weight: 400; color: #4b5563; }
+.dv-titlebar { margin: 14px 0 12px; border-bottom: 2px solid var(--acc); padding-bottom: 6px; }
+.dv-titlebar h1 { margin: 0; font-size: 24px; line-height: 28px; letter-spacing: .08em; color: var(--acc); text-align: right; }
+
+.dv-meta { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 14px; }
+.dv-party { flex: 1; min-width: 0; }
+.dv-pname { font-weight: 700; font-size: 12.5px; }
+.dv-mt { border-collapse: collapse; min-width: 230px; }
+.dv-mt th { text-align: left; font-weight: 700; padding: 1px 10px 1px 0; color: #374151; white-space: nowrap; vertical-align: top; }
+.dv-mt td { padding: 1px 0; }
+.dv-cont { display: flex; justify-content: space-between; border-bottom: 2px solid var(--acc); padding-bottom: 6px; margin-bottom: 12px; font-size: 12px; }
+
+.dv-items { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.dv-items th { background: var(--acc); color: #fff; font-weight: 700; padding: 6px 6px; text-align: left; font-size: 11px; }
+.dv-items td { padding: 5px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; word-wrap: break-word; }
+.dv-items .c-no { width: 32px; text-align: center; }
+.dv-items .c-qty { width: 54px; text-align: right; }
+.dv-items .c-unit { width: 52px; }
+.dv-items .c-num { width: 84px; text-align: right; }
+.dv-items .c-tax { width: 44px; text-align: center; }
+.dv-items th.c-num, .dv-items th.c-qty { text-align: right; }
+.dv-empty { text-align: center; color: #9ca3af; padding: 18px !important; }
+
+.dv-foot { margin-top: 10px; }
+.dv-totals { display: flex; justify-content: flex-end; }
+.dv-totals table { border-collapse: collapse; min-width: 290px; }
+.dv-totals th { text-align: left; font-weight: 400; padding: 3px 12px 3px 0; }
+.dv-totals th small { color: #6b7280; }
+.dv-totals td { text-align: right; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.dv-grand th, .dv-grand td { font-weight: 700; font-size: 13px; border-top: 2px solid var(--acc); border-bottom: 2px solid var(--acc); padding: 6px 0; }
+.dv-grand th { padding-right: 12px; }
+.dv-words { margin-top: 8px; padding: 6px 10px; background: #f3f4f6; font-weight: 700; font-size: 10.5px; }
+.dv-qty { text-align: right; font-size: 12px; padding: 6px 0; border-top: 2px solid var(--acc); }
+.dv-fgrid { display: flex; gap: 24px; margin-top: 12px; }
+.dv-notes { flex: 1.4; } .dv-bank { flex: 1; }
+.dv-notes ol { margin: 0; padding-left: 16px; }
+.dv-signs { display: flex; gap: 40px; margin-top: 16px; }
+.dv-signer { width: 240px; }
+.dv-sarea { position: relative; height: 112px; }
+.dv-sarea .sbox.static { position: absolute; left: 0; bottom: 0; width: 208px; max-width: none; border: 0; margin: 0; aspect-ratio: 260 / 140; }
+.dv-sarea .sitem.static { position: absolute; }
+.dv-sline { border-top: 1px solid #6b7280; margin-bottom: 3px; }
+.dv-sname { font-weight: 700; }
+.dv-signer .dv-lbl { margin-top: 4px; }
+
+.dv-pf { margin-top: auto; display: flex; justify-content: space-between; font-size: 9.5px; color: #9ca3af; padding-top: 8px; }
+.dv-draft { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-28deg); font-size: 150px; line-height: 1; font-weight: 700;
+  font-family: "Carlito", Arial, sans-serif; color: rgba(198, 40, 40, .08); letter-spacing: .1em; pointer-events: none; user-select: none; }
+
+/* pratonton berskala dalam app */
+.pv { display: grid; gap: 14px; justify-items: center; }
+.pv-page { width: calc(794px * var(--k, .5)); height: calc(1123px * var(--k, .5)); position: relative; box-shadow: 0 2px 12px rgba(15, 23, 42, .12); border-radius: 4px; overflow: hidden; background: #fff; }
+.pv-page > .a4 { transform: scale(var(--k, .5)); transform-origin: 0 0; position: absolute; left: 0; top: 0; }

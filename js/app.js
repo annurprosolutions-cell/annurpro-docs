@@ -39,6 +39,7 @@
     building: '<path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/>',
     hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
     image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+    trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>',
     out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
   };
   const icon = (n, cls) => `<svg class="ic ${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n] || ''}</svg>`;
@@ -161,11 +162,12 @@
     async resolveOverwrite() { UI.modal = ''; render(); try { await store.resolveConflict('overwrite'); toast('Perubahan anda disimpan.'); } catch (e) { /* status dipaparkan */ } },
     go(el) {
       if (UI.dirty && !root.confirm('Perubahan belum disimpan. Keluar juga?')) return;
+      if (UI.view === 'editor') { E.saveNow(true); UI.ed = null; }
       UI.dirty = false; UI.view = el.dataset.v; render(); root.scrollTo(0, 0);
+      if (UI.view === 'rekod') E.loadDrafts();
     },
     resumeSetup() { S.startWizard(); render(); },
     async recheck() { toast('Menyemak lesen...'); await runCheck(); },
-    newDoc(el) { UI.view = 'editor'; UI.newType = el.dataset.t || 'invoice'; render(); },
     buy(el) {
       const u = (UI.lic && UI.lic.buyUrls && UI.lic.buyUrls[el.dataset.k || 'sub']) || '';
       if (u) root.open(u, '_blank', 'noopener'); else toast('Pautan pembayaran belum disediakan. Hubungi sokongan.', true);
@@ -311,18 +313,19 @@
     if (UI.view === 'setup') { app.innerHTML = `${UI.sync.state === 'idle' ? '' : `<div class="topbar fixed">${syncPill()}</div>`}${S.views.setup()}${modal()}`; return; }
     let main;
     if (UI.view === 'home') main = viewHome();
-    else if (UI.view === 'rekod') main = soon('Rekod', 'Fasa 7', 'Senarai Invois, Quotation dan DO akan dipaparkan di sini.');
+    else if (UI.view === 'rekod') main = E.views.rekod();
     else if (UI.view === 'pelanggan') main = soon('Pelanggan', 'Fasa 7', 'Simpan pelanggan untuk isi Bill To dengan satu klik.');
     else if (UI.view === 'profil') main = S.views.profil();
     else if (UI.view === 'docset') main = S.views.docset();
     else if (UI.view === 'imej') main = I.views.imej();
-    else if (UI.view === 'editor') main = soon(({ invoice: 'Invois', quotation: 'Quotation', do: 'Delivery Order' })[UI.newType] + ' baharu', 'Fasa 5', 'Editor dokumen dengan pratonton langsung.');
+    else if (UI.view === 'editor' && UI.ed) main = E.views.editor();
     else main = viewSettings();
-    app.innerHTML = `<div class="shell">
+    app.innerHTML = `<div class="shell v-${UI.view}">
       <aside class="side"><div class="brand sm"><img src="brand/annurpro-icon-64.png" alt="" width="28" height="28"><b>${esc(CFG.appName)}</b></div>${nav()}</aside>
       <div class="content"><div class="topbar">${syncPill()}</div>${UI.online ? '' : '<div class="offline">Luar talian: draf boleh dicipta, terbit dokumen perlukan internet.</div>'}<main>${main}</main></div>
       <div class="bottom">${nav()}</div>
     </div>${modal()}`;
+    if (UI.view === 'editor') E.fitPreview();
   }
 
   let toastT;
@@ -336,14 +339,23 @@
   const I = AI.ImagesUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), header: () => S.docHeader(Object.assign({}, UI.data && UI.data.syarikat, UI.form)) });
   const S = AI.SettingsUI({ UI, esc, icon, toast, render, store: () => store, createWorkspace, renameWorkspace, saveBusinessName, email: () => auth.lastEmail(),
     imgOf: I.imgOf, signStatic: I.signStatic });
-  Object.assign(actions, S.actions, I.actions);
+  const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, email: () => auth.lastEmail(), imgOf: I.imgOf });
+  const newDoc = E.actions.newDoc;
+  E.actions.newDoc = (el) => {
+    if (!(UI.ws && UI.ws.ready && UI.data)) { toast('Ruang kerja Google belum sedia. Tunggu pill "Tersimpan" atau tekan Sambung semula.', true); return; }
+    if (UI.view === 'editor') E.saveNow(true);
+    newDoc(el);
+  };
+  Object.assign(actions, S.actions, I.actions, E.actions);
 
   // ---------- mula ----------
   function boot() {
     I.bind(document);
-    document.addEventListener('input', (e) => { if (!I.onInput(e.target)) S.onInput(e.target); });
+    document.addEventListener('input', (e) => { if (!I.onInput(e.target) && !E.onInput(e.target)) S.onInput(e.target); });
+    root.addEventListener('resize', () => { if (UI.view === 'editor') E.fitPreview(); });
     document.addEventListener('change', (e) => {
       if (I.onChange(e.target)) return;
+      if (e.target.closest && e.target.closest('[data-form="editor"]')) { if (e.target.type === 'checkbox') E.onInput(e.target); return; }
       if (e.target.type === 'checkbox' || e.target.type === 'radio' || e.target.tagName === 'SELECT') S.onInput(e.target);
     });
     root.addEventListener('beforeunload', (e) => { if (UI.dirty) { e.preventDefault(); e.returnValue = ''; } });

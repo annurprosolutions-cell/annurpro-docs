@@ -57,7 +57,7 @@
     const has = (k) => !keys || keys.includes(k);
     const val = (k) => str(v[k]);
     if (has('nama')) { if (!val('nama')) e.nama = 'Nama syarikat wajib diisi.'; else if (val('nama').length > 120) e.nama = 'Maksimum 120 aksara.'; }
-    if (has('kod_syarikat') && !/^[A-Z0-9]{2,6}$/.test(val('kod_syarikat').toUpperCase())) e.kod_syarikat = 'Kod 2 hingga 6 huruf atau nombor, tanpa ruang (cth AZN).';
+    if (has('kod_syarikat') && !/^[A-Z0-9]{2,6}$/.test(val('kod_syarikat').toUpperCase())) e.kod_syarikat = 'Kod 2 hingga 6 huruf atau nombor, tanpa ruang (cth APS).';
     ['prefix_invois', 'prefix_quotation', 'prefix_do'].forEach((k) => {
       if (has(k) && val(k) && !PREFIX.test(val(k).toUpperCase())) e[k] = 'Huruf, nombor dan tanda sempang sahaja (maks 12).';
     });
