@@ -27,7 +27,7 @@ Hubungan merentas stor hanya melalui `doc_id` (UUID) dan `no_dokumen`.
 
 ## 3. Jadual / Sheet
 
-### 3A. Sheet pengguna (nama fail: `Annur Invoice – [Nama Syarikat]`)
+### 3A. Sheet pengguna (nama fail: `[Nama Syarikat] – Annur Invoice`)
 Penanda carian: fail dicipta dengan `appProperties { annurInvoice: "master" }` supaya boleh dijumpai semula pada peranti lain (jangan cari ikut tajuk). Baris 1 = tajuk lajur; lajur bertanda "(rujukan)" untuk dibaca manusia dan **diabaikan** semasa memuat.
 
 #### `Meta` (Feature: F-01, F-14)
@@ -277,7 +277,7 @@ R-04 tidak mempunyai sebarang akses D1 atau Sheet. R-02 hanya dikuatkuasakan di 
 - **Gambar tetapan** dimuat ke browser melalui Drive API dengan token dan di-cache di IndexedDB; pada Worker ia tidak pernah lalu.
 
 ## 6. Setup Function (Sheet) — `ensureWorkspace()`
-Tiada Apps Script. Fungsi JS dalam app yang dijalankan automatik selepas log masuk pertama (S-01) dan selamat dijalankan berulang (**idempotent**: tidak menimpa nilai sedia ada, tidak memadam data).
+Tiada Apps Script. Selepas log masuk, app hanya **mencari** ruang kerja sedia ada (`findWorkspace()`, tidak mencipta). Jika tiada, wizard S-02 meminta nama syarikat dahulu, kemudian `ensureWorkspace()` mencipta folder dan Sheet bernama `[Nama Syarikat] – Annur Invoice` (pengguna boleh ubah nama sebelum dicipta). Fungsi ini selamat dijalankan berulang (**idempotent**: tidak menimpa nilai sedia ada, tidak memadam data, tidak menukar nama fail sedia ada). Nama boleh ditukar kemudian melalui Tetapan → Profil (atas persetujuan pengguna) atau terus dalam Drive; app mencari fail ikut `appProperties`, bukan nama.
 1. Cari fail induk: `Drive files.list` dengan `q = appProperties has { key='annurInvoice' and value='master' } and trashed = false`. Jika ada lebih satu, pilih yang terkini dan amaran pada S-17.
 2. Jika tiada: `spreadsheets.create` dengan tab `Meta, Syarikat, KodCukai, Pelanggan, Dokumen, Item`, kemudian `files.update` tetapkan `appProperties`.
 3. Cari/cipta folder `Annur Invoice` dan subfolder `Invois`, `Quotation`, `Delivery Order`, `_Tetapan` (cari ikut nama dalam folder induk, cipta jika tiada); simpan id dalam `Meta`.

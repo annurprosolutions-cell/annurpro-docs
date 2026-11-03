@@ -29,8 +29,8 @@ Pengguna baru masuk daripada halaman jualan atau demo, log masuk dengan Google, 
 ### Journey A: Pengguna baru hingga dokumen pertama (R-01)
 1. Buka halaman jualan S-15, cuba demo, tekan "Cuba percuma".
 2. S-01: tekan **Sambung Google**, benarkan scope. Worker `/api/check` cipta akaun dan beri 50 kredit (sekali). Jika gagal: paparan "Tidak dapat semak lesen, cuba lagi".
-3. Sistem cipta Sheet dan folder Drive (F-01). Redirect ke S-02.
-4. S-02 wizard 5 langkah: (1) nama syarikat, no. SSM, alamat, telefon, emel; (2) kod syarikat 2–6 huruf (cth `AZN`), sistem cadang prefix `AZN`, `AZN-Q`, `AZN-DO`; (3) logo, cop, tandatangan (boleh langkau dan isi kemudian); (4) bank; (5) berdaftar SST? Ya/Tidak. Pratonton dokumen contoh sentiasa kelihatan.
+3. Sistem cari ruang kerja sedia ada. Jika tiada, redirect ke S-02 (belum ada fail dicipta).
+4. S-02 wizard 5 langkah: (1) nama syarikat, no. SSM, alamat, telefon, emel; bila tekan Seterusnya, folder dan Sheet `[Nama Syarikat] – Annur Invoice` dicipta dalam Drive pengguna (F-01); (2) kod syarikat 2–6 huruf (dicadang daripada nama, cth `AZN`), prefix `AZN`, `AZN-Q`, `AZN-DO`; (3) penandatangan (gambar logo, cop, tandatangan dalam Tetapan, F-04); (4) bank; (5) berdaftar SST? Ya/Tidak + kod cukai. Langkah 3–4 boleh dilangkau. Pratonton kepala dokumen sentiasa kelihatan.
 5. Tekan **Siap** → S-03 dengan banner "50 kredit percuma = 10 dokumen".
 6. Tekan **Invois Baharu** → S-04 → isi → **Terbit** → S-05 → buka PDF.
 

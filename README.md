@@ -11,7 +11,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 0 | Struktur repo, `wrangler.jsonc`, `schema.sql`, Worker `/api/ping`, ujian, CI | Siap (perlu langkah pemilik di bawah) |
 | 1 | Log masuk Google, `/api/check` (akaun + 50 kredit percubaan sekali), kad lesen, notis, cache 7 hari, shell app + navigasi | Siap |
 | 2 | Ruang kerja Sheet/Drive (`ensureWorkspace`), lapisan storan (queue, debounce, cuba semula, konflik), pill status, dialog S-17, IndexedDB (cache, draf, tulisan tertangguh) | Siap |
-| 3 | Persediaan & Tetapan (wizard, profil, penomboran, kod cukai) | Seterusnya |
+| 3 | Wizard persediaan 5 langkah (folder & Sheet ikut nama syarikat), Profil Syarikat, Dokumen/Penomboran/Cukai, tukar nama folder atas persetujuan | Siap |
+| 4 | Logo, cop & tandatangan (muat naik, buang latar putih, seret/nudge/saiz) | Seterusnya |
 
 ## Struktur
 
@@ -26,6 +27,8 @@ js/google.js           klien Sheets v4 + Drive v3 (backoff 429/5xx)
 js/workspace.js        ensureWorkspace(): cipta/jumpa Sheet + folder (idempotent)
 js/store.js            Store: baca ikut nama lajur, tulis berbaris, konflik
 js/idb.js              IndexedDB: cache, draf, tulisan tertangguh
+js/settings.js         validasi tetapan, prefix, contoh nombor, kod cukai (tulen)
+js/ui-settings.js      skrin S-02 wizard, S-08 Profil, S-10 Dokumen & Cukai
 js/app.js              UI: render() + data-act
 worker/index.mjs       API: /api/ping, /api/check
 schema.sql             jadual D1 (docs/05-BSD.md §3B)
@@ -64,7 +67,7 @@ Jangan tampal sebarang rahsia (token, kunci) dalam chat. Letakkan terus dalam da
 6. Buka `https://<worker>/api/ping`. Jawapan `{"ok":true,...,"db":true}` bermaksud Worker dan D1 bersambung.
 
 **C. Uji log masuk**
-Buka alamat Worker → **Sambung Google** → pilih akaun test → skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan** di atas. Dalam Google Drive akan muncul folder **Annur Invoice** (subfolder Invois, Quotation, Delivery Order, _Tetapan) dan Sheet **Annur Invoice** dengan tab Dokumen, Pelanggan, Syarikat, KodCukai, Item, Meta.
+Buka alamat Worker → **Sambung Google** → pilih akaun test → skrin Utama menunjukkan **50 kredit (10 dokumen)** Akaun baharu masuk ke wizard persediaan. Selepas langkah 1 (nama syarikat), Google Drive akan ada folder **[Nama Syarikat] – Annur Invoice** (subfolder Invois, Quotation, Delivery Order, _Tetapan) dan Sheet dengan nama sama, bertab Dokumen, Pelanggan, Syarikat, KodCukai, Item, Meta. Habis wizard, skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan**.
 
 ## Rilis
 

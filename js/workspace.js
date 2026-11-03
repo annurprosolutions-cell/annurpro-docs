@@ -22,6 +22,29 @@
     return data;
   };
 
+  // Nama folder & Sheet ikut nama syarikat pengguna (pilihan A): "AZN POWER SOLUTION – Annur Invoice"
+  AI.cleanName = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 60).trim();
+  AI.workspaceName = (company) => { const n = AI.cleanName(company); return n ? n + ' – ' + AI.ROOT_FOLDER : AI.ROOT_FOLDER; };
+
+  // Cari ruang kerja sedia ada TANPA mencipta apa-apa. Pulang { id, rootId, duplicates } atau null.
+  AI.findWorkspace = async (api, opts) => {
+    opts = opts || {};
+    if (opts.cachedId) {
+      try { const info = await api.info(opts.cachedId); return { id: info.id, duplicates: 0 }; }
+      catch (e) { if (![403, 404].includes(e.status)) throw e; }
+    }
+    const found = await api.findByMark('master', AI.MIME_SHEET);
+    return found.length ? { id: found[0].id, duplicates: found.length - 1 } : null;
+  };
+
+  // Tukar nama folder induk dan Sheet (bila nama syarikat diubah dalam Tetapan, atas persetujuan pengguna)
+  AI.renameWorkspace = async (api, ws, company) => {
+    const name = AI.workspaceName(company);
+    await api.updateFile(ws.id, { name });
+    if (ws.folders && ws.folders.root) await api.updateFile(ws.folders.root, { name });
+    return name;
+  };
+
   function formatRequests(sheetId, tab, head) {
     const reqs = [
       { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
@@ -46,17 +69,19 @@
   /**
    * Cipta atau jumpa semula ruang kerja pengguna (docs/05-BSD.md §6). Idempotent: tidak menimpa nilai
    * sedia ada dan tidak memadam data.
-   * opts: { cachedId, title, email, writer, now }
+   * opts: { cachedId, company, title, folderName, email, writer, now }
+   *   company → nama folder & Sheet "<company> – Annur Invoice" (hanya semasa dicipta; tidak menukar nama sedia ada)
    * Pulang { id, url, title, folders, created, addedTabs, migrated, duplicates }
    */
   AI.ensureWorkspace = async (api, opts) => {
     opts = opts || {};
     const nowIso = new Date(opts.now != null ? opts.now : Date.now()).toISOString();
     const out = { created: false, addedTabs: [], migrated: [], duplicates: 0, folders: {} };
+    const wsName = opts.folderName ? AI.cleanName(opts.folderName, 100) : AI.workspaceName(opts.company);
 
     // 1) folder induk (ditanda appProperties supaya tidak tersalah jumpa folder lain bernama sama)
     let rootFolder = (await api.findByMark('root', AI.MIME_FOLDER))[0];
-    if (!rootFolder) rootFolder = await api.createFolder(AI.ROOT_FOLDER, null, 'root');
+    if (!rootFolder) rootFolder = await api.createFolder(wsName, null, 'root');
     out.folders.root = rootFolder.id;
 
     // 2) Sheet induk: id cache → cari ikut tanda → cipta
@@ -70,7 +95,7 @@
       if (found.length) info = await api.info(found[0].id);
     }
     if (!info) {
-      const f = await api.createFile({ name: opts.title || AI.ROOT_FOLDER, mimeType: AI.MIME_SHEET, parents: [rootFolder.id], appProperties: { [AI.APP_MARK]: 'master' } });
+      const f = await api.createFile({ name: opts.title || wsName, mimeType: AI.MIME_SHEET, parents: [rootFolder.id], appProperties: { [AI.APP_MARK]: 'master' } });
       info = await api.info(f.id);
       out.created = true;
     }

@@ -61,10 +61,10 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 2.4 IndexedDB: draf dan cache tetapan/gambar.
 
 ### Fasa 3 – Persediaan & Tetapan (F-02, F-03, F-05, F-06)
-- [ ] 3.1 S-02 wizard 5 langkah dengan pratonton dokumen contoh (AFD Journey A).
-- [ ] 3.2 S-08 Profil Syarikat; medan dan validasi mengikut `Syarikat` (BSD §3A).
-- [ ] 3.3 S-10: prefix (regex), nota, terma, validity, tajuk, `kongsi_awam`, urus `KodCukai` (aktif/kadar).
-- [ ] 3.4 Pengaktifan automatik kod SST bila `sst_berdaftar` = YA; `sst_no` wajib.
+- [x] 3.1 S-02 wizard 5 langkah dengan pratonton dokumen contoh (AFD Journey A).
+- [x] 3.2 S-08 Profil Syarikat; medan dan validasi mengikut `Syarikat` (BSD §3A).
+- [x] 3.3 S-10: prefix (regex), nota, terma, validity, tajuk, `kongsi_awam`, urus `KodCukai` (aktif/kadar).
+- [x] 3.4 Pengaktifan automatik kod SST bila `sst_berdaftar` = YA; `sst_no` wajib.
 
 ### Fasa 4 – Gambar (F-04)
 - [ ] 4.1 `images.js`: ubah saiz ≤ 800px, buang latar putih (ambang boleh laras), simpan PNG ke `_Tetapan`, ganti dan padam fail lama.

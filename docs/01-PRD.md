@@ -30,7 +30,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 ## 5. Features
 | ID | Feature | Penerangan | Role | Keutamaan | Hasil yang dijangka |
 |----|---------|-----------|------|-----------|--------------------|
-| F-01 | Log masuk Google & ruang kerja | Sambung Google (scope `drive.file`), sistem cipta Sheet "Annur Invoice – [Syarikat]" dan folder Drive secara automatik; sambung semula bila token tamat | R-01 | Wajib | Pengguna ada Sheet dan folder sendiri tanpa setup manual |
+| F-01 | Log masuk Google & ruang kerja | Sambung Google (scope `drive.file`), sistem cipta folder dan Sheet "[Syarikat] – Annur Invoice" dalam Drive pengguna selepas nama syarikat diisi; sambung semula bila token tamat | R-01 | Wajib | Pengguna ada Sheet dan folder sendiri tanpa setup manual |
 | F-02 | Persediaan pertama (wizard) | Langkah: syarikat, kod syarikat/prefix, logo, cop, tandatangan, bank, SST | R-01 | Wajib | Akaun sedia untuk terbit dokumen |
 | F-03 | Profil syarikat & tetapan admin | Nama, no. SSM, TIN/BRN (pilihan), alamat, emel, telefon, laman web, akaun bank, penandatangan, nota default setiap jenis dokumen, terma default, warna aksen, tajuk dokumen | R-01 | Wajib | Semua dokumen guna maklumat terkini tanpa sentuh kod |
 | F-04 | Logo, cop & tandatangan | Muat naik gambar, buang latar putih, drag/nudge/saiz kedudukan cop dan tandatangan dengan pratonton, tandatangan DO berasingan, butang reset | R-01 | Wajib | Cop bertindih tandatangan dengan cantik seperti dalam dokumen sebenar |
@@ -119,3 +119,4 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
 | 03/11/2026 | Dokumen dipindah ke repo `annurpro-docs`; pembinaan Fasa 0 dan Fasa 1 dimulakan |
+| 03/11/2026 | Nama folder & Sheet ikut nama syarikat pengguna: `[Nama Syarikat] – Annur Invoice` (pilihan A). Folder dicipta selepas nama syarikat diisi dalam wizard, bukan sejurus log masuk |
