@@ -1,4 +1,5 @@
-// E2E Fasa 1: log masuk Google (dimock) → /api/check (Worker sebenar + D1 palsu) → skrin Utama.
+// E2E Fasa 1–2: log masuk Google (dimock) → /api/check (Worker sebenar + D1 palsu) → skrin Utama
+// → ruang kerja Sheet/Drive (Google palsu dalam memori) → pill status → dialog konflik.
 // Jalankan: node --no-warnings tests/e2e.mjs [folder-screenshot]
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -10,6 +11,8 @@ import { handle } from '../worker/index.mjs';
 import { createD1 } from './helpers/d1.mjs';
 
 const require = createRequire(import.meta.url);
+const { fakeGoogle } = require('./helpers/fake-google.js');
+const G = fakeGoogle('ya29.TOK-E2E-LONG');
 const { chromium } = require('playwright');
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SHOTS = process.argv[2] || '';
@@ -55,6 +58,14 @@ try {
       await route.fulfill({ body, contentType: 'text/javascript' });
     });
     await page.route('https://www.googleapis.com/oauth2/v3/userinfo', (r) => r.fulfill({ json: { email: 'pemilik@contoh.my' } }));
+    // Sheets + Drive → Google palsu yang dikongsi antara konteks (meniru satu akaun Drive)
+    const toFake = async (route) => {
+      const rq = route.request();
+      const res = await G.fetch(rq.url(), { method: rq.method(), headers: { Authorization: rq.headers().authorization }, body: rq.postData() || undefined });
+      await route.fulfill({ status: res.status, contentType: 'application/json', body: await res.text() });
+    };
+    await page.route('https://sheets.googleapis.com/**', toFake);
+    await page.route('https://www.googleapis.com/drive/**', toFake);
 
     await page.goto(BASE + '/');
     await page.getByRole('button', { name: 'Sambung Google' }).waitFor();
@@ -63,6 +74,11 @@ try {
     await page.locator('.lic .big').waitFor({ timeout: 5000 });
     assert.match(await page.locator('.lic').innerText(), /Percubaan percuma[\s\S]*10 dokumen/);
     assert.equal(await page.locator('.lic .big').innerText(), '50 kredit');
+    // Fasa 2: ruang kerja dicipta sekali (konteks pertama) dan dijumpai semula (konteks kedua)
+    await page.locator('.topbar .pill', { hasText: 'Tersimpan' }).waitFor({ timeout: 8000 });
+    const sheets = [...G.files.values()].filter((f) => f.mimeType === 'application/vnd.google-apps.spreadsheet');
+    assert.equal(sheets.length, 1, 'satu Sheet sahaja');
+    assert.equal(sheets[0].name, 'Annur Invoice');
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/s03-${name}.png`, fullPage: true });
 
     // muat semula: sesi kekal (sessionStorage), tiada akaun berganda
@@ -73,6 +89,22 @@ try {
     // navigasi & log keluar
     await page.locator(name === 'telefon' ? '.bottom' : '.side').getByRole('button', { name: 'Tetapan' }).click();
     await page.getByText('pemilik@contoh.my').waitFor();
+    await page.getByRole('link', { name: 'Buka Google Sheet' }).waitFor();
+    assert.match(await page.getByRole('link', { name: 'Buka Google Sheet' }).getAttribute('href'), /docs\.google\.com\/spreadsheets\/d\/sheet/);
+
+    // S-17: peranti lain menulis Meta → tulisan kita ditahan, dialog konflik, "Muat data terkini"
+    const sid = sheets[0].id;
+    const metaRows = G.tab(sid, 'Meta');
+    const ri = metaRows.findIndex((r) => r[0] === 'dikemaskini'), pi = metaRows.findIndex((r) => r[0] === 'penulis');
+    G.edit(sid, 'Meta', ri, 1, '2030-01-01T00:00:00.000Z-' + name); G.edit(sid, 'Meta', pi, 1, 'peranti-lain-' + name);
+    await page.evaluate(() => { window.AI.app.store().setKV('Syarikat', { nama: 'UJIAN KONFLIK' }).catch(() => {}); });
+    await page.getByRole('dialog').getByText('Sheet telah diubah di tempat lain').waitFor({ timeout: 5000 });
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/s17-${name}.png` });
+    await page.getByRole('button', { name: 'Muat data terkini' }).click();
+    await page.locator('.topbar .pill', { hasText: 'Tersimpan' }).waitFor({ timeout: 5000 });
+    const nama = G.tab(sid, 'Syarikat').find((r) => r[0] === 'nama')[1] || '';
+    assert.notEqual(nama, 'UJIAN KONFLIK', 'tiada timpaan senyap');
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/tetapan-${name}.png`, fullPage: true });
     await page.getByRole('button', { name: 'Log keluar' }).click();
     await page.getByRole('button', { name: 'Sambung Google' }).waitFor();
 

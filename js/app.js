@@ -11,8 +11,14 @@
     busy: false,
     error: '',
     lic: null,              // keputusan AI.licenseDecision
-    online: root.navigator ? root.navigator.onLine !== false : true
+    online: root.navigator ? root.navigator.onLine !== false : true,
+    ws: null,               // { ready, id, url, folders }
+    data: null,             // snapshot Sheet: syarikat, kodCukai, pelanggan, dokumen
+    sync: { state: 'idle', info: {} },
+    modal: ''               // '' | 'conflict'
   };
+  let api = null, store = null;
+  const WS_KEY = (e) => 'ai-ws:' + e;
 
   const ICON = {
     home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -45,6 +51,44 @@
     UI.lic = decision;
     if (UI.view === 'login') UI.view = 'home';
     render();
+    setupWorkspace();
+  }
+
+  // ---------- ruang kerja Google (Sheet + Drive) ----------
+  async function setupWorkspace(force) {
+    if (UI.ws && UI.ws.ready && !force) return;
+    if (UI.sync.state === 'setup') return;
+    const email = auth.lastEmail();
+    UI.sync = { state: 'setup', info: {} }; render();
+    api = api || new AI.GoogleApi({ token: () => auth.token() });
+    try {
+      const cached = AI.local.get(WS_KEY(email), null);
+      const name = UI.lic && UI.lic.businessName;
+      const ws = await AI.ensureWorkspace(api, { cachedId: cached && cached.id, title: 'Annur Invoice' + (name ? ' – ' + name : ''), email, writer: AI.writerId() });
+      AI.local.set(WS_KEY(email), { id: ws.id, url: ws.url, folders: ws.folders });
+      store = new AI.Store(api, {
+        id: ws.id, email, writer: AI.writerId(),
+        persist: (p) => AI.idb.set('kv', 'pending:' + email, p),
+        onStatus: (st, info) => {
+          UI.sync = { state: st, info: info || {} };
+          if (st === 'saved') { UI.data = store.snapshot(); AI.idb.set('kv', 'snapshot:' + email, UI.data); }
+          if (st === 'conflict') UI.modal = 'conflict';
+          render();
+        }
+      });
+      UI.data = await store.load();
+      AI.idb.set('kv', 'snapshot:' + email, UI.data);
+      UI.ws = { ready: true, id: ws.id, url: ws.url, folders: ws.folders };
+      const pend = await AI.idb.get('kv', 'pending:' + email);
+      if (pend && pend.length) { store.restore(pend); store.flush().catch(() => {}); }
+      else UI.sync = { state: 'saved', info: {} };
+      if (ws.duplicates) toast('Ada lebih daripada satu Sheet Annur Invoice dalam Drive. Yang terkini digunakan.');
+    } catch (e) {
+      const snap = await AI.idb.get('kv', 'snapshot:' + email);
+      if (snap) UI.data = snap;
+      UI.sync = { state: e.needsLogin ? 'reconnect' : e.network ? 'offline' : 'error', info: { message: AI.googleErrorHint(e) } };
+    }
+    render();
   }
 
   // ---------- tindakan ----------
@@ -54,7 +98,20 @@
       try { await auth.signIn(); UI.busy = false; await runCheck(); }
       catch (e) { UI.busy = false; UI.error = e.message; render(); }
     },
-    signOut() { auth.signOut(); UI.lic = null; UI.view = 'login'; UI.error = ''; render(); },
+    signOut() {
+      auth.signOut(); store = null; UI.lic = null; UI.ws = null; UI.data = null; UI.modal = '';
+      UI.sync = { state: 'idle', info: {} }; UI.view = 'login'; UI.error = ''; render();
+    },
+    // S-17: sambung semula Google (mesti dari klik) kemudian sambung tulisan tertangguh
+    async reconnect() {
+      try { await auth.signIn(); } catch (e) { toast(e.message, true); return; }
+      if (UI.ws && UI.ws.ready && store) store.flush().catch(() => {}); else setupWorkspace(true);
+    },
+    retrySync() { if (UI.ws && UI.ws.ready && store) store.flush().catch(() => {}); else setupWorkspace(true); },
+    openConflict() { UI.modal = 'conflict'; render(); },
+    closeModal() { UI.modal = ''; render(); },
+    async resolveReload() { UI.modal = ''; render(); try { await store.resolveConflict('reload'); toast('Data terkini dimuat dari Sheet.'); } catch (e) { /* status dipaparkan */ } },
+    async resolveOverwrite() { UI.modal = ''; render(); try { await store.resolveConflict('overwrite'); toast('Perubahan anda disimpan.'); } catch (e) { /* status dipaparkan */ } },
     go(el) { UI.view = el.dataset.v; render(); root.scrollTo(0, 0); },
     async recheck() { toast('Menyemak lesen...'); await runCheck(); },
     newDoc(el) { UI.view = 'editor'; UI.newType = el.dataset.t || 'invoice'; render(); },
@@ -118,8 +175,47 @@
       </section>
       <section class="card">
         <h2>Dokumen terkini</h2>
-        <div class="empty">${icon('doc', 'xl')}<p>Belum ada dokumen. Cipta yang pertama di atas.</p></div>
+        ${recentDocs()}
       </section>`;
+  }
+
+  const DOC_LABEL = { invoice: 'Invois', quotation: 'Quotation', do: 'DO' };
+  function recentDocs() {
+    const docs = ((UI.data && UI.data.dokumen) || []).slice()
+      .sort((a, b) => String(b.diterbit_pada).localeCompare(String(a.diterbit_pada))).slice(0, 10);
+    if (!docs.length) return `<div class="empty">${icon('doc', 'xl')}<p>Belum ada dokumen. Cipta yang pertama di atas.</p></div>`;
+    return `<div class="dlist">${docs.map((d) => `<div class="drow"><div><b>${esc(d.no_dokumen)}</b><small class="muted">${esc(DOC_LABEL[d.jenis] || d.jenis)} · ${esc(AI.fmtDate(d.tarikh))} · ${esc(d.bill_nama)}</small></div>
+      <div class="dright">${d.jenis === 'do' ? '' : `<b>${esc(AI.fmtRM(d.jumlah))}</b>`}<span class="badge ${d.status === 'Batal' ? 'red' : 'green'}">${esc(d.status)}</span></div></div>`).join('')}</div>`;
+  }
+
+  // ---------- status Sheet (pill) & dialog S-17 ----------
+  const SYNC = {
+    idle: ['grey', 'Belum disambung'], setup: ['blue pulse', 'Menyediakan Sheet...'], saving: ['blue pulse', 'Menyimpan...'],
+    saved: ['green', 'Tersimpan'], reconnect: ['amber', 'Sambung semula'], offline: ['amber', 'Luar talian'],
+    conflict: ['red', 'Konflik'], error: ['red', 'Ralat storan']
+  };
+  function syncPill() {
+    const st = UI.sync.state, [cls, label] = SYNC[st] || SYNC.idle;
+    const act = { reconnect: 'reconnect', conflict: 'openConflict', error: 'retrySync', offline: 'retrySync' }[st];
+    const tip = esc((UI.sync.info && UI.sync.info.message) || '');
+    return act ? `<button class="pill ${cls}" data-act="${act}" title="${tip}"><i></i>${label}</button>`
+      : `<span class="pill ${cls}" title="${tip}"><i></i>${label}</span>`;
+  }
+  function modal() {
+    if (UI.modal !== 'conflict') return '';
+    const r = (UI.sync.info && UI.sync.info.remote) || {};
+    const t = Date.parse(r.dikemaskini || '');
+    const when = Number.isFinite(t) ? new Date(t).toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour12: false }) : '';
+    return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="sheet">
+      <h2 id="mTitle">Sheet telah diubah di tempat lain</h2>
+      <p>Data dalam Google Sheet anda dikemas kini dari peranti atau tab lain${r.oleh ? ` (${esc(r.oleh)})` : ''}${when ? ` pada ${esc(when)}` : ''}. Perubahan anda belum disimpan supaya tiada data ditimpa tanpa sedar.</p>
+      <div class="sheet-acts">
+        <button class="btn primary" data-act="resolveReload">Muat data terkini</button>
+        <button class="btn" data-act="resolveOverwrite">Simpan versi saya</button>
+        <button class="btn ghost" data-act="closeModal">Tutup</button>
+      </div>
+      <p class="fine">"Muat data terkini" membuang perubahan yang belum disimpan pada peranti ini.</p>
+    </div></div>`;
   }
 
   const soon = (title, fasa, text) => `<header class="page-head"><h1>${esc(title)}</h1></header>
@@ -130,6 +226,15 @@
       <section class="card"><h2>Akaun</h2>
         <div class="row"><span class="av">${esc(AI.initials(auth.lastEmail()))}</span><div><b>${esc(auth.lastEmail() || '-')}</b><small class="muted">Akaun Google</small></div></div>
         <button class="btn" data-act="signOut">${icon('out')}Log keluar</button>
+      </section>
+      <section class="card"><h2>Storan Google</h2>
+        <p class="muted">Semua dokumen, pelanggan dan tetapan disimpan dalam Google Sheet dan folder Drive milik anda.</p>
+        <div class="row">${syncPill()}</div>
+        ${UI.ws && UI.ws.ready ? `<div class="links">
+          <a class="btn" href="${esc(UI.ws.url)}" target="_blank" rel="noopener">Buka Google Sheet</a>
+          <a class="btn" href="https://drive.google.com/drive/folders/${esc(UI.ws.folders.root)}" target="_blank" rel="noopener">Buka folder Drive</a>
+        </div>` : ''}
+        <button class="btn ghost" data-act="retrySync">Semak ruang kerja</button>
       </section>
       <section class="card"><div class="empty"><p>Profil syarikat, logo, cop, tandatangan, penomboran dan cukai.</p><small class="muted">Dibina dalam Fasa 3 dan 4.</small></div></section>
       <p class="fine center">${esc(CFG.appName)} v${esc(CFG.version)} · ${esc(CFG.vendor)}</p>`;
@@ -153,9 +258,9 @@
     else main = viewSettings();
     app.innerHTML = `<div class="shell">
       <aside class="side"><div class="brand sm"><img src="brand/annurpro-icon-64.png" alt="" width="28" height="28"><b>${esc(CFG.appName)}</b></div>${nav()}</aside>
-      <div class="content">${UI.online ? '' : '<div class="offline">Luar talian: draf boleh dicipta, terbit dokumen perlukan internet.</div>'}<main>${main}</main></div>
+      <div class="content"><div class="topbar">${syncPill()}</div>${UI.online ? '' : '<div class="offline">Luar talian: draf boleh dicipta, terbit dokumen perlukan internet.</div>'}<main>${main}</main></div>
       <div class="bottom">${nav()}</div>
-    </div>`;
+    </div>${modal()}`;
   }
 
   let toastT;
@@ -173,13 +278,19 @@
       const fn = actions[el.dataset.act];
       if (fn) { e.preventDefault(); fn(el); }
     });
-    root.addEventListener('online', () => { UI.online = true; render(); if (UI.view !== 'login') runCheck(); });
+    root.addEventListener('online', () => {
+      UI.online = true; render();
+      if (UI.view === 'login') return;
+      runCheck();
+      if (store && UI.sync.state === 'offline') store.flush().catch(() => {});
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && UI.modal) actions.closeModal(); });
     root.addEventListener('offline', () => { UI.online = false; render(); });
     if (auth.has()) { UI.view = 'home'; render(); runCheck(); }
     else render();
     if ('serviceWorker' in root.navigator && root.location.protocol === 'https:') root.navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 
-  AI.app = { UI, actions, render, runCheck };
+  AI.app = { UI, actions, render, runCheck, setupWorkspace, store: () => store };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })(window);

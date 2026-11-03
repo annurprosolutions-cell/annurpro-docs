@@ -10,7 +10,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 |------|-----------|--------|
 | 0 | Struktur repo, `wrangler.jsonc`, `schema.sql`, Worker `/api/ping`, ujian, CI | Siap (perlu langkah pemilik di bawah) |
 | 1 | Log masuk Google, `/api/check` (akaun + 50 kredit percubaan sekali), kad lesen, notis, cache 7 hari, shell app + navigasi | Siap |
-| 2 | Ruang kerja Sheet/Drive (`ensureWorkspace`) | Seterusnya |
+| 2 | Ruang kerja Sheet/Drive (`ensureWorkspace`), lapisan storan (queue, debounce, cuba semula, konflik), pill status, dialog S-17, IndexedDB (cache, draf, tulisan tertangguh) | Siap |
+| 3 | Persediaan & Tetapan (wizard, profil, penomboran, kod cukai) | Seterusnya |
 
 ## Struktur
 
@@ -20,6 +21,11 @@ css/app.css            token warna dan komponen (docs/04-DBD.md)
 js/core.js             utiliti (esc, tarikh DD/MM/YYYY, storan selamat)
 js/auth.js             log masuk Google (GIS token model)
 js/license.js          keputusan lesen + notis (fungsi tulen, diuji)
+js/schema.js           skema tab Sheet, default Syarikat, seed KodCukai, baris ↔ objek
+js/google.js           klien Sheets v4 + Drive v3 (backoff 429/5xx)
+js/workspace.js        ensureWorkspace(): cipta/jumpa Sheet + folder (idempotent)
+js/store.js            Store: baca ikut nama lajur, tulis berbaris, konflik
+js/idb.js              IndexedDB: cache, draf, tulisan tertangguh
 js/app.js              UI: render() + data-act
 worker/index.mjs       API: /api/ping, /api/check
 schema.sql             jadual D1 (docs/05-BSD.md §3B)
@@ -58,7 +64,7 @@ Jangan tampal sebarang rahsia (token, kunci) dalam chat. Letakkan terus dalam da
 6. Buka `https://<worker>/api/ping`. Jawapan `{"ok":true,...,"db":true}` bermaksud Worker dan D1 bersambung.
 
 **C. Uji log masuk**
-Buka alamat Worker → **Sambung Google** → pilih akaun test → skrin Utama menunjukkan **50 kredit (10 dokumen)**.
+Buka alamat Worker → **Sambung Google** → pilih akaun test → skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan** di atas. Dalam Google Drive akan muncul folder **Annur Invoice** (subfolder Invois, Quotation, Delivery Order, _Tetapan) dan Sheet **Annur Invoice** dengan tab Dokumen, Pelanggan, Syarikat, KodCukai, Item, Meta.
 
 ## Rilis
 

@@ -41,24 +41,24 @@ Anggaran ≈ 24 hari kerja bersih untuk v1 dengan vibe coding (kebanyakan masa p
 Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webmanifest`, `css/app.css`, `js/{core,calc,words,sheets,workspace,store,ui-*,pdf,license,images}.js`, `worker/index.mjs`, `schema.sql`, `wrangler.jsonc`, `admin/index.html`, `salepage/`, `panduan/`, `privasi.html`, `tests/`, `tools/`.
 
 ### Fasa 0 – Setup
-- [ ] 0.1 Cipta repo, `.gitignore`, `.assetsignore` (kecualikan `tests/`, `tools/`, `worker/`, `docs/`, `schema.sql`), `wrangler.jsonc` dengan `assets.directory="."`, `run_worker_first: ["/api/*","/bcl/*"]`, binding D1 `DB` (TRD §9).
-- [ ] 0.2 Letak `docs/01-PRD.md` … `06-IPD.md` dalam repo.
+- [x] 0.1 Cipta repo, `.gitignore`, `.assetsignore` (kecualikan `tests/`, `tools/`, `worker/`, `docs/`, `schema.sql`), `wrangler.jsonc` dengan `assets.directory="."`, `run_worker_first: ["/api/*","/bcl/*"]`, binding D1 `DB` (TRD §9).
+- [x] 0.2 Letak `docs/01-PRD.md` … `06-IPD.md` dalam repo.
 - [ ] 0.3 Cipta D1 `annur-invoice` dan jalankan `schema.sql` (BSD §3B); sahkan jadual wujud.
-- [ ] 0.4 Skrip `npm test` (`node --test tests/*.test.js tests/*.test.mjs`) dan fail `config.js` (client id, `licenseUrl`, harga, sokongan).
-- [ ] 0.5 Worker `/api/ping`, CORS ikut `ALLOWED_ORIGINS`.
+- [x] 0.4 Skrip `npm test` (`node --test tests/*.test.js tests/*.test.mjs`) dan fail `config.js` (client id, `licenseUrl`, harga, sokongan).
+- [x] 0.5 Worker `/api/ping`, CORS ikut `ALLOWED_ORIGINS`.
 
 ### Fasa 1 – Asas & lesen (F-01, F-15)
-- [ ] 1.1 Shell app: `index.html`, navigasi bawah/sisi (DBD §5–6), `render()` tunggal dengan penghantaran `data-act`, token CSS DBD §3.
-- [ ] 1.2 S-01 Log Masuk: GIS `initTokenClient` dipicu klik; simpan `{email, token, exp}` dalam sessionStorage (hilang bila tab ditutup; bukan localStorage).
-- [ ] 1.3 Worker: sahkan token via tokeninfo (audience, emel verified) → fungsi `authEmail()` digunakan semua endpoint.
-- [ ] 1.4 `POST /api/check`: cipta `tenants` + `credit_ledger(trial,+50)` dalam satu batch; pulang status (BSD §3B). Ujian unit: akaun baharu, akaun lama, token salah.
-- [ ] 1.5 Klien: cache jawapan `/check` 7 hari, notis S-03 (percubaan/ihsan/tamat), kad status lesen.
+- [x] 1.1 Shell app: `index.html`, navigasi bawah/sisi (DBD §5–6), `render()` tunggal dengan penghantaran `data-act`, token CSS DBD §3.
+- [x] 1.2 S-01 Log Masuk: GIS `initTokenClient` dipicu klik; simpan `{email, token, exp}` dalam sessionStorage (hilang bila tab ditutup; bukan localStorage).
+- [x] 1.3 Worker: sahkan token via tokeninfo (audience, emel verified) → fungsi `authEmail()` digunakan semua endpoint.
+- [x] 1.4 `POST /api/check`: cipta `tenants` + `credit_ledger(trial,+50)` dalam satu batch; pulang status (BSD §3B). Ujian unit: akaun baharu, akaun lama, token salah.
+- [x] 1.5 Klien: cache jawapan `/check` 7 hari, notis S-03 (percubaan/ihsan/tamat), kad status lesen.
 
 ### Fasa 2 – Ruang kerja (F-01, F-14)
-- [ ] 2.1 `workspace.js`: `ensureWorkspace()` ikut BSD §6 (idempotent), ujian dengan `fake-sheets.js` daripada skill.
-- [ ] 2.2 `store.js`: baca tab ikut nama lajur, tulis `values.batchUpdate`/`append`, debounce, backoff pada 429, pill status.
-- [ ] 2.3 S-17: sambung semula token, konflik bila `Meta.dikemaskini` berubah (jangan timpa senyap), tulisan tertangguh.
-- [ ] 2.4 IndexedDB: draf dan cache tetapan/gambar.
+- [x] 2.1 `workspace.js`: `ensureWorkspace()` ikut BSD §6 (idempotent), ujian dengan `fake-sheets.js` daripada skill.
+- [x] 2.2 `store.js`: baca tab ikut nama lajur, tulis `values.batchUpdate`/`append`, debounce, backoff pada 429, pill status.
+- [x] 2.3 S-17: sambung semula token, konflik bila `Meta.dikemaskini` berubah (jangan timpa senyap), tulisan tertangguh.
+- [x] 2.4 IndexedDB: draf dan cache tetapan/gambar.
 
 ### Fasa 3 – Persediaan & Tetapan (F-02, F-03, F-05, F-06)
 - [ ] 3.1 S-02 wizard 5 langkah dengan pratonton dokumen contoh (AFD Journey A).

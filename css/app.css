@@ -120,3 +120,35 @@ code { background: var(--soft); padding: 1px 5px; border-radius: 6px; font-size:
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.bad { background: var(--red); }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* pill status Sheet (docs/04-DBD.md §6) */
+.topbar { display: flex; justify-content: flex-end; margin-bottom: 4px; min-height: 30px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; background: var(--soft); color: var(--mute); }
+button.pill { cursor: pointer; min-height: 30px; }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.pill.green { background: var(--green-soft); color: var(--green); }
+.pill.blue { background: var(--blue-soft); color: var(--primary); }
+.pill.amber { background: var(--amber-soft); color: var(--amber); }
+.pill.red { background: var(--red-soft); color: var(--red); }
+.pill.pulse i { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .pill.pulse i { animation: none; } }
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--primary); }
+
+/* dialog / helaian bawah */
+.overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .6); display: flex; align-items: flex-end; justify-content: center; z-index: 40; }
+.sheet { background: var(--card); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); }
+.sheet p { margin: 0 0 16px; }
+.sheet-acts { display: grid; gap: 8px; margin-bottom: 8px; }
+@media (min-width: 640px) { .overlay { align-items: center; } .sheet { border-radius: 20px; } }
+
+/* senarai dokumen ringkas */
+.dlist { display: grid; }
+.drow { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.drow:first-child { border-top: 0; }
+.drow small { display: block; }
+.dright { display: flex; align-items: center; gap: 8px; text-align: right; }
+.badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.badge.green { background: var(--green-soft); color: var(--green); }
+.badge.red { background: var(--red-soft); color: var(--red); }
