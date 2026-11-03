@@ -38,7 +38,7 @@
       const f = rf(), months = AI.monthsOf(docs());
       const mon = (m) => { const [y, mm] = m.split('-'); return `${mm}/${y}`; };
       return `<section class="card"><h2>Dokumen diterbit</h2>
-        <form class="rfilters" data-form="rekod" onsubmit="return false">
+        <form class="rfilters" data-form="rekod">
           <div class="seg" role="group" aria-label="Jenis">${[['', 'Semua'], ['invoice', 'Invois'], ['quotation', 'Quotation'], ['do', 'DO']].map(([v, l]) => `<button type="button" class="${f.jenis === v ? 'on' : ''}" data-act="recType" data-v="${v}">${l}</button>`).join('')}</div>
           <div class="rf-row">
             <input class="inp" type="search" name="q" value="${esc(f.q)}" placeholder="Cari no. dokumen, pelanggan atau PO" aria-label="Cari">
@@ -104,7 +104,7 @@
     }
     function viewPelanggan() {
       return `<header class="page-head"><h1>Pelanggan</h1><button class="btn primary" data-act="custNew">${ctx.icon('plus')}Tambah</button></header>
-        <section class="card"><form class="rfilters" data-form="cust-filter" onsubmit="return false"><div class="rf-row">
+        <section class="card"><form class="rfilters" data-form="cust-filter"><div class="rf-row">
           <input class="inp" type="search" name="q" value="${esc(pf().q)}" placeholder="Cari nama atau telefon" aria-label="Cari pelanggan">
           <label class="sw"><input type="checkbox" name="arkib" ${pf().arkib ? 'checked' : ''}> Tunjuk arkib</label></div></form>
           <div data-custlist>${custList()}</div></section>`;
@@ -118,7 +118,7 @@
       const ark = str(c.arkib).toUpperCase() === 'YA';
       return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="cTitle"><div class="sheet wide">
         <h2 id="cTitle">${c.id ? 'Edit pelanggan' : 'Pelanggan baharu'}</h2>
-        <form data-form="cust" novalidate onsubmit="return false">
+        <form data-form="cust" novalidate>
           ${f('nama', 'Nama', { required: true, placeholder: 'cth Contoh Trading Sdn Bhd' })}
           ${f('alamat', 'Alamat', { rows: 3 })}
           <div class="grid2">${f('tel', 'No. telefon', { type: 'tel', inputmode: 'tel' })}${f('attn', 'Attn', {})}</div>

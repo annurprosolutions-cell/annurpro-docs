@@ -120,3 +120,20 @@ test('tarikh Malaysia dan entitlement tulen', () => {
   assert.equal(entitlement({ credits: 4 }, null, false, c, '2026-11-03').mode, 'habis');
   assert.equal(entitlement({ credits: 5 }, null, true, c, '2026-11-03').trial, false);
 });
+
+test('had kadar: terbit dihadkan 30/minit per token, minit seterusnya pulih; webhook & ping tidak dihadkan', async () => {
+  const { call, env } = setup({ TRIAL_CREDITS: '500' });
+  const tok = 'tok-laju@x.com';
+  let last;
+  for (let i = 0; i < 31; i++) {
+    last = await handle(new Request('https://w.test/api/issue', { method: 'POST', headers: { authorization: 'Bearer ' + tok }, body: JSON.stringify({ docId: 'doc-rate-' + String(i).padStart(4, '0'), type: 'invoice', prefix: 'APS', date: '2026-11-03' }) }), env, { fetch: fakeFetch, now: () => NOW });
+  }
+  assert.equal(last.status, 429); assert.ok(Number(last.headers.get('retry-after')) > 0);
+  assert.equal((await last.json()).reason, 'terlalu-kerap');
+  const next = await handle(new Request('https://w.test/api/issue', { method: 'POST', headers: { authorization: 'Bearer ' + tok }, body: JSON.stringify({ docId: 'doc-rate-next', type: 'invoice', prefix: 'APS', date: '2026-11-03' }) }), env, { fetch: fakeFetch, now: () => NOW + 61000 });
+  assert.equal(next.status, 200);
+  const other = await handle(new Request('https://w.test/api/check', { method: 'POST', headers: { authorization: 'Bearer tok-lain@x.com' } }), env, { fetch: fakeFetch, now: () => NOW });
+  assert.equal(other.status, 200, 'token lain tidak terjejas');
+  for (let i = 0; i < 70; i++) await call('/api/ping');
+  assert.equal((await call('/api/ping')).status, 200);
+});

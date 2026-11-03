@@ -111,7 +111,7 @@
       : { name: str(sk.tt_nama), title: str(sk.tt_jawatan), tel: doo ? str(sk.do_tt_tel) : '' };
     const ship = doo ? (d.ship_sama ? null : { name: str(d.ship_nama), address: lines(d.ship_alamat), attn: str(d.ship_attn), tel: str(d.ship_tel) }) : null;
     return {
-      jenis, title, number, isDraft: !o.number, accent: /^#[0-9a-f]{6}$/i.test(str(sk.warna_aksen)) ? str(sk.warna_aksen) : '#0f172a',
+      jenis, title, number, isDraft: !o.number, isDemo: !!o.demo, accent: /^#[0-9a-f]{6}$/i.test(str(sk.warna_aksen)) ? str(sk.warna_aksen) : '#0f172a',
       co: {
         name: str(sk.nama), reg: str(sk.ssm), address: lines(sk.alamat), tel: str(sk.tel), email: str(sk.emel), web: str(sk.laman),
         sst: reg ? str(sk.sst_no) : '', tin: str(sk.tin)

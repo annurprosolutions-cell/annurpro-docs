@@ -402,3 +402,9 @@ table.ltab th { text-align: left; font-size: 12px; color: var(--mute); font-weig
 table.ltab td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
 table.ltab .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 table.ltab .neg { color: var(--red); } table.ltab .pos { color: var(--green); }
+.demo-bar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; background: var(--amber-soft); color: var(--amber); padding: 10px 14px; border-radius: var(--r-sm); margin-bottom: 8px; font-size: 14px; }
+.login-card .btn.ghost.block { margin-top: 8px; }
+.faq details { border-bottom: 1px solid var(--line); padding: 4px 0; }
+.faq details:last-child { border-bottom: 0; }
+.faq summary { color: var(--ink); min-height: 44px; }
+.faq p { margin: 0 0 12px; color: var(--ink2, #334155); }

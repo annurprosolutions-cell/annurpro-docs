@@ -5,7 +5,13 @@
   const esc = AI.esc;
   const LIC_KEY = 'ai-lic';
 
-  const auth = new AI.GoogleAuth(CFG.googleClientId);
+  // Mod demo (/?demo): Google & Worker disimulasikan dalam memori (js/demo.js, js/fakegoogle.js)
+  const DEMO = !!(AI.isDemo && AI.isDemo());
+  const auth = DEMO ? new AI.DemoAuth() : new AI.GoogleAuth(CFG.googleClientId);
+  const demoG = DEMO ? AI.fakeGoogle('demo-token', { blobLinks: true }) : null;
+  const demoW = DEMO ? new AI.DemoWorker() : null;
+  const apiFetch = DEMO ? (...a) => demoW.fetch(...a) : (...a) => root.fetch(...a);
+  let demoSeeded = false;
   const UI = {
     view: 'login',          // login | home | rekod | pelanggan | tetapan | editor
     busy: false,
@@ -33,6 +39,7 @@
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
     up: '<path d="M12 19V5M5 12l7-7 7 7"/>', down: '<path d="M12 5v14M19 12l-7 7-7-7"/>',
     left: '<path d="M19 12H5M12 19l-7-7 7-7"/>', right: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
     card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     back: '<path d="M15 18l-6-6 6-6"/>',
@@ -51,7 +58,7 @@
     let decision;
     try {
       const token = await auth.token();
-      const result = await AI.fetchCheck(CFG.apiBase, token, (...a) => root.fetch(...a));
+      const result = await AI.fetchCheck(CFG.apiBase, token, apiFetch);
       decision = AI.licenseDecision({ result, cache, email: auth.lastEmail() });
     } catch (e) {
       if (e.needsLogin) { UI.view = 'login'; UI.error = e.message; render(); return; }
@@ -101,8 +108,9 @@
     if (UI.sync.state === 'setup') return;
     const email = auth.lastEmail();
     UI.sync = { state: 'setup', info: {} }; render();
-    api = api || new AI.GoogleApi({ token: () => auth.token() });
+    api = api || new AI.GoogleApi({ token: () => auth.token(), fetch: DEMO ? demoG.fetch : undefined });
     try {
+      if (DEMO && !demoSeeded) { demoSeeded = true; await AI.seedDemo(api); }
       const cached = AI.local.get(WS_KEY(email), null);
       const found = await AI.findWorkspace(api, { cachedId: cached && cached.id });
       if (!found) {
@@ -120,7 +128,7 @@
 
   async function createWorkspace(company, folderName) {
     const email = auth.lastEmail();
-    api = api || new AI.GoogleApi({ token: () => auth.token() });
+    api = api || new AI.GoogleApi({ token: () => auth.token(), fetch: DEMO ? demoG.fetch : undefined });
     UI.sync = { state: 'setup', info: {} }; render();
     try {
       const ws = await AI.ensureWorkspace(api, { company, folderName, email, writer: AI.writerId() });
@@ -136,7 +144,7 @@
 
   // nama perniagaan untuk dashboard pemilik platform (bukan data dokumen)
   function saveBusinessName(nama) {
-    auth.token().then((t) => AI.fetchCheck(CFG.apiBase, t, (...a) => root.fetch(...a), { businessName: nama }))
+    auth.token().then((t) => AI.fetchCheck(CFG.apiBase, t, apiFetch, { businessName: nama }))
       .then((r) => { if (r && r.body && r.body.ok && UI.lic) UI.lic.businessName = r.body.businessName; }).catch(() => {});
   }
 
@@ -148,6 +156,7 @@
       catch (e) { UI.busy = false; UI.error = e.message; render(); }
     },
     signOut() {
+      if (DEMO) { root.location.href = root.location.pathname; return; }
       auth.signOut(); store = null; I.reset(); UI.lic = null; UI.ws = null; UI.data = null; UI.modal = ''; UI.form = {}; UI.formErr = {};
       UI.sync = { state: 'idle', info: {} }; UI.view = 'login'; UI.error = ''; render();
     },
@@ -186,6 +195,7 @@
         ${noClient ? '<p class="note warn">Mod pembangunan: Client ID Google belum diisi dalam <code>config.js</code>.</p>' : ''}
         ${UI.error ? `<p class="note danger" role="alert">${esc(UI.error)}</p>` : ''}
         <ul class="ticks"><li>10 dokumen percuma untuk mencuba</li><li>Logo, cop dan tandatangan syarikat anda</li><li>Tiada kad kredit diperlukan</li></ul>
+        <a class="btn ghost block" href="?demo">Cuba demo dahulu (tanpa log masuk)</a>
         <p class="fine">Dengan log masuk, anda bersetuju dengan <a href="privasi.html">dasar privasi</a>. App hanya boleh mengakses fail yang ia cipta dalam Drive anda.</p>
       </div>
     </div>`;
@@ -286,7 +296,7 @@
       <section class="card"><h2>Storan Google</h2>
         <p class="muted">Semua dokumen, pelanggan dan tetapan disimpan dalam Google Sheet dan folder Drive milik anda.</p>
         <div class="row">${syncPill()}</div>
-        ${UI.ws && UI.ws.ready ? `<div class="links">
+        ${DEMO ? '<p class="note info">Dalam mod demo, "Google Sheet" dan "Drive" disimulasikan dalam memori pelayar.</p>' : UI.ws && UI.ws.ready ? `<div class="links">
           <a class="btn" href="${esc(UI.ws.url)}" target="_blank" rel="noopener">Buka Google Sheet</a>
           <a class="btn" href="https://drive.google.com/drive/folders/${esc(UI.ws.folders.root)}" target="_blank" rel="noopener">Buka folder Drive</a>
         </div>` : ''}
@@ -297,6 +307,7 @@
         <button class="mrow" data-act="openDocset" ${ready ? '' : 'disabled'}>${icon('hash')}<div><b>Dokumen, Penomboran & Cukai</b><small class="muted">Prefix, nota, terma, SST</small></div>${icon('chev')}</button>
         <button class="mrow" data-act="openImej" ${ready ? '' : 'disabled'}>${icon('image')}<div><b>Logo, Cop & Tandatangan</b><small class="muted">Muat naik gambar, susun kedudukan cop dan tandatangan</small></div>${icon('chev')}</button>
         <button class="mrow" data-act="openLangganan">${icon('card')}<div><b>Langganan &amp; Kredit</b><small class="muted">Status pelan, bayaran, sejarah kredit</small></div>${icon('chev')}</button>
+        <button class="mrow" data-act="openBantuan">${icon('help')}<div><b>Bantuan &amp; Sokongan</b><small class="muted">Soalan lazim, panduan, WhatsApp</small></div>${icon('chev')}</button>
       </section>
       <p class="fine center">${esc(CFG.appName)} v${esc(CFG.version)} · ${esc(CFG.vendor)}</p>`;
   }
@@ -317,6 +328,7 @@
     else if (UI.view === 'rekod') main = E.views.rekod();
     else if (UI.view === 'pelanggan') main = R.views.pelanggan();
     else if (UI.view === 'langganan') main = B.views.langganan();
+    else if (UI.view === 'bantuan') main = H.views.bantuan();
     else if (UI.view === 'profil') main = S.views.profil();
     else if (UI.view === 'docset') main = S.views.docset();
     else if (UI.view === 'imej') main = I.views.imej();
@@ -324,7 +336,7 @@
     else main = viewSettings();
     app.innerHTML = `<div class="shell v-${UI.view}">
       <aside class="side"><div class="brand sm"><img src="brand/annurpro-icon-64.png" alt="" width="28" height="28"><b>${esc(CFG.appName)}</b></div>${nav()}</aside>
-      <div class="content"><div class="topbar">${syncPill()}</div>${UI.online ? '' : '<div class="offline">Luar talian: draf boleh dicipta, terbit dokumen perlukan internet.</div>'}<main>${main}</main></div>
+      <div class="content">${DEMO ? '<div class="demo-bar"><span><b>Mod demo.</b> Data disimpan dalam tab ini sahaja dan hilang bila ditutup. Tiada Google atau bayaran.</span><a class="btn sm" href="./">Mula dengan Google</a></div>' : ''}<div class="topbar">${syncPill()}</div>${UI.online ? '' : '<div class="offline">Luar talian: draf boleh dicipta, terbit dokumen perlukan internet.</div>'}<main>${main}</main></div>
       <div class="bottom">${nav()}</div>
     </div>${modal()}`;
     if (UI.view === 'editor') E.fitPreview();
@@ -346,7 +358,7 @@
     const t = await auth.token();
     let res;
     try {
-      res = await root.fetch(String(CFG.apiBase || '').replace(/\/$/, '') + path, { method, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      res = await apiFetch(String(CFG.apiBase || '').replace(/\/$/, '') + path, { method, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     } catch (e) { const err = new Error('Tiada sambungan ke pelayan'); err.network = true; throw err; }
     let b = {}; try { b = await res.json(); } catch (e) { /* bukan JSON */ }
     return { status: res.status, body: b };
@@ -360,7 +372,9 @@
     if (L.cache) { L.cache.credits = L.credits; L.cache.docsLeft = L.docsLeft; AI.local.set(LIC_KEY, L.cache); }
   }
   let R = null;
+  UI.demo = DEMO;
   const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), imgOf: I.imgOf, worker, onIssued, recheck: () => runCheck(),
+    demo: DEMO, linkOf: DEMO ? (id) => (demoG.files.get(id) || {}).webViewLink : null,
     recordsSection: () => R.section(), go: (v) => { if (v === 'langganan') B.actions.openLangganan(); else { UI.view = v; render(); } } });
   R = AI.RecordsUI({ UI, esc, icon, toast, render, store: () => store, email: () => auth.lastEmail(), worker, openEditor: (d) => { UI.modal = ''; E.open(d); } });
   const newDoc = E.actions.newDoc;
@@ -370,11 +384,13 @@
     newDoc(el);
   };
   const B = AI.BillingUI({ UI, esc, icon, toast, render, email: () => auth.lastEmail(), worker, recheck: () => runCheck(), support: CFG.support });
-  Object.assign(actions, S.actions, I.actions, E.actions, R.actions, B.actions);
+  const H = AI.HelpUI({ esc, icon, email: () => auth.lastEmail(), support: CFG.support, appName: CFG.appName, version: CFG.version, go: (v) => { UI.view = v; render(); root.scrollTo(0, 0); } });
+  Object.assign(actions, S.actions, I.actions, E.actions, R.actions, B.actions, H.actions);
 
   // ---------- mula ----------
   function boot() {
     I.bind(document);
+    document.addEventListener('submit', (e) => e.preventDefault());
     const RFORMS = '[data-form="rekod"],[data-form="cust-filter"],[data-form="cust"]';
     document.addEventListener('input', (e) => {
       if (e.target.closest && e.target.closest(RFORMS)) { R.onInput(e.target); return; }
@@ -402,9 +418,10 @@
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && UI.modal && !(UI.issue && UI.issue.phase === 'running')) actions.closeModal(); });
     root.addEventListener('offline', () => { UI.online = false; render(); });
+    if (DEMO) AI.drafts.list(AI.DEMO_EMAIL).then((ds) => ds.forEach((x) => AI.drafts.del(x.id))).catch(() => {});
     if (auth.has()) { UI.view = 'home'; render(); runCheck(); }
     else render();
-    if ('serviceWorker' in root.navigator && root.location.protocol === 'https:') root.navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in root.navigator && (root.location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(root.location.hostname))) root.navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 
   AI.app = { UI, actions, render, runCheck, setupWorkspace, store: () => store };

@@ -107,7 +107,7 @@
         ${x.sumber_no && !x.editing ? `<p class="note info">Dibuat daripada ${esc((T[x.sumber_jenis] || {}).label || '')} <b>${esc(x.sumber_no)}</b>.</p>` : ''}
         <div class="seg ed-tabs" role="tablist"><button type="button" role="tab" aria-selected="${tab === 'form'}" class="${tab === 'form' ? 'on' : ''}" data-act="edTab" data-t="form">Borang</button><button type="button" role="tab" aria-selected="${tab === 'preview'}" class="${tab === 'preview' ? 'on' : ''}" data-act="edTab" data-t="preview">Pratonton</button></div>
         <div class="ed-grid">
-          <form class="ed-form stack" data-form="editor" novalidate onsubmit="return false">
+          <form class="ed-form stack" data-form="editor" novalidate>
             <section class="card"><h2>Pelanggan</h2>
               <div class="cust">${inp('bill_nama', 'Nama (Bill To)', x.bill_nama, { placeholder: 'cth Contoh Trading Sdn Bhd' })}<div data-sugg>${suggestions()}</div></div>
               ${inp('bill_alamat', 'Alamat', x.bill_alamat, { rows: 3 })}
@@ -224,6 +224,7 @@
       },
       async edSaveDraft() { await saveNow(false); },
       edIssue() {
+        if (root.navigator && root.navigator.onLine === false) { ctx.toast('Terbit dokumen perlukan internet. Draf disimpan di peranti ini.', true); saveNow(true); return; }
         ed().err = AI.validateDraft(d(), sk(), codes());
         if (Object.keys(ed().err).length) {
           ed().tab = 'form'; ctx.render(); fitPreview();
@@ -231,7 +232,6 @@
           setTimeout(() => { const el = document.querySelector('[aria-invalid="true"]') || document.querySelector('.ferr'); if (el) { el.scrollIntoView({ block: 'center' }); if (el.focus) el.focus(); } }, 0);
           return;
         }
-        if (root.navigator && root.navigator.onLine === false) { ctx.toast('Terbit dokumen perlukan internet. Draf disimpan di peranti ini.', true); saveNow(true); return; }
         UI.issue = { phase: 'confirm', step: 0 }; UI.modal = 'issue'; ctx.render();
       },
       async issueGo() {
@@ -242,7 +242,7 @@
           sk: sk(), codes: codes(), api: ctx.api(), store: ctx.store(), ws: UI.ws, email: ctx.email(), worker: ctx.worker,
           makePdf: AI.makePdf, assets,
           saveDraft: async (dd) => { const rec = await AI.drafts.save(Object.assign({}, dd, { email: ctx.email() })); dd.id = rec.id; },
-          dropDraft: (id) => AI.drafts.del(id)
+          dropDraft: (id) => AI.drafts.del(id), demo: ctx.demo, linkOf: ctx.linkOf
         };
         try {
           const r = await AI.issueDocument(deps, x, (i) => { UI.issue.step = i; updateSteps(); });
@@ -340,7 +340,7 @@
         <p class="muted center">${esc(I.bill)}${r.view.jenis === 'do' ? '' : ' · RM' + esc(r.view.totals.total)}${r.charged && !r.repeat ? ` · ${r.charged} kredit digunakan` : ''}</p>
         ${!r.shared ? `<p class="note warn">${r.shareError ? 'Perkongsian awam disekat oleh akaun Google anda. ' : 'Perkongsian awam dimatikan dalam Tetapan. '}Pautan hanya boleh dibuka oleh anda; hantar fail PDF secara manual.</p>` : ''}
         <div class="sheet-acts">
-          <a class="btn primary" href="${esc(r.url)}" target="_blank" rel="noopener">Buka PDF di Google Drive</a>
+          <a class="btn primary" href="${esc(r.url)}" target="_blank" rel="noopener">${ctx.demo ? 'Buka PDF' : 'Buka PDF di Google Drive'}</a>
           <div class="acts3">
             ${r.shared ? `<a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
             ${r.shared ? '<button class="btn" data-act="issueCopy">Salin pautan</button>' : ''}

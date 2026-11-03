@@ -37,7 +37,7 @@
 
       // 2) baris Sheet (Dokumen + Item rujukan)
       step(at = 1);
-      const view = AI.docView(draft, sk, codes, { number: issued.number });
+      const view = AI.docView(draft, sk, codes, { number: issued.number, demo: deps.demo });
       const row = AI.docRow(draft, view, issued, deps.email);
       row.hash_kandungan = await AI.sha256Hex(AI.hashInput(row));
       const existing = store.list('Dokumen').find((x) => str(x.doc_id) === draft.doc_id);
@@ -76,7 +76,7 @@
       if (str(sk.kongsi_awam).toUpperCase() !== 'TIDAK') {
         try { await api.share(file.id); shared = true; } catch (e) { shareError = AI.googleErrorHint(e); }
       }
-      const url = file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`;
+      const url = (deps.linkOf && deps.linkOf(file.id)) || file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`;
       store.update('Dokumen', 'doc_id', { doc_id: draft.doc_id, pdf_url: url, pdf_id: file.id });
       await store.flush();
 

@@ -56,7 +56,7 @@
           <tbody>${p.rows.map((i) => row(v.rows[i])).join('') || `<tr><td class="dv-empty" colspan="${cols.length}">No items yet</td></tr>`}</tbody></table>` : ''}
         ${p.last ? foot : ''}
         <footer class="dv-pf"><span>This is a computer-generated document.</span><span>Page ${p.no} of ${p.of}</span></footer>
-      </div>${v.isDraft ? '<div class="dv-draft" aria-hidden="true">DRAF</div>' : ''}</div>`);
+      </div>${v.isDraft ? '<div class="dv-draft" aria-hidden="true">DRAF</div>' : v.isDemo ? '<div class="dv-draft" aria-hidden="true">DEMO</div>' : ''}</div>`);
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = AI;

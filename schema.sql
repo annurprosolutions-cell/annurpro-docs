@@ -69,3 +69,11 @@ CREATE TABLE IF NOT EXISTS webhook_log (
   ok INTEGER NOT NULL,
   detail TEXT
 );
+
+-- had kadar (juga dicipta automatik oleh Worker jika tiada)
+CREATE TABLE IF NOT EXISTS rate_limits (
+  k TEXT NOT NULL,
+  w INTEGER NOT NULL,
+  n INTEGER NOT NULL,
+  PRIMARY KEY (k, w)
+);

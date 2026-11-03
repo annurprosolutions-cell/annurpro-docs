@@ -148,6 +148,23 @@ async function check(req, env, deps) {
   return json(Object.assign({ ok: true, email, businessName: t0.business_name, newAccount: created, buyUrls: c.buyUrls }, ent));
 }
 
+// ---------- had kadar (tetingkap tetap per minit, dalam D1) ----------
+// Jadual dicipta sendiri kali pertama digunakan (tiada migrasi manual). Gagal terbuka: jika D1 bermasalah, permintaan dibenarkan.
+const rlReady = new WeakMap();   // db → janji CREATE TABLE
+export const RATE = { issue: 30, check: 60, admin: 120, user: 120 };
+export async function rateLimit(env, key, limit, now) {
+  const db = env.DB;
+  try {
+    if (!rlReady.has(db)) rlReady.set(db, db.prepare('CREATE TABLE IF NOT EXISTS rate_limits (k TEXT NOT NULL, w INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (k, w))').run());
+    await rlReady.get(db);
+    const w = Math.floor(now / 60000);
+    const n = await db.prepare('INSERT INTO rate_limits (k, w, n) VALUES (?, ?, 1) ON CONFLICT (k, w) DO UPDATE SET n = n + 1 RETURNING n').bind(key, w).first('n');
+    if (Math.random() < 0.02) await db.prepare('DELETE FROM rate_limits WHERE w < ?').bind(w - 5).run();
+    return n <= limit ? { ok: true, n } : { ok: false, n, retryAfter: 60 - Math.floor((now % 60000) / 1000) };
+  } catch (e) { rlReady.delete(db); return { ok: true, error: true }; }
+}
+const RATE_ROUTE = { 'POST /api/issue': 'issue', 'POST /api/check': 'check', 'POST /api/void': 'user', 'GET /api/issues': 'user', 'GET /api/ledger': 'user', 'GET /api/payments': 'user' };
+
 // ---------- terbit dokumen: nombor berserial + caj kredit (docs/05-BSD.md §3B) ----------
 const DOC_TYPES = ['invoice', 'quotation', 'do'];
 const bad = (msg, reason) => { const e = new Error(msg); e.status = 400; e.reason = reason || 'input-tidak-sah'; return e; };
@@ -497,6 +514,13 @@ export async function handle(req, env, deps) {
   try {
     if (path === '/api/ping' && req.method === 'GET') {
       return json({ ok: true, app: APP, time: new Date(deps.now()).toISOString(), db: !!env.DB }, 200, cors);
+    }
+    // had kadar ikut token (hash) + laluan; webhook BCL dan ping tidak dihadkan
+    const rk = RATE_ROUTE[req.method + ' ' + path] || (path.startsWith('/api/admin/') ? 'admin' : null);
+    if (rk && env.DB) {
+      const tok = (req.headers.get('authorization') || '').slice(-32) || req.headers.get('cf-connecting-ip') || 'anon';
+      const r = await rateLimit(env, rk + ':' + tok, RATE[rk], deps.now());
+      if (!r.ok) return json({ ok: false, reason: 'terlalu-kerap', error: 'Terlalu banyak permintaan. Cuba lagi sebentar.' }, 429, Object.assign({ 'retry-after': String(r.retryAfter) }, cors));
     }
     if (path === '/api/check' && req.method === 'POST') {
       if (!env.DB) return json({ ok: false, reason: 'tiada-db', error: 'D1 belum disambung pada Worker' }, 500, cors);

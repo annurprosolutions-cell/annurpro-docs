@@ -167,7 +167,7 @@
         <header class="wiz-head"><div class="brand"><img src="brand/annurpro-icon-64.png" alt="" width="32" height="32"><div><b>Persediaan</b><small>Langkah ${step + 1} daripada ${STEPS.length}</small></div></div>
           <ol class="steps">${STEPS.map(([, t], i) => `<li class="${i < step ? 'done' : i === step ? 'on' : ''}" ${i === step ? 'aria-current="step"' : ''}><span>${i + 1}</span>${esc(t)}</li>`).join('')}</ol></header>
         <div class="wiz-body">
-          <form class="card wiz-form" data-form="wizard" novalidate onsubmit="return false">
+          <form class="card wiz-form" data-form="wizard" novalidate>
             <h1>${esc(title)}</h1>${body}
             <div class="wiz-acts">
               ${step > 0 ? '<button type="button" class="btn" data-act="wizBack">Kembali</button>' : '<span></span>'}
@@ -321,7 +321,7 @@
       const v = Object.assign({}, sk(), f());
       return `${pageHead('Profil Syarikat', 'Maklumat pada setiap dokumen')}
         <div class="split">
-          <form class="stack" data-form="profil" novalidate onsubmit="return false">
+          <form class="stack" data-form="profil" novalidate>
             <section class="card"><h2>Syarikat</h2>
               ${field('nama', 'Nama syarikat', { required: true, max: 120 })}
               <div class="grid2">${field('ssm', 'No. pendaftaran (SSM)', { upper: true })}${field('laman', 'Laman web')}</div>
@@ -363,7 +363,7 @@
       }).join('');
       return `${pageHead('Dokumen, Penomboran & Cukai')}
         <div class="split">
-          <form class="stack" data-form="docset" novalidate onsubmit="return false">
+          <form class="stack" data-form="docset" novalidate>
             <section class="card"><h2>Penomboran</h2>
               ${field('kod_syarikat', 'Kod syarikat', { required: true, upper: true, max: 6, hint: '2 hingga 6 huruf atau nombor.' })}
               <div class="prefix-grid">${[['invoice', 'prefix_invois', 'Invois'], ['quotation', 'prefix_quotation', 'Quotation'], ['do', 'prefix_do', 'Delivery Order']].map(([t, k, l]) => `<div class="pcard">
