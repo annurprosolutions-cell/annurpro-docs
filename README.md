@@ -47,27 +47,50 @@ node --no-warnings tests/e2e.mjs
 
 `npm test` menjalankan ujian unit Worker (dengan D1 palsu atas `node:sqlite` yang memuatkan `schema.sql` sebenar) dan logik lesen. `tests/e2e.mjs` memerlukan Playwright dan menguji log masuk hingga skrin Utama pada saiz telefon dan desktop, dengan Google dimock.
 
-## Langkah pemilik (Fasa 0) — sekali sahaja
+## Langkah pemilik (persediaan sekali sahaja)
 
-Jangan tampal sebarang rahsia (token, kunci) dalam chat. Letakkan terus dalam dashboard.
+Jangan tampal sebarang rahsia (token, kunci rahsia) dalam chat. Yang boleh dikongsi dengan Claude hanyalah **Database ID** (D1) dan **Client ID** (Google); kedua-duanya bukan rahsia.
 
-**A. Google Cloud (log masuk)**
-1. Buka https://console.cloud.google.com → pilih atau cipta projek `Annur Invoice`.
-2. **APIs & Services → Library**: aktifkan **Google Sheets API** dan **Google Drive API**.
-3. **OAuth consent screen**: User type *External*, nama app `Annur Invoice`, emel sokongan, scope `openid`, `email`, `.../auth/drive.file`. Kekal **Testing** dan tambah emel kau sebagai *Test user*.
-4. **Credentials → Create credentials → OAuth client ID → Web application**. *Authorized JavaScript origins*: alamat Worker (contoh `https://annur-invoice.<akaun>.workers.dev`) dan domain nanti.
-5. Salin **Client ID** (bukan secret) dan bagi pada Claude, atau isi sendiri dalam `config.js` (`googleClientId`) dan var Worker `GOOGLE_CLIENT_ID`.
+Susunan penting kerana setiap langkah memberi maklumat kepada langkah seterusnya: D1 → Worker → Google.
 
-**B. Cloudflare (hos + D1)**
-1. https://dash.cloudflare.com → **Storage & Databases → D1 → Create** → nama `annur-invoice`.
-2. Buka database itu → **Console** → tampal seluruh isi `schema.sql` → **Execute**.
-3. Salin **Database ID** → ganti `ISI_DATABASE_ID_D1` dalam `wrangler.jsonc`.
-4. **Workers & Pages → Create → Import a repository** → pilih `annurpro-docs`. Build command kosong; deploy command `npx wrangler deploy`.
-5. Worker → **Settings → Variables and Secrets**: semak var dalam `wrangler.jsonc` (`GOOGLE_CLIENT_ID`, `ALLOWED_ORIGINS`). Rahsia BCL ditambah pada Fasa 8.
-6. Buka `https://<worker>/api/ping`. Jawapan `{"ok":true,...,"db":true}` bermaksud Worker dan D1 bersambung.
+### 1. Cloudflare: cipta database D1
+1. https://dash.cloudflare.com → **Storage & Databases → D1 SQL database → Create database** → nama `annur-invoice`.
+2. Buka database itu → tab **Console** → tampal seluruh isi `schema.sql` → **Execute**. Jika ada ralat, jalankan satu `CREATE TABLE` pada satu masa.
+3. Tab **Tables** patut menunjukkan 7 jadual: `tenants`, `subscriptions`, `credit_ledger`, `counters`, `doc_issues`, `payments`, `webhook_log`.
+4. Salin **Database ID** (di halaman ringkasan database) dan bagi kepada Claude. Claude (atau anda, melalui GitHub) menggantikan `ISI_DATABASE_ID_D1` dalam `wrangler.jsonc`.
 
-**C. Uji log masuk**
-Buka alamat Worker → **Sambung Google** → pilih akaun test → skrin Utama menunjukkan **50 kredit (10 dokumen)** Akaun baharu masuk ke wizard persediaan. Selepas langkah 1 (nama syarikat), Google Drive akan ada folder **[Nama Syarikat] – Annur Invoice** (subfolder Invois, Quotation, Delivery Order, _Tetapan) dan Sheet dengan nama sama, bertab Dokumen, Pelanggan, Syarikat, KodCukai, Item, Meta. Habis wizard, skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan**.
+### 2. Cloudflare: sambung repo dan deploy
+1. **Workers & Pages → Create → Import a repository** → pilih `annurpro-docs`.
+2. Branch pengeluaran: branch default repo. Nama projek `annur-invoice`. **Build command kosong**. Deploy command `npx wrangler deploy`.
+3. Selepas deploy berjaya, salin alamat Worker (contoh `https://annur-invoice.<subdomain>.workers.dev`).
+4. Buka `<alamat>/api/ping`. Jawapan `{"ok":true,...,"db":true}` bermaksud Worker dan D1 bersambung. Jika `db:false`, `database_id` dalam `wrangler.jsonc` belum betul.
+
+### 3. Google Cloud: log masuk
+1. https://console.cloud.google.com → cipta projek `Annur Invoice`.
+2. **APIs & Services → Library**: aktifkan **Google Sheets API** dan **Google Drive API** (kedua-duanya wajib).
+3. **Google Auth Platform / OAuth consent screen**: User type *External*, nama app `Annur Invoice`, e-mel sokongan. Tambah scope `openid`, `.../auth/userinfo.email` dan `.../auth/drive.file`. Biarkan status **Testing**, dan tambah e-mel Google anda dalam **Test users**.
+4. **Credentials → Create credentials → OAuth client ID → Web application**. *Authorized JavaScript origins*: tampal alamat Worker dari langkah 2 (tanpa garis condong di hujung). Tiada *redirect URI* diperlukan.
+5. Salin **Client ID** (berakhir `.apps.googleusercontent.com`) dan bagi kepada Claude. Jangan bagi *Client secret* (tidak digunakan).
+
+### 4. Letak Client ID dalam kod
+`googleClientId` dalam `config.js` **dan** `GOOGLE_CLIENT_ID` dalam `vars` di `wrangler.jsonc` mesti sama. Letakkan dalam `wrangler.jsonc`, bukan hanya dalam dashboard Cloudflare, kerana setiap deploy menimpa pembolehubah dashboard dengan nilai dalam fail. Selepas push, Cloudflare deploy semula dalam lebih kurang 30 saat.
+
+### 5. Uji
+1. Buka alamat Worker, tekan **Sambung Google**, pilih akaun test, benarkan akses Drive. Amaran "Google hasn't verified this app" adalah normal dalam mod Testing: **Advanced → Go to Annur Invoice**.
+2. Wizard persediaan keluar. Isi nama syarikat, tekan **Seterusnya**: folder `[Nama Syarikat] – Annur Invoice` muncul dalam Google Drive anda bersama Sheet dengan nama sama.
+3. Lengkapkan wizard. Skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan**.
+4. Tetapan → Profil Syarikat dan Dokumen, Penomboran & Cukai boleh disunting dan disimpan; semak Google Sheet (tab `Syarikat`) berubah.
+
+### Masalah biasa
+| Gejala | Punca dan penyelesaian |
+|--------|------------------------|
+| `Error 400: origin_mismatch` | Alamat Worker belum ada dalam *Authorized JavaScript origins*, atau ada garis condong di hujung. |
+| `Error 403: access_denied` | E-mel belum ditambah sebagai **Test user**. |
+| Butang Sambung Google kelabu, mesej "Client ID belum diisi" | `googleClientId` dalam `config.js` masih kosong (langkah 4). |
+| Pill "Ralat storan" | Sheets API atau Drive API belum diaktifkan (langkah 3.2). |
+| Skrin Utama kata "Semakan lesen gagal" | `GOOGLE_CLIENT_ID` pada Worker tidak sama dengan `config.js`, atau D1 belum disambung (`/api/ping` tunjuk `db:false`). |
+| Deploy gagal pada `database_id` | `ISI_DATABASE_ID_D1` belum diganti. |
+| Popup log masuk disekat | Benarkan popup untuk laman ini. |
 
 ## Rilis
 
