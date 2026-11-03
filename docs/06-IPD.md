@@ -78,12 +78,12 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 5.5 Simpan pelanggan baharu daripada borang.
 
 ### Fasa 6 – Terbit (F-06, F-11, F-17)
-- [ ] 6.1 Worker `POST /api/issue` ikut BSD §3B (idempoten ikut `doc_id`, atomik, regex prefix/tarikh); ujian: dua `issue` serentak, kredit tepat 5, baki 4 ditolak, ulang sama dapat nombor sama tanpa caj, langganan aktif tiada caj.
-- [ ] 6.2 Klien: alur `issue → append Sheet → jana PDF → muat naik Drive → kemas kini baris (pdf_url, hash)`; status perantaraan pada S-05; cuba semula idempotent.
-- [ ] 6.3 `pdf.js`: html2canvas+jsPDF disalin ke repo, skala 2, A4 berbilang halaman, ujian visual dengan tangkapan skrin rujukan.
-- [ ] 6.4 Kongsi: `permissions.create` (jika `kongsi_awam`), butang WhatsApp, salin pautan, muat turun.
-- [ ] 6.5 `GET /api/issues?since=` + "Pulihkan" bagi nombor tanpa baris Sheet; `POST /api/void`.
-- [ ] 6.6 S-12 dialog tiada kredit/lesen tamat dengan butang beli (buka BCL tab baharu, `noopener`) dan "Semak semula".
+- [x] 6.1 Worker `POST /api/issue` ikut BSD §3B (idempoten ikut `doc_id`, atomik, regex prefix/tarikh); ujian: dua `issue` serentak, kredit tepat 5, baki 4 ditolak, ulang sama dapat nombor sama tanpa caj, langganan aktif tiada caj.
+- [x] 6.2 Klien: alur `issue → append Sheet → jana PDF → muat naik Drive → kemas kini baris (pdf_url, hash)`; status perantaraan pada S-05; cuba semula idempotent.
+- [x] 6.3 `pdf.js`: html2canvas+jsPDF disalin ke repo, skala 2, A4 berbilang halaman, ujian visual dengan tangkapan skrin rujukan.
+- [x] 6.4 Kongsi: `permissions.create` (jika `kongsi_awam`), butang WhatsApp, salin pautan, muat turun.
+- [x] 6.5 `GET /api/issues?since=` + "Pulihkan" bagi nombor tanpa baris Sheet; `POST /api/void`.
+- [x] 6.6 S-12 dialog tiada kredit/lesen tamat dengan butang beli (buka BCL tab baharu, `noopener`) dan "Semak semula".
 
 ### Fasa 7 – Rekod & Tukar (F-10, F-12, F-13)
 - [ ] 7.1 S-06: tapis jenis/status/bulan, carian, menu "⋯" ikut status, badge, kunci 24 jam (UI).

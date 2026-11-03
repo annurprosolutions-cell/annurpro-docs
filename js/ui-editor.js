@@ -229,9 +229,49 @@
           setTimeout(() => { const el = document.querySelector('[aria-invalid="true"]') || document.querySelector('.ferr'); if (el) { el.scrollIntoView({ block: 'center' }); if (el.focus) el.focus(); } }, 0);
           return;
         }
-        saveNow(true);
-        ctx.toast('Dokumen lengkap. Fungsi terbit (nombor rasmi + PDF) akan tersedia dalam kemas kini seterusnya.');
+        if (root.navigator && root.navigator.onLine === false) { ctx.toast('Terbit dokumen perlukan internet. Draf disimpan di peranti ini.', true); saveNow(true); return; }
+        UI.issue = { phase: 'confirm', step: 0 }; UI.modal = 'issue'; ctx.render();
       },
+      async issueGo() {
+        const x = d(); if (!x || (UI.issue && UI.issue.phase === 'running')) return;
+        UI.issue = { phase: 'running', step: 0 }; ctx.render();
+        if (!x.id) await saveNow(true);
+        const deps = {
+          sk: sk(), codes: codes(), api: ctx.api(), store: ctx.store(), ws: UI.ws, email: ctx.email(), worker: ctx.worker,
+          makePdf: AI.makePdf, assets,
+          saveDraft: async (dd) => { const rec = await AI.drafts.save(Object.assign({}, dd, { email: ctx.email() })); dd.id = rec.id; },
+          dropDraft: (id) => AI.drafts.del(id)
+        };
+        try {
+          const r = await AI.issueDocument(deps, x, (i) => { UI.issue.step = i; updateSteps(); });
+          UI.issue = { phase: 'done', result: r, jenis: x.jenis, bill: x.bill_nama };
+          ctx.onIssued(r);
+          UI.ed = null; UI.view = 'home';
+        } catch (e) {
+          if (e.paywall) { UI.issue = null; UI.pay = e.paywall; UI.modal = 'paywall'; ctx.render(); return; }
+          if (e.validation) { UI.issue = null; UI.modal = ''; ed().err = e.validation; ctx.render(); return; }
+          if (e.issued) ctx.onIssued(e.issued);
+          UI.issue = { phase: 'error', step: e.step || 0, message: e.network ? 'Tiada sambungan internet.' : AI.googleErrorHint(e), number: x.issued && x.issued.number };
+        }
+        ctx.render();
+      },
+      issueDone() { if (UI.issue && UI.issue.url) URL.revokeObjectURL(UI.issue.url); UI.issue = null; UI.modal = ''; UI.view = 'home'; ctx.render(); root.scrollTo(0, 0); },
+      issueNew(el) { const t = (UI.issue && UI.issue.jenis) || 'invoice'; UI.issue = null; UI.modal = ''; actions.newDoc({ dataset: { t } }); },
+      async issueCopy() {
+        const u = UI.issue && UI.issue.result && UI.issue.result.url; if (!u) return;
+        try { await root.navigator.clipboard.writeText(u); ctx.toast('Pautan disalin.'); } catch (e) { ctx.toast('Tidak dapat menyalin. Pautan: ' + u, true); }
+      },
+      async issueShare() {
+        const r = UI.issue && UI.issue.result; if (!r) return;
+        const name = AI.pdfName(r.number, UI.issue.bill);
+        try {
+          const file = root.File ? new File([r.bytes], name, { type: 'application/pdf' }) : null;
+          if (file && root.navigator.canShare && root.navigator.canShare({ files: [file] })) await root.navigator.share({ files: [file], title: r.number });
+          else await root.navigator.share({ title: r.number, url: r.url });
+        } catch (e) { /* pengguna batal */ }
+      },
+      payClose() { UI.pay = null; UI.modal = ''; ctx.render(); },
+      async payRecheck() { await ctx.recheck(); UI.pay = null; UI.modal = ''; ctx.render(); ctx.toast(UI.lic && UI.lic.canIssue ? 'Kelayakan dikemas kini. Cuba terbit semula.' : 'Belum ada perubahan. Selesaikan bayaran dahulu.', !(UI.lic && UI.lic.canIssue)); },
       async edClose() { await saveNow(true); UI.ed = null; UI.view = 'home'; ctx.render(); },
       async openDraft(el) { const rec = await AI.drafts.get(el.dataset.id); if (rec) open(rec); else ctx.toast('Draf tidak dijumpai.', true); },
       async delDraft(el) {
@@ -240,8 +280,82 @@
       }
     };
 
+    // ---------- dialog S-05 (terbit) dan S-12 (tiada kelayakan) ----------
+    function updateSteps() {
+      const el = document.querySelector('[data-steps]'); if (el && UI.issue) el.innerHTML = stepsHtml(UI.issue.step, UI.issue.phase);
+    }
+    function stepsHtml(at, phase) {
+      return AI.ISSUE_STEPS.map((t, i) => {
+        const st = phase === 'error' && i === at ? 'bad' : i < at || phase === 'done' ? 'ok' : i === at ? 'run' : '';
+        return `<li class="${st}"><span>${st === 'ok' ? '✓' : st === 'bad' ? '!' : i + 1}</span>${esc(t)}${st === 'run' ? '...' : ''}</li>`;
+      }).join('');
+    }
+    function modal() {
+      if (UI.modal === 'paywall' && UI.pay) {
+        const p = UI.pay, sub = p.buyUrls && p.buyUrls.sub, pack = p.buyUrls && p.buyUrls.pack;
+        const msg = p.reason === 'tamat' ? 'Langganan anda telah tamat.' : `Baki kredit tidak cukup (${p.credits || 0} kredit; perlu ${p.creditsPerDoc || 5} untuk satu dokumen).`;
+        return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="pTitle"><div class="sheet">
+          <h2 id="pTitle">Tidak dapat terbit</h2><p>${esc(msg)} Draf anda selamat di peranti ini.</p>
+          <p class="muted">Langgan RM20 sebulan untuk terbit tanpa had${pack ? ', atau beli kredit' : ''}.</p>
+          <div class="sheet-acts">
+            ${sub ? `<a class="btn primary" href="${esc(sub)}" target="_blank" rel="noopener">Langgan</a>` : '<p class="note warn">Pautan bayaran belum disediakan. Hubungi sokongan.</p>'}
+            ${pack ? `<a class="btn" href="${esc(pack)}" target="_blank" rel="noopener">Beli kredit</a>` : ''}
+            <button class="btn" data-act="payRecheck">Saya sudah bayar, semak semula</button>
+            <button class="btn ghost" data-act="payClose">Tutup</button></div></div></div>`;
+      }
+      if (UI.modal !== 'issue' || !UI.issue) return '';
+      const I = UI.issue, x = UI.ed && UI.ed.d, label = AI.DOC_TYPES[(x && x.jenis) || I.jenis].label;
+      if (I.phase === 'confirm') {
+        const L = UI.lic || {}, per = L.creditsPerDoc || 5;
+        const cost = x && x.issued ? `Nombor ${esc(x.issued.number)} sudah dikeluarkan untuk dokumen ini. Tiada kredit tambahan.`
+          : L.mode === 'langganan' || L.mode === 'ihsan' ? 'Langganan aktif: tiada kredit digunakan.'
+            : `${per} kredit akan digunakan. Baki selepas ini: ${Math.max(0, (L.credits || 0) - per)} kredit.`;
+        return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle"><div class="sheet">
+          <h2 id="iTitle">Terbit ${esc(label)}?</h2>
+          <p>Nombor rasmi akan dikeluarkan dan PDF disimpan dalam Google Drive anda. Anda boleh mengedit dokumen ini dalam 24 jam selepas terbit.</p>
+          <p class="note info">${cost}</p>
+          <div class="sheet-acts"><button class="btn primary" data-act="issueGo">Terbit sekarang</button><button class="btn ghost" data-act="closeModal">Batal</button></div></div></div>`;
+      }
+      if (I.phase === 'running' || I.phase === 'error') {
+        return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle" aria-busy="${I.phase === 'running'}"><div class="sheet">
+          <h2 id="iTitle">${I.phase === 'error' ? 'Terbit belum selesai' : 'Menerbit ' + esc(label)}</h2>
+          <ol class="isteps" data-steps>${stepsHtml(I.step, I.phase)}</ol>
+          ${I.phase === 'error' ? `<p class="note danger">${esc(I.message)}</p>
+            ${I.number ? `<p>Nombor <b>${esc(I.number)}</b> sudah dikeluarkan dan disimpan untuk dokumen ini. Cuba lagi tidak menggunakan kredit tambahan.</p>` : ''}
+            <div class="sheet-acts"><button class="btn primary" data-act="issueGo">Cuba lagi</button><button class="btn ghost" data-act="closeModal">Tutup (draf disimpan)</button></div>`
+            : '<p class="fine">Jangan tutup app sehingga selesai.</p>'}</div></div>`;
+      }
+      const r = I.result;
+      if (!I.url) I.url = URL.createObjectURL(new Blob([r.bytes], { type: 'application/pdf' }));
+      const wa = 'https://wa.me/?text=' + encodeURIComponent(AI.waText(r.view.title, r.number, I.bill, r.url));
+      return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle"><div class="sheet">
+        <div class="ok-badge">✓</div>
+        <h2 id="iTitle">${esc(label)} diterbit</h2>
+        <p class="bignum">${esc(r.number)}</p>
+        <p class="muted center">${esc(I.bill)}${r.view.jenis === 'do' ? '' : ' · RM' + esc(r.view.totals.total)}${r.charged ? ` · ${r.charged} kredit digunakan` : ''}</p>
+        ${!r.shared ? `<p class="note warn">${r.shareError ? 'Perkongsian awam disekat oleh akaun Google anda. ' : 'Perkongsian awam dimatikan dalam Tetapan. '}Pautan hanya boleh dibuka oleh anda; hantar fail PDF secara manual.</p>` : ''}
+        <div class="sheet-acts">
+          <a class="btn primary" href="${esc(r.url)}" target="_blank" rel="noopener">Buka PDF di Google Drive</a>
+          <div class="acts3">
+            ${r.shared ? `<a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+            ${r.shared ? '<button class="btn" data-act="issueCopy">Salin pautan</button>' : ''}
+            <a class="btn" href="${esc(I.url)}" download="${esc(AI.pdfName(r.number, I.bill))}">Muat turun</a>
+            ${root.navigator && root.navigator.share ? '<button class="btn" data-act="issueShare">Kongsi</button>' : ''}
+          </div>
+          <button class="btn ghost" data-act="issueNew">Cipta ${esc(label)} baharu</button>
+          <button class="btn ghost" data-act="issueDone">Selesai</button>
+        </div></div></div>`;
+    }
+
     // ---------- Rekod: draf ----------
-    async function loadDrafts() { UI.drafts = await AI.drafts.list(ctx.email()); ctx.render(); }
+    async function loadDrafts() {
+      UI.drafts = await AI.drafts.list(ctx.email()); ctx.render();
+      try {
+        const since = new Date(Date.now() - 60 * 864e5).toISOString();
+        const r = await ctx.worker('GET', '/api/issues?since=' + encodeURIComponent(since));
+        if (r.body && r.body.ok) { UI.issuesRemote = r.body.issues; ctx.render(); }
+      } catch (e) { /* luar talian: pendamaian kemudian */ }
+    }
     function viewRekod() {
       const ds = UI.drafts;
       const T = AI.DOC_TYPES;
@@ -250,15 +364,37 @@
           const v = AI.calcDoc(AI.cleanItems(x.items), codes(), { taxable: reg(), jenis: x.jenis });
           return `<div class="drow"><button class="dopen" data-act="openDraft" data-id="${esc(x.id)}"><b>${esc(str(x.bill_nama) || '(tiada nama pelanggan)')}</b>
             <small class="muted">${esc(T[x.jenis] ? T[x.jenis].label : x.jenis)} · ${esc(AI.fmtDate(x.tarikh))} · ${AI.cleanItems(x.items).length} item</small></button>
-            <div class="dright">${x.jenis === 'do' ? '' : `<b>RM${esc(AI.fmtMoney(v.total))}</b>`}<span class="badge grey">Draf</span>
+            <div class="dright">${x.jenis === 'do' ? '' : `<b>RM${esc(AI.fmtMoney(v.total))}</b>`}${x.issued ? `<span class="badge amber" title="Nombor sudah dikeluarkan">Belum siap · ${esc(x.issued.number)}</span>` : '<span class="badge grey">Draf</span>'}
             <button class="ib danger" data-act="delDraft" data-id="${esc(x.id)}" aria-label="Padam draf">${ctx.icon('trash')}</button></div></div>`;
         }).join('')}</div>`;
       return `<header class="page-head"><h1>Rekod</h1></header>
         <section class="card"><h2>Draf di peranti ini</h2>${list}</section>
-        <section class="card"><h2>Dokumen diterbit</h2><div class="empty"><p>Dokumen yang diterbit akan disenaraikan di sini.</p></div></section>`;
+        ${orphanNotice()}
+        <section class="card"><h2>Dokumen diterbit</h2>${issuedList()}</section>`;
+    }
+    const ST = (r) => (r.status === 'Batal' ? ['red', 'Batal'] : Date.now() - Date.parse(r.diterbit_pada) > 24 * 3600e3 ? ['blue', 'Dikunci'] : ['green', 'Terbit']);
+    function issuedList() {
+      const rows = ((UI.data && UI.data.dokumen) || []).slice().sort((a, b) => String(b.diterbit_pada).localeCompare(String(a.diterbit_pada)));
+      if (!rows.length) return `<div class="empty"><p>Belum ada dokumen diterbit.</p></div>`;
+      return `<div class="dlist">${rows.map((r) => {
+        const [tone, label] = ST(r);
+        return `<div class="drow"><div class="dopen"><b>${esc(r.no_dokumen)}</b><small class="muted">${esc((AI.DOC_TYPES[r.jenis] || {}).label || r.jenis)} · ${esc(AI.fmtDate(r.tarikh))} · ${esc(r.bill_nama)}</small></div>
+          <div class="dright">${r.jenis === 'do' ? '' : `<b>RM${esc(AI.fmtMoney(AI.toCents(r.jumlah) || 0))}</b>`}<span class="badge ${tone}">${label}</span>
+          ${r.pdf_url ? `<a class="btn sm" href="${esc(r.pdf_url)}" target="_blank" rel="noopener">PDF</a>` : '<span class="badge amber">PDF belum siap</span>'}</div></div>`;
+      }).join('')}</div>`;
+    }
+    // Nombor dikeluarkan Worker tetapi tiada baris dalam Sheet (cth app ditutup semasa terbit)
+    function orphanNotice() {
+      const iss = UI.issuesRemote; if (!iss || !iss.length) return '';
+      const have = new Set(((UI.data && UI.data.dokumen) || []).map((r) => str(r.no_dokumen)));
+      const local = new Set((UI.drafts || []).filter((x) => x.issued).map((x) => x.issued.number));
+      const miss = iss.filter((x) => x.status === 'issued' && !have.has(x.number));
+      if (!miss.length) return '';
+      return `<div class="notice warn"><span>Nombor berikut sudah dikeluarkan tetapi belum disimpan ke Sheet: <b>${miss.map((x) => esc(x.number)).join(', ')}</b>.
+        ${miss.some((x) => local.has(x.number)) ? 'Buka draf bertanda "Belum siap" dan tekan Terbit untuk menyambung (tiada kredit tambahan).' : 'Draf tiada pada peranti ini; buka app pada peranti asal untuk menyambung.'}</span></div>`;
     }
 
-    return { views: { editor: viewEditor, rekod: viewRekod }, actions, onInput, fitPreview, saveNow, loadDrafts };
+    return { views: { editor: viewEditor, rekod: viewRekod }, actions, onInput, fitPreview, saveNow, loadDrafts, modal };
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = AI;

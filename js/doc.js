@@ -128,6 +128,38 @@
     };
   };
 
+  // ---------- baris Sheet untuk dokumen terbit (docs/05-BSD.md §3A) ----------
+  AI.docRow = (d, v, issued, email) => {
+    const doo = d.jenis === 'do', c = v.totals.cents || { subtotal: 0, tax: 0, total: 0, taxes: [] };
+    const items = AI.cleanItems(d.items).map((it, i) => ({ n: i + 1, desc: str(it.desc), qty: str(it.qty), unit: str(it.unit),
+      price: doo ? '' : str(it.price), disc: doo ? '' : str(it.disc), tax_code: doo ? '' : str(it.tax_code || 'TIADA'),
+      amount: doo ? '' : AI.fromCents((c.lines && c.lines[i] && c.lines[i].amount) || 0) }));
+    const ship = doo ? (d.ship_sama ? { n: d.bill_nama, a: d.bill_alamat, at: d.attn, t: d.bill_tel } : { n: d.ship_nama, a: d.ship_alamat, at: d.ship_attn, t: d.ship_tel }) : { n: '', a: '', at: '', t: '' };
+    return {
+      doc_id: d.doc_id, jenis: d.jenis, no_dokumen: issued.number, tarikh: d.tarikh, status: 'Terbit', status_quotation: d.jenis === 'quotation' ? 'Menunggu' : '',
+      pelanggan_id: str(d.pelanggan_id), bill_nama: str(d.bill_nama), bill_alamat: str(d.bill_alamat), bill_tel: str(d.bill_tel), attn: str(d.attn),
+      our_ref: str(d.our_ref), your_ref: str(d.your_ref), terma: doo ? '' : str(d.terma), validity: d.jenis === 'quotation' ? str(d.validity) : '',
+      ship_nama: str(ship.n), ship_alamat: str(ship.a), ship_attn: str(ship.at), ship_tel: str(ship.t),
+      sumber_jenis: str(d.sumber_jenis), sumber_no: str(d.sumber_no), ditukar_kepada: '',
+      subtotal: doo ? '' : AI.fromCents(c.subtotal), jumlah_cukai: doo ? '' : AI.fromCents(c.tax), jumlah: doo ? '' : AI.fromCents(c.total),
+      jumlah_perkataan: doo ? '' : v.totals.words, jumlah_qty: doo ? Number(v.totals.qty) || 0 : '', bil_item: items.length,
+      items_json: JSON.stringify(items), ringkasan_cukai_json: doo || !c.taxes.length ? '' : JSON.stringify(c.taxes.map((t) => ({ kod: t.kod, kadar: t.kadar, asas: AI.fromCents(t.base), cukai: AI.fromCents(t.tax) }))),
+      pdf_url: '', pdf_id: '', hash_kandungan: '', diterbit_pada: issued.issuedAt, diterbit_oleh: email || '', dikemaskini_pada: issued.issuedAt,
+      dibatalkan_pada: '', sebab_batal: '', skema: 1
+    };
+  };
+  AI.itemRows = (row) => JSON.parse(row.items_json || '[]').map((it) => ({ no_dokumen: row.no_dokumen, n: it.n, desc: it.desc, qty: it.qty, unit: it.unit, price: it.price, disc: it.disc, tax_code: it.tax_code, amount: it.amount }));
+  // Kandungan kanonik untuk hash (bukti ubahsuai): medan yang dicetak pada dokumen
+  const HASH_KEYS = ['no_dokumen', 'jenis', 'tarikh', 'bill_nama', 'bill_alamat', 'bill_tel', 'attn', 'our_ref', 'your_ref', 'terma', 'validity',
+    'ship_nama', 'ship_alamat', 'ship_attn', 'ship_tel', 'subtotal', 'jumlah_cukai', 'jumlah', 'jumlah_qty', 'items_json', 'ringkasan_cukai_json'];
+  AI.hashInput = (row) => JSON.stringify(HASH_KEYS.map((k) => [k, row[k] == null ? '' : String(row[k])]));
+  AI.sha256Hex = async (text) => {
+    const buf = await (root.crypto || globalThis.crypto).subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+  AI.pdfName = (number, bill) => (String(number).replace(/\//g, '-') + ' - ' + str(bill).slice(0, 40)).replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim() + '.pdf';
+  AI.newDocId = () => (root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+
   // ---------- pembahagian halaman A4 (anggaran tinggi; sama untuk pratonton & PDF) ----------
   AI.PAGE = { first: 640, next: 880, rowPad: 10, lineH: 15 };
   AI.rowLines = (desc, cpl) => {

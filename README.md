@@ -14,7 +14,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 3 | Wizard persediaan 5 langkah (folder & Sheet ikut nama syarikat), Profil Syarikat, Dokumen/Penomboran/Cukai, tukar nama folder atas persetujuan | Siap |
 | 4 | Logo, cop, tandatangan & tandatangan DO: muat naik ke `_Tetapan`, buang latar putih, penyusun seret/nudge/saiz/reset | Siap |
 | 5 | Enjin dokumen: kalkulator SST (sen, cukai peringkat kod), editor Invois/Quotation/DO, pratonton A4 berbilang halaman, draf di peranti, pelanggan dari borang | Siap |
-| 6 | Terbit: nombor rasmi dari Worker, caj kredit, PDF ke Drive, kongsi | Seterusnya |
+| 6 | Terbit: `/api/issue` (nombor atomik + caj kredit), `/api/void`, `/api/issues`, `/api/ledger`; PDF (html2canvas + jsPDF dalam `vendor/`) ke Drive; kongsi; cuba semula; S-12 | Siap |
+| 7 | Rekod penuh (tapis, cari, edit 24 jam, batal), tukar Quotation→Invois / →DO, Pelanggan | Seterusnya |
 
 ## Struktur
 
@@ -36,10 +37,13 @@ js/ui-images.js        skrin S-09: muat naik, penyusun seret/nudge/saiz
 js/calc.js             pengiraan wang dalam sen, SST, jumlah dalam perkataan (tulen)
 js/doc.js              model draf, validasi, data paparan, pembahagian halaman A4 (tulen)
 js/template.js         HTML A4 Invois/Quotation/DO (css/doc.css, font Carlito)
-js/ui-editor.js        skrin S-04 editor + senarai draf dalam Rekod
+js/ui-editor.js        skrin S-04 editor, S-05 terbit, S-12 tiada kredit, Rekod (draf + terbit)
+js/issue.js            aliran terbit: nombor → Sheet → PDF → Drive (setiap langkah selamat diulang)
+js/pdf.js              HTML A4 → PDF (dimuat bila perlu dari vendor/)
+vendor/                html2canvas 1.4.1 dan jsPDF 2.5.1 (MIT, lesen disertakan)
 js/ui-settings.js      skrin S-02 wizard, S-08 Profil, S-10 Dokumen & Cukai
 js/app.js              UI: render() + data-act
-worker/index.mjs       API: /api/ping, /api/check
+worker/index.mjs       API: /api/ping, /api/check, /api/issue, /api/void, /api/issues, /api/ledger
 schema.sql             jadual D1 (docs/05-BSD.md §3B)
 tests/                 node --test (unit) + e2e.mjs (Playwright)
 ```

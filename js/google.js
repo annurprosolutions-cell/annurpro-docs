@@ -72,6 +72,9 @@
       parentId ? { parents: [parentId] } : {}, mark ? { appProperties: { [AI.APP_MARK]: mark } } : {}));
     this.updateFile = (id, meta) => req('PATCH', `${DRIVE}/files/${encodeURIComponent(id)}?fields=id,name`, meta);
     this.trash = (id) => this.updateFile(id, { trashed: true });
+    // kongsi "sesiapa dengan pautan boleh lihat"
+    this.share = (id) => req('POST', `${DRIVE}/files/${encodeURIComponent(id)}/permissions?fields=id`, { role: 'reader', type: 'anyone' });
+    this.findByProp = (key, value, mime) => this.listFiles(`appProperties has { key=${q(key)} and value=${q(value)} } and mimeType=${q(mime)} and trashed=false`, 'files(id,name,webViewLink,appProperties)');
     // kandungan fail: muat naik (media) dan muat turun (alt=media)
     this.uploadBytes = (id, bytes, mime) => req('PATCH', `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(id)}?uploadType=media&fields=id`, bytes, { raw: true, contentType: mime });
     this.downloadBytes = (id) => req('GET', `${DRIVE}/files/${encodeURIComponent(id)}?alt=media`, undefined, { bytes: true });

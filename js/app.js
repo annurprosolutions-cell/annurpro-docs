@@ -256,6 +256,7 @@
       : `<span class="pill ${cls}" title="${tip}"><i></i>${label}</span>`;
   }
   function modal() {
+    if (UI.modal === 'issue' || UI.modal === 'paywall') return E.modal();
     if (UI.modal === 'rename') return S.renameModal();
     if (UI.modal !== 'conflict') return '';
     const r = (UI.sync.info && UI.sync.info.remote) || {};
@@ -339,7 +340,25 @@
   const I = AI.ImagesUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), header: () => S.docHeader(Object.assign({}, UI.data && UI.data.syarikat, UI.form)) });
   const S = AI.SettingsUI({ UI, esc, icon, toast, render, store: () => store, createWorkspace, renameWorkspace, saveBusinessName, email: () => auth.lastEmail(),
     imgOf: I.imgOf, signStatic: I.signStatic });
-  const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, email: () => auth.lastEmail(), imgOf: I.imgOf });
+  // panggilan Worker dengan token Google pengguna
+  async function worker(method, path, body) {
+    const t = await auth.token();
+    let res;
+    try {
+      res = await root.fetch(String(CFG.apiBase || '').replace(/\/$/, '') + path, { method, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    } catch (e) { const err = new Error('Tiada sambungan ke pelayan'); err.network = true; throw err; }
+    let b = {}; try { b = await res.json(); } catch (e) { /* bukan JSON */ }
+    return { status: res.status, body: b };
+  }
+  // kemas kini kad lesen selepas terbit (tanpa menunggu /api/check)
+  function onIssued(r) {
+    if (!UI.lic || r.credits == null) return;
+    const L = UI.lic, per = L.creditsPerDoc || 5;
+    L.credits = r.credits; L.docsLeft = Math.floor(r.credits / per);
+    if (L.mode === 'kredit' && r.credits < per) { L.mode = 'habis'; L.canIssue = false; L.entitled = false; L.reason = 'tiada-kredit'; }
+    if (L.cache) { L.cache.credits = L.credits; L.cache.docsLeft = L.docsLeft; AI.local.set(LIC_KEY, L.cache); }
+  }
+  const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), imgOf: I.imgOf, worker, onIssued, recheck: () => runCheck() });
   const newDoc = E.actions.newDoc;
   E.actions.newDoc = (el) => {
     if (!(UI.ws && UI.ws.ready && UI.data)) { toast('Ruang kerja Google belum sedia. Tunggu pill "Tersimpan" atau tekan Sambung semula.', true); return; }
@@ -371,7 +390,7 @@
       runCheck();
       if (store && UI.sync.state === 'offline') store.flush().catch(() => {});
     });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && UI.modal) actions.closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && UI.modal && !(UI.issue && UI.issue.phase === 'running')) actions.closeModal(); });
     root.addEventListener('offline', () => { UI.online = false; render(); });
     if (auth.has()) { UI.view = 'home'; render(); runCheck(); }
     else render();

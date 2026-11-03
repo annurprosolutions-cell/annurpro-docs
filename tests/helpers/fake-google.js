@@ -64,10 +64,17 @@ function fakeGoogle(token) {
     if (p === '/drive/v3/files' && method === 'POST') {
       const isSheet = body.mimeType === 'application/vnd.google-apps.spreadsheet';
       const id = nid(isSheet ? 'sheet' : 'fold');
-      files.set(id, { id, name: body.name, mimeType: body.mimeType, parents: body.parents || [], appProperties: body.appProperties || {}, trashed: false });
+      files.set(id, { id, name: body.name, mimeType: body.mimeType, parents: body.parents || [], appProperties: body.appProperties || {}, trashed: false,
+        webViewLink: 'https://drive.google.com/file/d/' + id + '/view', permissions: [] });
       touch(id);
       if (isSheet) books.set(id, { title: body.name, tabs: [{ id: 0, title: 'Sheet1', rows: [] }], formats: [] });
-      return resp(200, { id, name: body.name, webViewLink: 'https://drive.google.com/' + id });
+      return resp(200, { id, name: body.name, webViewLink: files.get(id).webViewLink });
+    }
+    const pm = p.match(/^\/drive\/v3\/files\/([^/]+)\/permissions$/);
+    if (pm && method === 'POST') {
+      const f = files.get(decodeURIComponent(pm[1])); if (!f) return err(404, 'File not found');
+      if (fakeGoogle.blockShare) return err(403, 'The user does not have sufficient permissions for this file.');
+      f.permissions.push(body); return resp(200, { id: 'anyoneWithLink' });
     }
     const fm = p.match(/^\/drive\/v3\/files\/([^/]+)$/);
     if (fm && method === 'GET' && u.searchParams.get('alt') === 'media') {
@@ -145,4 +152,5 @@ function fakeGoogle(token) {
   };
 }
 
+fakeGoogle.blockShare = false;
 module.exports = { fakeGoogle };

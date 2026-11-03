@@ -59,6 +59,9 @@ const GIS_MOCK = `window.google = { accounts: { oauth2: {
   initTokenClient: (o) => ({ requestAccessToken: () => setTimeout(() => o.callback({ access_token: 'ya29.TOK-E2E-LONG', expires_in: 3600 }), 20) }),
   revoke: (t, cb) => cb && cb() } } };`;
 
+let FAIL_PDF_UPLOAD = 0;
+const pdfFiles = () => [...G.files.values()].filter((f) => f.mimeType === 'application/pdf');
+const pdfPages = (f) => (Buffer.from(f.bytes).toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
 const browser = await chromium.launch();
 let failed = false;
 try {
@@ -76,6 +79,9 @@ try {
     // Sheets + Drive → Google palsu yang dikongsi antara konteks (meniru satu akaun Drive)
     const toFake = async (route) => {
       const rq = route.request();
+      if (FAIL_PDF_UPLOAD > 0 && rq.url().includes('/upload/drive/') && (rq.headers()['content-type'] || '').includes('pdf')) {
+        FAIL_PDF_UPLOAD--; await route.fulfill({ status: 400, contentType: 'application/json', body: '{"error":{"code":400,"message":"Simulasi muat naik gagal"}}' }); return;
+      }
       const res = await G.fetch(rq.url(), { method: rq.method(), headers: { Authorization: rq.headers().authorization, 'Content-Type': rq.headers()['content-type'] }, body: rq.postDataBuffer() || undefined });
       await route.fulfill({ status: res.status, contentType: res.headers.get('content-type') || 'application/json', body: Buffer.from(await res.arrayBuffer()) });
     };
@@ -83,6 +89,7 @@ try {
     await page.route('https://www.googleapis.com/drive/**', toFake);
     await page.route('https://www.googleapis.com/upload/drive/**', toFake);
 
+    const AI_rows = (id) => { const t = G.tab(id, 'Dokumen') || []; const h = t[0] || []; return t.slice(1).map((r) => Object.fromEntries(h.map((k, i) => [k, r[i] == null ? '' : r[i]]))); };
     const sheetsNow = () => [...G.files.values()].filter((f) => f.mimeType === 'application/vnd.google-apps.spreadsheet' && !f.trashed);
     const kv = (sid, tab) => Object.fromEntries((G.tab(sid, tab) || []).slice(1).map((r) => [r[0], r[1] == null ? '' : r[1]]));
     const until = async (fn, ms, what) => { const t = Date.now(); while (Date.now() - t < (ms || 6000)) { if (await fn()) return; await page.waitForTimeout(100); } throw new Error('Tamat masa menunggu: ' + what); };
@@ -188,7 +195,20 @@ try {
       assert.match(await page.locator('[data-pv]').innerText(), /Cukai Perkhidmatan 8%/);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar pratonton telefon');
       await shot('s04-telefon-pratonton', false);
-      await page.getByRole('button', { name: 'Utama' }).first().click();
+      await page.locator('.ed-bar').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Invois diterbit').waitFor({ timeout: 60000 });
+      const pnum = await page.locator('.bignum').innerText();
+      assert.match(pnum, /^AZN\/\d{4}-001$/);
+      await until(() => AI_rows(sid).some((r) => r.no_dokumen === pnum && r.pdf_id), 6000, 'baris telefon');
+      const prow = AI_rows(sid).find((r) => r.no_dokumen === pnum);
+      assert.equal(prow.jumlah, 108); assert.equal(prow.jumlah_cukai, 8); assert.equal(prow.subtotal, 100);
+      assert.match(prow.ringkasan_cukai_json, /SST-PERKHIDMATAN-8/);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar dialog terbit telefon');
+      await shot('s05-telefon', false);
+      await page.getByRole('button', { name: 'Selesai' }).click();
+      await page.locator('.lic .big').waitFor();
+      assert.equal(await page.locator('.lic .big').innerText(), '45 kredit');
       await page.locator('.bottom').getByRole('button', { name: 'Tetapan' }).click();
 
     } else {
@@ -388,8 +408,10 @@ try {
       await page.locator('.doc-seg').getByRole('button', { name: 'Invois' }).click();
       await until(async () => /RM390\.00/.test(await page.locator('[data-totals]').innerText()), 3000, 'jumlah kekal');
       await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
-      await page.locator('#toast.show', { hasText: 'Dokumen lengkap' }).waitFor();
+      await page.getByRole('dialog').getByText('Terbit Invois?').waitFor();
+      assert.match(await page.getByRole('dialog').innerText(), /5 kredit akan digunakan/);
       await shot('s04-invois', false);
+      await page.getByRole('dialog').getByRole('button', { name: 'Batal' }).click();
 
       // berbilang halaman A4
       await page.evaluate(() => { const d = window.AI.app.UI.ed.d; for (let i = 0; i < 45; i++) d.items.push({ desc: 'Komponen ' + (i + 1), qty: '1', unit: 'PCS', price: '10', disc: '', tax_code: 'TIADA' }); window.AI.app.render(); });
@@ -403,7 +425,7 @@ try {
       await page.getByRole('button', { name: 'Utama' }).first().click();
       await navBar().getByRole('button', { name: 'Rekod' }).click();
       await page.getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).waitFor();
-      assert.match(await page.locator('.dlist').innerText(), /RM390\.00/);
+      assert.match(await page.locator('section', { hasText: 'Draf di peranti ini' }).locator('.dlist').innerText(), /RM390\.00/);
       await page.getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).click();
       await page.getByRole('heading', { name: 'Invois (draf)' }).waitFor();
       assert.equal(await page.locator('[name="it:1:desc"]').inputValue(), 'Website maintenance');
@@ -418,7 +440,78 @@ try {
       await page.locator('.sugg').getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).click();
       assert.match(await page.getByLabel('Alamat', { exact: true }).inputValue(), /Shah Alam/);
       assert.equal(await page.locator('.sugg').count(), 0);
+
+      // ---------- S-05 Terbit sebenar: nombor, Sheet, PDF sebenar (html2canvas + jsPDF), Drive ----------
+      await page.locator('[name="it:0:desc"]').fill('Annual support contract');
+      await page.locator('[name="it:0:price"]').fill('250');
+      const credBefore = await page.evaluate(() => window.AI.app.UI.lic.credits);
+      const nPdf = pdfFiles().length;
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Invois diterbit').waitFor({ timeout: 60000 });
+      const num1 = await page.locator('.bignum').innerText();
+      assert.match(num1, /^AZN\/\d{4}-\d{3}$/);
+      await shot('s05-desktop', false);
+      assert.equal(pdfFiles().length, nPdf + 1);
+      const pdf1 = pdfFiles().find((f) => f.name.startsWith(num1.replace(/\//g, '-')));
+      assert.ok(pdf1, 'PDF dinamakan ikut nombor');
+      assert.deepEqual(pdf1.parents, [kv(sid, 'Meta').folder_invois]);
+      assert.equal(Buffer.from(pdf1.bytes.slice(0, 5)).toString(), '%PDF-');
+      assert.ok(pdf1.bytes.length > 15000, 'PDF ada kandungan imej: ' + pdf1.bytes.length);
+      assert.equal(pdfPages(pdf1), 1);
+      if (SHOTS) (await import('node:fs')).writeFileSync(`${SHOTS}/invois-${name}.pdf`, Buffer.from(pdf1.bytes));
+      assert.deepEqual(pdf1.permissions, [{ role: 'reader', type: 'anyone' }]);
+      assert.match(await page.getByRole('link', { name: 'WhatsApp' }).getAttribute('href'), /^https:\/\/wa\.me\/\?text=/);
+      assert.match(await page.getByRole('link', { name: 'Muat turun' }).getAttribute('download'), /\.pdf$/);
+      const drow = () => AI_rows(sid).find((r) => r.no_dokumen === num1);
+      await until(() => drow() && drow().pdf_id === pdf1.id, 6000, 'baris Dokumen dengan pautan PDF');
+      assert.equal(drow().jumlah, 250); assert.equal(drow().status, 'Terbit'); assert.equal(drow().bill_nama, 'Contoh Trading Sdn Bhd');
+      assert.match(drow().hash_kandungan, /^[0-9a-f]{64}$/);
+      await page.getByRole('button', { name: 'Selesai' }).click();
+      await page.locator('.lic .big').waitFor();
+      assert.equal(await page.evaluate(() => window.AI.app.UI.lic.credits), credBefore - 5, 'kredit ditolak 5');
+      assert.ok((await page.locator('.dlist').first().innerText()).includes(num1), 'dokumen terkini di Utama');
+
+      // gagal semasa muat naik PDF → Cuba lagi: nombor sama, kredit sekali, satu PDF
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.getByLabel('Nama (Bill To)').fill('Syarikat Ujian Retry');
+      await page.locator('[name="it:0:desc"]').fill('Item retry'); await page.locator('[name="it:0:price"]').fill('10');
+      FAIL_PDF_UPLOAD = 1;
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Terbit belum selesai').waitFor({ timeout: 60000 });
+      assert.match(await page.getByRole('dialog').innerText(), /Simulasi muat naik gagal/);
+      assert.match(await page.getByRole('dialog').innerText(), /sudah dikeluarkan/);
+      const credMid = await page.evaluate(() => window.AI.app.UI.lic.credits);
+      assert.equal(credMid, credBefore - 10, 'kad lesen dikemas kini walaupun terbit belum selesai');
+      await page.getByRole('button', { name: 'Cuba lagi' }).click();
+      await page.getByRole('dialog').getByText('Invois diterbit').waitFor({ timeout: 60000 });
+      const num2 = await page.locator('.bignum').innerText();
+      assert.equal(pdfFiles().filter((f) => f.name.startsWith(num2.replace(/\//g, '-'))).length, 1, 'satu PDF sahaja');
+      assert.equal(AI_rows(sid).filter((r) => r.no_dokumen === num2).length, 1, 'satu baris sahaja');
+      assert.equal(await page.evaluate(() => window.AI.app.UI.lic.credits), credMid, 'cuba semula tidak mengecaj lagi');
+      const ledger = await env.DB.prepare("SELECT COUNT(*) AS n FROM credit_ledger WHERE reason = 'issue'").first('n');
+      assert.equal(ledger, (await env.DB.prepare('SELECT COUNT(*) AS n FROM doc_issues').first('n')), 'satu caj setiap nombor');
+      await page.getByRole('button', { name: 'Selesai' }).click();
+
+      // tiada kredit → S-12
+      await env.DB.prepare('UPDATE tenants SET credits = 0').run();
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.getByLabel('Nama (Bill To)').fill('Pelanggan Tanpa Kredit');
+      await page.locator('[name="it:0:desc"]').fill('Item'); await page.locator('[name="it:0:price"]').fill('1');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Tidak dapat terbit').waitFor({ timeout: 15000 });
+      assert.match(await page.getByRole('dialog').innerText(), /Baki kredit tidak cukup \(0 kredit/);
+      assert.equal(await page.getByRole('link', { name: 'Langgan' }).getAttribute('href'), 'https://bcl.test/form');
+      await shot('s12-desktop', false);
+      await page.getByRole('button', { name: 'Tutup' }).click();
+      assert.equal(AI_rows(sid).filter((r) => r.bill_nama === 'Pelanggan Tanpa Kredit').length, 0);
       await page.getByRole('button', { name: 'Utama' }).first().click();
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await page.getByText(num2).waitFor();
+      assert.ok(await page.getByRole('link', { name: 'PDF' }).count() >= 2);
+      await shot('s06-desktop', true);
       await navBar().getByRole('button', { name: 'Tetapan' }).click();
     }
 
@@ -431,7 +524,7 @@ try {
     console.log('ok', name);
     await ctx.close();
   }
-  const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM credit_ledger').first('n');
+  const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM credit_ledger WHERE reason = 'trial'").first('n');
   assert.equal(n, 1, 'kredit percubaan sekali sahaja');
   console.log('E2E lulus');
 } catch (e) {

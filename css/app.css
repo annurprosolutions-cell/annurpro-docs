@@ -354,3 +354,20 @@ img.sitem.static { position: absolute; pointer-events: none; cursor: default; he
   .ed-acts { display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 16px; padding: 12px; background: rgba(255, 255, 255, .96); border-radius: var(--r); box-shadow: var(--shadow); }
   .shell.v-editor .content { padding-bottom: 28px; max-width: 1500px; }
 }
+
+/* ---------- S-05 terbit & S-12 ---------- */
+.isteps { list-style: none; padding: 0; margin: 8px 0 16px; display: grid; gap: 10px; }
+.isteps li { display: flex; align-items: center; gap: 10px; color: var(--mute); }
+.isteps li span { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); font-size: 12px; font-weight: 700; flex: none; }
+.isteps li.run { color: var(--primary); font-weight: 600; } .isteps li.run span { background: var(--primary); color: #fff; animation: pulse 1s ease-in-out infinite; }
+.isteps li.ok { color: var(--ink); } .isteps li.ok span { background: var(--green-soft); color: var(--green); }
+.isteps li.bad { color: var(--red); font-weight: 600; } .isteps li.bad span { background: var(--red-soft); color: var(--red); }
+@media (prefers-reduced-motion: reduce) { .isteps li.run span { animation: none; } }
+.ok-badge { width: 56px; height: 56px; border-radius: 50%; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-size: 28px; font-weight: 700; margin: 0 auto 8px; }
+.sheet h2 { text-align: left; }
+.sheet .ok-badge + h2 { text-align: center; }
+.bignum { text-align: center; font-size: 24px; font-weight: 700; letter-spacing: .02em; margin: 4px 0 2px !important; font-variant-numeric: tabular-nums; }
+.acts3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.badge.amber { background: var(--amber-soft); color: var(--amber); }
+.badge.blue { background: var(--blue-soft); color: var(--primary); }
+a.btn { text-decoration: none; }
