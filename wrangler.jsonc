@@ -1,0 +1,32 @@
+{
+  // Satu Worker: hos fail app (static assets) + API /api/* dan webhook /bcl/*.
+  // Rujuk docs/02-TRD.md §9 dan README.md "Langkah pemilik".
+  "name": "annur-invoice",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2025-06-01",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/bcl/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "annur-invoice",
+      // Tukar kepada Database ID selepas cipta D1 (Cloudflare > Storage & Databases > D1)
+      "database_id": "ISI_DATABASE_ID_D1"
+    }
+  ],
+  "vars": {
+    "GOOGLE_CLIENT_ID": "",
+    "ALLOWED_ORIGINS": "",
+    "OWNER_EMAILS": "annurprosolutions@gmail.com",
+    "TRIAL_CREDITS": "50",
+    "CREDITS_PER_DOC": "5",
+    "GRACE_DAYS": "7",
+    "EDIT_WINDOW_HOURS": "24",
+    "BUY_URL_SUB": "",
+    "BUY_URL_PACK": ""
+  }
+  // Rahsia (set dalam dashboard, JANGAN tulis di sini): BCL_API_TOKEN, BCL_WEBHOOK_KEY, ADMIN_TOKEN
+}

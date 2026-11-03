@@ -1,0 +1,15 @@
+.git
+.github
+.gitignore
+.assetsignore
+.claude
+node_modules
+tests
+tools
+worker
+docs
+schema.sql
+package.json
+package-lock.json
+wrangler.jsonc
+README.md
