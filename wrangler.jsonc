@@ -18,7 +18,7 @@
     }
   ],
   "vars": {
-    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_ID": "933747272196-5ub5jst04ff6e3b21ou8muouvvlmfgae.apps.googleusercontent.com",
     "ALLOWED_ORIGINS": "",
     "OWNER_EMAILS": "annurprosolutions@gmail.com",
     "TRIAL_CREDITS": "50",

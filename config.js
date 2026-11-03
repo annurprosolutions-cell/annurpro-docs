@@ -4,7 +4,7 @@ window.APP_CONFIG = {
   version: '0.3.0',
   vendor: 'AnnurPro Solutions',
   // Client ID OAuth Google (jenis "Web application"). Kosong = log masuk dimatikan (mod pembangunan).
-  googleClientId: '',
+  googleClientId: '933747272196-5ub5jst04ff6e3b21ou8muouvvlmfgae.apps.googleusercontent.com',
   // Alamat API Worker. Kosong = asal yang sama (app dan API dihos oleh Worker yang sama).
   apiBase: '',
   priceText: 'RM20 sebulan atau RM200 setahun. Atau beli kredit: 5 kredit setiap dokumen.',

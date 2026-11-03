@@ -54,7 +54,7 @@ try {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.addInitScript(GIS_MOCK);
     await page.route('**/config.js', async (route) => {
-      const body = (await readFile(join(ROOT, 'config.js'), 'utf8')).replace("googleClientId: ''", `googleClientId: '${CLIENT}'`);
+      const body = (await readFile(join(ROOT, 'config.js'), 'utf8')).replace(/googleClientId: '[^']*'/, `googleClientId: '${CLIENT}'`);
       await route.fulfill({ body, contentType: 'text/javascript' });
     });
     await page.route('https://www.googleapis.com/oauth2/v3/userinfo', (r) => r.fulfill({ json: { email: 'pemilik@contoh.my' } }));
