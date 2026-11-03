@@ -209,6 +209,17 @@ try {
       await page.getByRole('button', { name: 'Selesai' }).click();
       await page.locator('.lic .big').waitFor();
       assert.equal(await page.locator('.lic .big').innerText(), '45 kredit');
+      // S-06 & S-07 pada telefon: tiada skrol mendatar
+      await page.locator('.bottom').getByRole('button', { name: 'Rekod' }).click();
+      await page.getByRole('button', { name: 'Menu ' + pnum }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Edit' }).waitFor();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar menu rekod telefon');
+      await shot('s06-telefon', false);
+      await page.getByRole('dialog').getByRole('button', { name: 'Tutup' }).click();
+      await page.locator('.bottom').getByRole('button', { name: 'Pelanggan' }).click();
+      await page.getByText('Belum ada pelanggan.').waitFor();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar pelanggan telefon');
+      await shot('s07-telefon', false);
       await page.locator('.bottom').getByRole('button', { name: 'Tetapan' }).click();
 
     } else {
@@ -512,6 +523,133 @@ try {
       await page.getByText(num2).waitFor();
       assert.ok(await page.getByRole('link', { name: 'PDF' }).count() >= 2);
       await shot('s06-desktop', true);
+
+      // ================= Fasa 7 =================
+      await env.DB.prepare('UPDATE tenants SET credits = 100').run();
+      const recList = () => page.locator('[data-reclist]').innerText();
+      const qbox = page.locator('[data-form="rekod"] input[name="q"]');
+      await qbox.fill('retry');
+      await until(async () => (await recList()).includes(num2) && !(await recList()).includes(num1), 3000, 'carian rekod');
+      await qbox.fill('');
+      await page.locator('.rfilters').getByRole('button', { name: 'Quotation' }).click();
+      await page.getByText('Tiada dokumen sepadan.').waitFor();
+      await page.locator('.rfilters').getByRole('button', { name: 'Semua' }).click();
+
+      // Edit dalam 24 jam: nombor & fail PDF sama, jumlah dikemas kini, tiada caj
+      const pdfBefore = Buffer.from(pdf1.bytes).toString('base64');
+      const credEdit = await env.DB.prepare('SELECT credits FROM tenants').first('credits');
+      await page.getByRole('button', { name: 'Menu ' + num1 }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Edit' }).click();
+      await page.getByRole('heading', { name: 'Edit Invois ' + num1 }).waitFor();
+      assert.equal(await page.locator('.doc-seg').count(), 0, 'jenis tidak boleh ditukar semasa edit');
+      await page.locator('[name="it:0:price"]').fill('300');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('dialog').getByText('Simpan perubahan Invois?').waitFor();
+      assert.match(await page.getByRole('dialog').innerText(), /Tiada kredit digunakan/);
+      await page.getByRole('button', { name: 'Simpan & jana semula PDF' }).click();
+      await page.getByRole('dialog').getByText('Invois dikemas kini').waitFor({ timeout: 60000 });
+      assert.equal(await page.locator('.bignum').innerText(), num1);
+      await until(() => drow().jumlah === 300, 6000, 'jumlah dikemas kini');
+      assert.equal(drow().pdf_id, pdf1.id, 'fail PDF sama');
+      assert.notEqual(Buffer.from(G.files.get(pdf1.id).bytes).toString('base64'), pdfBefore, 'kandungan PDF diganti');
+      assert.equal(AI_rows(sid).filter((r) => r.no_dokumen === num1).length, 1);
+      assert.equal(await env.DB.prepare('SELECT credits FROM tenants').first('credits'), credEdit, 'edit tidak mengecaj');
+      await page.getByRole('button', { name: 'Selesai' }).click();
+
+      // Quotation → Invois → DO
+      await page.getByRole('button', { name: 'Dokumen baharu' }).first().click();
+      await page.locator('.doc-seg').getByRole('button', { name: 'Quotation' }).click();
+      await page.getByLabel('Nama (Bill To)').fill('Gamma Sdn Bhd');
+      await page.locator('[name="it:0:desc"]').fill('Panel install'); await page.locator('[name="it:0:qty"]').fill('4'); await page.locator('[name="it:0:price"]').fill('500');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Quotation diterbit').waitFor({ timeout: 60000 });
+      const qnum = await page.locator('.bignum').innerText();
+      assert.match(qnum, /^QT\/\d{4}-001$/);
+      await page.getByRole('button', { name: 'Selesai' }).click();
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await page.getByRole('button', { name: 'Menu ' + qnum }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Tukar jadi Invois' }).click();
+      await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
+      assert.match(await page.locator('.editor').innerText(), new RegExp('Dibuat daripada Quotation ' + qnum.replace('/', '\\/')));
+      assert.equal(await page.getByLabel('Your Ref. / PO No.').inputValue(), qnum);
+      assert.equal(await page.locator('[name="it:0:qty"]').inputValue(), '4');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Invois diterbit').waitFor({ timeout: 60000 });
+      const inum = await page.locator('.bignum').innerText();
+      await page.getByRole('button', { name: 'Selesai' }).click();
+      const rowOf = (n) => AI_rows(sid).find((r) => r.no_dokumen === n);
+      await until(() => rowOf(qnum).status_quotation === 'Ditukar' && rowOf(qnum).ditukar_kepada === inum, 6000, 'quotation ditukar');
+      assert.equal(rowOf(inum).sumber_no, qnum); assert.equal(rowOf(inum).jumlah, 2000);
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await page.locator('[data-form="rekod"] select[name="status"]').selectOption('ditukar');
+      await until(async () => JSON.stringify(await page.locator('[data-reclist] .drow.rec .dopen > b').allInnerTexts()) === JSON.stringify([qnum]), 3000, 'tapis ditukar');
+      await page.locator('[data-form="rekod"] select[name="status"]').selectOption('');
+      await page.getByRole('button', { name: 'Menu ' + inum }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Buat Delivery Order' }).click();
+      await page.getByRole('heading', { name: 'Delivery Order baharu' }).waitFor();
+      assert.equal(await page.locator('[name="it:0:price"]').count(), 0, 'DO tanpa harga');
+      await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();
+      await page.getByRole('button', { name: 'Terbit sekarang' }).click();
+      await page.getByRole('dialog').getByText('Delivery Order diterbit').waitFor({ timeout: 60000 });
+      const dnum = await page.locator('.bignum').innerText();
+      await page.getByRole('button', { name: 'Selesai' }).click();
+      await until(() => rowOf(inum).ditukar_kepada === dnum, 6000, 'invois → DO');
+      assert.equal(rowOf(dnum).sumber_jenis, 'invoice'); assert.equal(rowOf(dnum).jumlah_qty, 4);
+
+      // Batal dokumen
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await page.getByRole('button', { name: 'Menu ' + num2 }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Batal dokumen' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Batal dokumen' }).click();
+      await page.getByText('Nyatakan sebab').waitFor();
+      await page.locator('#voidReason').fill('Harga salah');
+      await shot('s06-batal', false);
+      await page.getByRole('dialog').getByRole('button', { name: 'Batal dokumen' }).click();
+      await page.locator('#toast.show', { hasText: num2 + ' dibatalkan.' }).waitFor({ timeout: 8000 });
+      await until(() => rowOf(num2).status === 'Batal' && rowOf(num2).sebab_batal === 'Harga salah', 6000, 'baris Batal');
+      assert.equal(await env.DB.prepare('SELECT status FROM doc_issues WHERE number = ?').bind(num2).first('status'), 'void');
+      await page.getByRole('button', { name: 'Menu ' + num2 }).click();
+      assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Edit' }).count(), 0);
+      assert.equal(await page.getByRole('dialog').getByRole('button', { name: 'Batal dokumen' }).count(), 0);
+      await page.getByRole('dialog').getByRole('button', { name: 'Salin sebagai draf baharu' }).click();
+      await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
+      assert.equal(await page.getByLabel('Nama (Bill To)').inputValue(), 'Syarikat Ujian Retry');
+      await page.getByRole('button', { name: 'Utama' }).first().click();
+      await navBar().getByRole('button', { name: 'Rekod' }).click();
+      await shot('s06-penuh', true);
+
+      // ---------- S-07 Pelanggan ----------
+      await navBar().getByRole('button', { name: 'Pelanggan' }).click();
+      await page.getByRole('button', { name: /Contoh Trading Sdn Bhd/ }).waitFor();
+      assert.match(await page.locator('[data-custlist]').innerText(), /\d+ dokumen/);
+      await page.getByRole('button', { name: 'Tambah' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Simpan' }).click();
+      await page.getByText('Nama pelanggan wajib diisi.').waitFor();
+      await page.locator('#c-nama').fill('contoh trading sdn bhd');
+      await page.getByRole('dialog').getByRole('button', { name: 'Simpan' }).click();
+      await page.getByText('Nama ini sama dengan pelanggan sedia ada').waitFor();
+      await page.locator('#c-nama').fill('Delta Engineering');
+      await page.locator('#c-alamat').fill('No 9, Jalan Teknologi\n47810 Petaling Jaya');
+      await page.getByRole('dialog').getByRole('button', { name: 'Simpan' }).click();
+      const pel = () => { const t = G.tab(sid, 'Pelanggan') || []; const h = t[0] || []; return t.slice(1).map((r) => Object.fromEntries(h.map((k, i) => [k, r[i] == null ? '' : r[i]]))); };
+      await until(() => pel().some((c) => c.nama === 'Delta Engineering'), 6000, 'pelanggan baharu');
+      await page.getByRole('button', { name: /Delta Engineering/ }).click();
+      await page.locator('#c-tel').fill('03-5555 1234');
+      await page.getByRole('dialog').getByRole('button', { name: 'Simpan' }).click();
+      await until(() => (pel().find((c) => c.nama === 'Delta Engineering') || {}).tel === '03-5555 1234', 6000, 'pelanggan dikemas kini');
+      await page.getByRole('button', { name: /Delta Engineering/ }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Arkibkan' }).click();
+      await until(() => (pel().find((c) => c.nama === 'Delta Engineering') || {}).arkib === 'YA', 6000, 'diarkib');
+      assert.equal(await page.getByRole('button', { name: /Delta Engineering/ }).count(), 0, 'arkib disembunyikan');
+      await page.getByLabel('Tunjuk arkib').check();
+      await page.getByRole('button', { name: /Delta Engineering/ }).waitFor();
+      await shot('s07-desktop', false);
+      await page.locator('.drow', { hasText: 'Contoh Trading Sdn Bhd' }).getByRole('button', { name: 'Invois baharu' }).click();
+      await page.getByRole('heading', { name: 'Invois baharu' }).waitFor();
+      assert.match(await page.getByLabel('Alamat', { exact: true }).inputValue(), /Shah Alam/);
+      await page.getByRole('button', { name: 'Utama' }).first().click();
       await navBar().getByRole('button', { name: 'Tetapan' }).click();
     }
 

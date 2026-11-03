@@ -15,7 +15,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 4 | Logo, cop, tandatangan & tandatangan DO: muat naik ke `_Tetapan`, buang latar putih, penyusun seret/nudge/saiz/reset | Siap |
 | 5 | Enjin dokumen: kalkulator SST (sen, cukai peringkat kod), editor Invois/Quotation/DO, pratonton A4 berbilang halaman, draf di peranti, pelanggan dari borang | Siap |
 | 6 | Terbit: `/api/issue` (nombor atomik + caj kredit), `/api/void`, `/api/issues`, `/api/ledger`; PDF (html2canvas + jsPDF dalam `vendor/`) ke Drive; kongsi; cuba semula; S-12 | Siap |
-| 7 | Rekod penuh (tapis, cari, edit 24 jam, batal), tukar Quotation→Invois / →DO, Pelanggan | Seterusnya |
+| 7 | Rekod penuh (tapis, cari, menu), edit 24 jam, batal, salin, tukar Quotation→Invois / →DO, Pelanggan (CRUD, arkib) | Siap |
+| 8 | Bayaran BCL (webhook, langganan), S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Seterusnya |
 
 ## Struktur
 
@@ -37,7 +38,9 @@ js/ui-images.js        skrin S-09: muat naik, penyusun seret/nudge/saiz
 js/calc.js             pengiraan wang dalam sen, SST, jumlah dalam perkataan (tulen)
 js/doc.js              model draf, validasi, data paparan, pembahagian halaman A4 (tulen)
 js/template.js         HTML A4 Invois/Quotation/DO (css/doc.css, font Carlito)
-js/ui-editor.js        skrin S-04 editor, S-05 terbit, S-12 tiada kredit, Rekod (draf + terbit)
+js/ui-editor.js        skrin S-04 editor, S-05 terbit, S-12 tiada kredit, draf
+js/records.js          status dokumen, penapis, draf edit/salin/tukar, validasi pelanggan (tulen)
+js/ui-records.js       skrin S-06 Rekod (tapis, menu, batal) dan S-07 Pelanggan
 js/issue.js            aliran terbit: nombor → Sheet → PDF → Drive (setiap langkah selamat diulang)
 js/pdf.js              HTML A4 → PDF (dimuat bila perlu dari vendor/)
 vendor/                html2canvas 1.4.1 dan jsPDF 2.5.1 (MIT, lesen disertakan)

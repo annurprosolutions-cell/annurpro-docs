@@ -101,8 +101,10 @@
       const shipHidden = !doo || x.ship_sama;
       return `<div class="editor tab-${tab}">
         <header class="page-head"><div><button class="link-back" data-act="edClose">${ctx.icon('back')}Utama</button>
-          <h1>${esc(T[x.jenis].label)} ${x.id ? '(draf)' : 'baharu'}</h1><small class="muted" data-edsaved>${ed().saved ? 'Draf disimpan di peranti ini · ' + esc(ed().saved) : 'Draf disimpan automatik di peranti ini'}</small></div></header>
-        <div class="seg doc-seg" role="group" aria-label="Jenis dokumen">${Object.keys(T).map((t) => `<button type="button" class="${x.jenis === t ? 'on' : ''}" data-act="edType" data-t="${t}">${esc(T[t].label)}</button>`).join('')}</div>
+          <h1>${x.editing ? `Edit ${esc(T[x.jenis].label)} ${esc(x.issued.number)}` : `${esc(T[x.jenis].label)} ${x.id ? '(draf)' : 'baharu'}`}</h1><small class="muted" data-edsaved>${ed().saved ? 'Draf disimpan di peranti ini · ' + esc(ed().saved) : 'Draf disimpan automatik di peranti ini'}</small></div></header>
+        ${x.editing ? `<p class="note info">Anda mengedit dokumen yang sudah diterbit. Nombor, jenis dan tarikh kekal. Edit dibenarkan sehingga ${esc(new Date(Date.parse(x.issued.issuedAt) + AI.EDIT_HOURS * 3600e3).toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'short', timeStyle: 'short' }))}.</p>`
+          : `<div class="seg doc-seg" role="group" aria-label="Jenis dokumen">${Object.keys(T).map((t) => `<button type="button" class="${x.jenis === t ? 'on' : ''}" data-act="edType" data-t="${t}">${esc(T[t].label)}</button>`).join('')}</div>`}
+        ${x.sumber_no && !x.editing ? `<p class="note info">Dibuat daripada ${esc((T[x.sumber_jenis] || {}).label || '')} <b>${esc(x.sumber_no)}</b>.</p>` : ''}
         <div class="seg ed-tabs" role="tablist"><button type="button" role="tab" aria-selected="${tab === 'form'}" class="${tab === 'form' ? 'on' : ''}" data-act="edTab" data-t="form">Borang</button><button type="button" role="tab" aria-selected="${tab === 'preview'}" class="${tab === 'preview' ? 'on' : ''}" data-act="edTab" data-t="preview">Pratonton</button></div>
         <div class="ed-grid">
           <form class="ed-form stack" data-form="editor" novalidate onsubmit="return false">
@@ -113,7 +115,7 @@
               ${errOf('bill_nama')}
             </section>
             <section class="card"><h2>Maklumat ${esc(T[x.jenis].label)}</h2>
-              <div class="grid2">${inp('tarikh', 'Tarikh', x.tarikh, { type: 'date' })}${doo ? '' : inp('terma', 'Terma', x.terma, { list: 'termList', placeholder: 'cth 30 DAYS' })}</div>
+              <div class="grid2">${x.editing ? `<div class="fld"><label>Tarikh</label><input class="inp" value="${esc(AI.fmtDate(x.tarikh))}" disabled></div>` : inp('tarikh', 'Tarikh', x.tarikh, { type: 'date' })}${doo ? '' : inp('terma', 'Terma', x.terma, { list: 'termList', placeholder: 'cth 30 DAYS' })}</div>
               ${x.jenis === 'quotation' ? inp('validity', 'Tempoh sah (validity)', x.validity, { placeholder: 'cth 30 DAYS' }) : ''}
               <div class="grid2">${inp('our_ref', doo ? 'Ref No.' : 'Our Ref.', x.our_ref, {})}${inp('your_ref', doo ? 'PO No.' : 'Your Ref. / PO No.', x.your_ref, { placeholder: 'cth PO-2026-0815' })}</div>
               <p class="fine">Nombor dokumen dikeluarkan secara automatik semasa terbit.</p>
@@ -190,7 +192,7 @@
     const actions = {
       newDoc(el) { open(AI.newDraft(el.dataset.t || 'invoice', sk(), codes(), { email: ctx.email() })); },
       edType(el) {
-        const t = el.dataset.t; if (!AI.DOC_TYPES[t] || d().jenis === t) return;
+        const t = el.dataset.t; if (!AI.DOC_TYPES[t] || d().jenis === t || d().editing) return;
         d().jenis = t; if (t === 'quotation' && !str(d().validity)) d().validity = str(sk().validity_default) || '30 DAYS';
         ed().err = {}; ctx.render(); fitPreview(); autosave();
       },
@@ -249,7 +251,7 @@
           UI.ed = null; UI.view = 'home';
         } catch (e) {
           if (e.paywall) { UI.issue = null; UI.pay = e.paywall; UI.modal = 'paywall'; ctx.render(); return; }
-          if (e.validation) { UI.issue = null; UI.modal = ''; ed().err = e.validation; ctx.render(); return; }
+          if (e.validation) { UI.issue = null; UI.modal = ''; ed().err = e.validation; if (e.validation._) ctx.toast(e.validation._, true); ctx.render(); return; }
           if (e.issued) ctx.onIssued(e.issued);
           UI.issue = { phase: 'error', step: e.step || 0, message: e.network ? 'Tiada sambungan internet.' : AI.googleErrorHint(e), number: x.issued && x.issued.number };
         }
@@ -307,14 +309,15 @@
       const I = UI.issue, x = UI.ed && UI.ed.d, label = AI.DOC_TYPES[(x && x.jenis) || I.jenis].label;
       if (I.phase === 'confirm') {
         const L = UI.lic || {}, per = L.creditsPerDoc || 5;
-        const cost = x && x.issued ? `Nombor ${esc(x.issued.number)} sudah dikeluarkan untuk dokumen ini. Tiada kredit tambahan.`
+        const cost = x && x.editing ? `Perubahan akan menggantikan baris Sheet dan PDF ${esc(x.issued.number)} (pautan kekal sama). Tiada kredit digunakan.`
+          : x && x.issued ? `Nombor ${esc(x.issued.number)} sudah dikeluarkan untuk dokumen ini. Tiada kredit tambahan.`
           : L.mode === 'langganan' || L.mode === 'ihsan' ? 'Langganan aktif: tiada kredit digunakan.'
             : `${per} kredit akan digunakan. Baki selepas ini: ${Math.max(0, (L.credits || 0) - per)} kredit.`;
         return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle"><div class="sheet">
-          <h2 id="iTitle">Terbit ${esc(label)}?</h2>
+          <h2 id="iTitle">${x && x.editing ? 'Simpan perubahan ' + esc(label) + '?' : 'Terbit ' + esc(label) + '?'}</h2>
           <p>Nombor rasmi akan dikeluarkan dan PDF disimpan dalam Google Drive anda. Anda boleh mengedit dokumen ini dalam 24 jam selepas terbit.</p>
           <p class="note info">${cost}</p>
-          <div class="sheet-acts"><button class="btn primary" data-act="issueGo">Terbit sekarang</button><button class="btn ghost" data-act="closeModal">Batal</button></div></div></div>`;
+          <div class="sheet-acts"><button class="btn primary" data-act="issueGo">${x && x.editing ? 'Simpan & jana semula PDF' : 'Terbit sekarang'}</button><button class="btn ghost" data-act="closeModal">Batal</button></div></div></div>`;
       }
       if (I.phase === 'running' || I.phase === 'error') {
         return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle" aria-busy="${I.phase === 'running'}"><div class="sheet">
@@ -330,9 +333,9 @@
       const wa = 'https://wa.me/?text=' + encodeURIComponent(AI.waText(r.view.title, r.number, I.bill, r.url));
       return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="iTitle"><div class="sheet">
         <div class="ok-badge">✓</div>
-        <h2 id="iTitle">${esc(label)} diterbit</h2>
+        <h2 id="iTitle">${esc(label)} ${r.edited ? 'dikemas kini' : 'diterbit'}</h2>
         <p class="bignum">${esc(r.number)}</p>
-        <p class="muted center">${esc(I.bill)}${r.view.jenis === 'do' ? '' : ' · RM' + esc(r.view.totals.total)}${r.charged ? ` · ${r.charged} kredit digunakan` : ''}</p>
+        <p class="muted center">${esc(I.bill)}${r.view.jenis === 'do' ? '' : ' · RM' + esc(r.view.totals.total)}${r.charged && !r.repeat ? ` · ${r.charged} kredit digunakan` : ''}</p>
         ${!r.shared ? `<p class="note warn">${r.shareError ? 'Perkongsian awam disekat oleh akaun Google anda. ' : 'Perkongsian awam dimatikan dalam Tetapan. '}Pautan hanya boleh dibuka oleh anda; hantar fail PDF secara manual.</p>` : ''}
         <div class="sheet-acts">
           <a class="btn primary" href="${esc(r.url)}" target="_blank" rel="noopener">Buka PDF di Google Drive</a>
@@ -364,13 +367,14 @@
           const v = AI.calcDoc(AI.cleanItems(x.items), codes(), { taxable: reg(), jenis: x.jenis });
           return `<div class="drow"><button class="dopen" data-act="openDraft" data-id="${esc(x.id)}"><b>${esc(str(x.bill_nama) || '(tiada nama pelanggan)')}</b>
             <small class="muted">${esc(T[x.jenis] ? T[x.jenis].label : x.jenis)} · ${esc(AI.fmtDate(x.tarikh))} · ${AI.cleanItems(x.items).length} item</small></button>
-            <div class="dright">${x.jenis === 'do' ? '' : `<b>RM${esc(AI.fmtMoney(v.total))}</b>`}${x.issued ? `<span class="badge amber" title="Nombor sudah dikeluarkan">Belum siap · ${esc(x.issued.number)}</span>` : '<span class="badge grey">Draf</span>'}
+            <div class="dright">${x.jenis === 'do' ? '' : `<b>RM${esc(AI.fmtMoney(v.total))}</b>`}${x.editing ? `<span class="badge amber">Sedang diedit · ${esc(x.issued.number)}</span>` : x.issued ? `<span class="badge amber" title="Nombor sudah dikeluarkan">Belum siap · ${esc(x.issued.number)}</span>` : '<span class="badge grey">Draf</span>'}
             <button class="ib danger" data-act="delDraft" data-id="${esc(x.id)}" aria-label="Padam draf">${ctx.icon('trash')}</button></div></div>`;
         }).join('')}</div>`;
       return `<header class="page-head"><h1>Rekod</h1></header>
+        ${ctx.recordsSection ? ctx.recordsSection() : ''}
         <section class="card"><h2>Draf di peranti ini</h2>${list}</section>
         ${orphanNotice()}
-        <section class="card"><h2>Dokumen diterbit</h2>${issuedList()}</section>`;
+        ${ctx.recordsSection ? '' : `<section class="card"><h2>Dokumen diterbit</h2>${issuedList()}</section>`}`;
     }
     const ST = (r) => (r.status === 'Batal' ? ['red', 'Batal'] : Date.now() - Date.parse(r.diterbit_pada) > 24 * 3600e3 ? ['blue', 'Dikunci'] : ['green', 'Terbit']);
     function issuedList() {
@@ -394,7 +398,7 @@
         ${miss.some((x) => local.has(x.number)) ? 'Buka draf bertanda "Belum siap" dan tekan Terbit untuk menyambung (tiada kredit tambahan).' : 'Draf tiada pada peranti ini; buka app pada peranti asal untuk menyambung.'}</span></div>`;
     }
 
-    return { views: { editor: viewEditor, rekod: viewRekod }, actions, onInput, fitPreview, saveNow, loadDrafts, modal };
+    return { views: { editor: viewEditor, rekod: viewRekod }, actions, onInput, fitPreview, saveNow, loadDrafts, modal, open };
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = AI;

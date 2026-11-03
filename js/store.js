@@ -61,6 +61,8 @@
     this.append = (tab, objs, idField) => enqueue({ type: 'append', tab, rows: objs, idField }, 0);
     // kemas kini satu baris ikut id (medan yang tiada dikekalkan)
     this.update = (tab, idField, obj) => enqueue({ type: 'update', tab, idField, obj }, 0);
+    // ganti semua baris yang key = val dengan `rows` (tulis di tempat, lebihan dikosongkan, kekurangan ditambah)
+    this.replaceRows = (tab, key, val, rows) => enqueue({ type: 'replace', tab, key, val, rows }, 0);
     this.restore = (ops) => { if (Array.isArray(ops) && ops.length) { pending = ops.concat(pending); save(); } };
 
     this.flush = () => {
@@ -95,6 +97,15 @@
           if (o.type === 'kv') { kvMerged[o.tab] = Object.assign(kvMerged[o.tab] || {}, o.values); return; }
           const parsed = AI.rowsToObjects(fresh[o.tab]);
           const has = (idf, v) => parsed.rows.find((r) => str(r[idf]) === str(v));
+          if (o.type === 'replace') {
+            const olds = parsed.rows.filter((r) => str(r[o.key]) === str(o.val));
+            o.rows.forEach((obj, i) => {
+              if (olds[i]) data.push({ range: AI.range(o.tab, 'A' + olds[i]._row), values: [AI.objectToRow(head, obj)] });
+              else (appends[o.tab] = appends[o.tab] || []).push(AI.objectToRow(head, obj));
+            });
+            olds.slice(o.rows.length).forEach((r) => data.push({ range: AI.range(o.tab, 'A' + r._row), values: [head.map(() => '')] }));
+            return;
+          }
           if (o.type === 'update') {
             const hit = has(o.idField, o.obj[o.idField]);
             if (hit) { data.push({ range: AI.range(o.tab, 'A' + hit._row), values: [AI.objectToRow(head, o.obj, fresh[o.tab][hit._row - 1])] }); return; }

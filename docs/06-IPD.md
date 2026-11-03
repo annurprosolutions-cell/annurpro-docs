@@ -86,10 +86,10 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 6.6 S-12 dialog tiada kredit/lesen tamat dengan butang beli (buka BCL tab baharu, `noopener`) dan "Semak semula".
 
 ### Fasa 7 – Rekod & Tukar (F-10, F-12, F-13)
-- [ ] 7.1 S-06: tapis jenis/status/bulan, carian, menu "⋯" ikut status, badge, kunci 24 jam (UI).
-- [ ] 7.2 Edit dalam 24 jam: kemas kini baris sama dan PDF diganti tanpa caj; selepas itu Batal dengan sebab; Salin sebagai draf.
-- [ ] 7.3 Tukar Quotation→Invois; Invois/Quotation→DO (bawa Bill To, item, rujukan, PO); kemas kini `status_quotation` dan `ditukar_kepada`.
-- [ ] 7.4 S-07 Pelanggan: CRUD, arkib, amaran duplikasi.
+- [x] 7.1 S-06: tapis jenis/status/bulan, carian, menu "⋯" ikut status, badge, kunci 24 jam (UI).
+- [x] 7.2 Edit dalam 24 jam: kemas kini baris sama dan PDF diganti tanpa caj; selepas itu Batal dengan sebab; Salin sebagai draf.
+- [x] 7.3 Tukar Quotation→Invois; Invois/Quotation→DO (bawa Bill To, item, rujukan, PO); kemas kini `status_quotation` dan `ditukar_kepada`.
+- [x] 7.4 S-07 Pelanggan: CRUD, arkib, amaran duplikasi.
 
 ### Fasa 8 – Bayaran & dashboard pemilik (F-16, F-17, F-19)
 - [ ] 8.1 `POST /bcl/<key>`: respons 200 segera, kerja dalam `ctx.waitUntil`; ambil semula transaksi BCL, semak status/amaun/order; `payments` idempoten; kesan item (bulanan, tahunan, pek kredit dari v1.1) ikut `PACKS`/nama item/`YEARLY_MIN_AMOUNT`.

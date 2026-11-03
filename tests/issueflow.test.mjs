@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { handle } from '../worker/index.mjs';
 import { createD1 } from './helpers/d1.mjs';
 const require = createRequire(import.meta.url);
-['core', 'schema', 'google', 'workspace', 'store', 'settings', 'calc', 'sign', 'doc', 'template', 'images'].forEach((m) => require(`../js/${m}.js`));
+['core', 'schema', 'google', 'workspace', 'store', 'settings', 'calc', 'sign', 'doc', 'template', 'images', 'records'].forEach((m) => require(`../js/${m}.js`));
 const AI = require('../js/issue.js');
 const { fakeGoogle } = require('./helpers/fake-google.js');
 
@@ -133,4 +133,40 @@ test('hash kandungan stabil dan berubah bila kandungan berubah', async () => {
   assert.equal(h1, await AI.sha256Hex(AI.hashInput(Object.assign({}, base, { pdf_url: 'x' }))), 'medan bukan kandungan tidak menjejaskan hash');
   assert.notEqual(h1, await AI.sha256Hex(AI.hashInput(Object.assign({}, base, { jumlah: 11 }))));
   assert.equal(AI.pdfName('APS/1126-001', 'A/B:C*D "E"'), 'APS-1126-001 - A-B-C-D -E-.pdf');
+});
+
+test('edit dalam 24 jam: nombor & fail PDF sama, baris & Item diganti, tiada caj', async () => {
+  const S = await setup();
+  const d = S.draft(); d.items.push({ desc: 'Hosting', qty: '1', unit: 'UNIT', price: '50', disc: '', tax_code: 'TIADA' });
+  const r1 = await AI.issueDocument(S.deps(), d);
+  const row = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows[0];
+  const ed = AI.draftForEdit(row, S.store.snapshot().syarikat, S.store.snapshot().kodCukai, 'p@contoh.my');
+  ed.items = [{ desc: 'Website maintenance (revised)', qty: '3', unit: 'JOB', price: '150', disc: '', tax_code: 'TIADA' }];
+  ed.bill_nama = 'Contoh Trading (M) Sdn Bhd';
+  const r2 = await AI.issueDocument(Object.assign(S.deps(), { now: () => NOW + 3600e3 }), ed);
+  assert.equal(r2.number, r1.number); assert.equal(r2.edited, true); assert.equal(r2.charged, 5, 'caj asal (tiada caj baharu)'); assert.equal(r2.credits, 45);
+  assert.equal(r2.fileId, r1.fileId, 'fail PDF sama');
+  const rows = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows;
+  assert.equal(rows.length, 1); assert.equal(rows[0].jumlah, 450); assert.equal(rows[0].bill_nama, 'Contoh Trading (M) Sdn Bhd');
+  assert.equal(rows[0].diterbit_pada, row.diterbit_pada); assert.notEqual(rows[0].dikemaskini_pada, row.dikemaskini_pada); assert.equal(rows[0].pdf_id, r1.fileId);
+  assert.notEqual(rows[0].hash_kandungan, row.hash_kandungan);
+  assert.deepEqual(AI.rowsToObjects(S.g.tab(S.ws.id, 'Item')).rows.map((x) => x.desc), ['Website maintenance (revised)']);
+  assert.equal(S.g.files.get(r1.fileId).name, 'APS-1126-001 - Contoh Trading (M) Sdn Bhd.pdf');
+  // selepas 24 jam: ditolak
+  const late = AI.draftForEdit(rows[0], S.store.snapshot().syarikat, S.store.snapshot().kodCukai);
+  await assert.rejects(AI.issueDocument(Object.assign(S.deps(), { now: () => NOW + 25 * 3600e3 }), late), (e) => /24 jam/.test(e.message));
+});
+
+test('tukar Quotation → Invois → DO: dokumen asal ditanda', async () => {
+  const S = await setup();
+  const q = await AI.issueDocument(S.deps(), Object.assign(S.draft(), { jenis: 'quotation' }));
+  const qrow = () => AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows.find((r) => r.no_dokumen === q.number);
+  const inv = await AI.issueDocument(S.deps(), AI.draftConvert(qrow(), 'invoice', S.store.snapshot().syarikat, S.store.snapshot().kodCukai));
+  assert.equal(qrow().status_quotation, 'Ditukar'); assert.equal(qrow().ditukar_kepada, inv.number);
+  const irow = () => AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows.find((r) => r.no_dokumen === inv.number);
+  assert.equal(irow().sumber_no, q.number); assert.equal(irow().your_ref, q.number);
+  const dd = await AI.issueDocument(S.deps(), AI.draftConvert(irow(), 'do', S.store.snapshot().syarikat, S.store.snapshot().kodCukai));
+  assert.equal(irow().ditukar_kepada, dd.number);
+  const drow = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows.find((r) => r.no_dokumen === dd.number);
+  assert.equal(drow.sumber_jenis, 'invoice'); assert.equal(drow.jumlah_qty, 2);
 });

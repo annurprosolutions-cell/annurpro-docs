@@ -371,3 +371,18 @@ img.sitem.static { position: absolute; pointer-events: none; cursor: default; he
 .badge.amber { background: var(--amber-soft); color: var(--amber); }
 .badge.blue { background: var(--blue-soft); color: var(--primary); }
 a.btn { text-decoration: none; }
+
+/* ---------- S-06 Rekod & S-07 Pelanggan ---------- */
+.rfilters { display: grid; gap: 10px; margin-bottom: 10px; }
+.rf-row { display: grid; gap: 8px; grid-template-columns: 1fr; align-items: center; }
+@media (min-width: 640px) { .rf-row { grid-template-columns: minmax(0, 1fr) 190px 150px; } }
+[data-form="cust-filter"] .rf-row { grid-template-columns: 1fr auto; }
+.drow.rec .dright { flex-wrap: wrap; justify-content: flex-end; }
+.drow .dright .ib { font-size: 18px; line-height: 1; }
+.btn.danger { background: var(--red); border-color: var(--red); color: #fff; }
+.btn.danger:hover:not(:disabled) { background: #a51f1f; }
+.btn.danger-o { color: var(--red); border-color: var(--red-line, #f3c6c4); }
+.sheet.wide { max-width: 560px; max-height: calc(100vh - 24px); overflow: auto; }
+.page-head .btn.primary { min-height: 40px; }
+.sheet p .badge { vertical-align: middle; }
+.sheet { max-height: calc(100vh - 24px); overflow: auto; }

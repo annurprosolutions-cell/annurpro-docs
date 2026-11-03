@@ -257,6 +257,7 @@
   }
   function modal() {
     if (UI.modal === 'issue' || UI.modal === 'paywall') return E.modal();
+    if (UI.modal === 'docmenu' || UI.modal === 'void' || UI.modal === 'cust') return R.modal();
     if (UI.modal === 'rename') return S.renameModal();
     if (UI.modal !== 'conflict') return '';
     const r = (UI.sync.info && UI.sync.info.remote) || {};
@@ -315,7 +316,7 @@
     let main;
     if (UI.view === 'home') main = viewHome();
     else if (UI.view === 'rekod') main = E.views.rekod();
-    else if (UI.view === 'pelanggan') main = soon('Pelanggan', 'Fasa 7', 'Simpan pelanggan untuk isi Bill To dengan satu klik.');
+    else if (UI.view === 'pelanggan') main = R.views.pelanggan();
     else if (UI.view === 'profil') main = S.views.profil();
     else if (UI.view === 'docset') main = S.views.docset();
     else if (UI.view === 'imej') main = I.views.imej();
@@ -358,22 +359,30 @@
     if (L.mode === 'kredit' && r.credits < per) { L.mode = 'habis'; L.canIssue = false; L.entitled = false; L.reason = 'tiada-kredit'; }
     if (L.cache) { L.cache.credits = L.credits; L.cache.docsLeft = L.docsLeft; AI.local.set(LIC_KEY, L.cache); }
   }
-  const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), imgOf: I.imgOf, worker, onIssued, recheck: () => runCheck() });
+  let R = null;
+  const E = AI.EditorUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), imgOf: I.imgOf, worker, onIssued, recheck: () => runCheck(),
+    recordsSection: () => R.section() });
+  R = AI.RecordsUI({ UI, esc, icon, toast, render, store: () => store, email: () => auth.lastEmail(), worker, openEditor: (d) => { UI.modal = ''; E.open(d); } });
   const newDoc = E.actions.newDoc;
   E.actions.newDoc = (el) => {
     if (!(UI.ws && UI.ws.ready && UI.data)) { toast('Ruang kerja Google belum sedia. Tunggu pill "Tersimpan" atau tekan Sambung semula.', true); return; }
     if (UI.view === 'editor') E.saveNow(true);
     newDoc(el);
   };
-  Object.assign(actions, S.actions, I.actions, E.actions);
+  Object.assign(actions, S.actions, I.actions, E.actions, R.actions);
 
   // ---------- mula ----------
   function boot() {
     I.bind(document);
-    document.addEventListener('input', (e) => { if (!I.onInput(e.target) && !E.onInput(e.target)) S.onInput(e.target); });
+    const RFORMS = '[data-form="rekod"],[data-form="cust-filter"],[data-form="cust"]';
+    document.addEventListener('input', (e) => {
+      if (e.target.closest && e.target.closest(RFORMS)) { R.onInput(e.target); return; }
+      if (!I.onInput(e.target) && !E.onInput(e.target)) S.onInput(e.target);
+    });
     root.addEventListener('resize', () => { if (UI.view === 'editor') E.fitPreview(); });
     document.addEventListener('change', (e) => {
       if (I.onChange(e.target)) return;
+      if (e.target.closest && e.target.closest(RFORMS)) { R.onInput(e.target); return; }
       if (e.target.closest && e.target.closest('[data-form="editor"]')) { if (e.target.type === 'checkbox') E.onInput(e.target); return; }
       if (e.target.type === 'checkbox' || e.target.type === 'radio' || e.target.tagName === 'SELECT') S.onInput(e.target);
     });

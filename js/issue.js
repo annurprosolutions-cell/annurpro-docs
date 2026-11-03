@@ -18,6 +18,11 @@
     const { sk, codes, api, store } = deps;
     const errs = AI.validateDraft(draft, sk, codes);
     if (Object.keys(errs).length) { const e = new Error('Dokumen belum lengkap'); e.validation = errs; throw e; }
+    const now = deps.now ? deps.now() : Date.now();
+    if (draft.editing) {
+      const t = Date.parse(draft.issued && draft.issued.issuedAt);
+      if (!(now - t <= AI.EDIT_HOURS * 3600e3)) { const e = new Error('Tempoh edit 24 jam telah tamat. Batalkan dokumen dan terbit yang baharu.'); e.validation = { _: e.message }; throw e; }
+    }
     if (!draft.doc_id) { draft.doc_id = AI.newDocId(); await deps.saveDraft(draft); }
     let at = 0, issued = null;
     try {
@@ -27,6 +32,7 @@
       if (r.status === 403) { const e = new Error(r.body.error || 'Tiada kelayakan'); e.paywall = r.body; throw e; }
       if (!r.body || !r.body.ok) { const e = new Error((r.body && r.body.error) || 'Gagal mengeluarkan nombor (HTTP ' + r.status + ')'); e.status = r.status; throw e; }
       issued = r.body;
+      if (draft.editing && issued.number !== draft.issued.number) throw new Error('Nombor dokumen tidak sepadan; edit dibatalkan.');
       if (!draft.issued || draft.issued.number !== issued.number) { draft.issued = { number: issued.number, issuedAt: issued.issuedAt }; await deps.saveDraft(draft); }
 
       // 2) baris Sheet (Dokumen + Item rujukan)
@@ -34,8 +40,20 @@
       const view = AI.docView(draft, sk, codes, { number: issued.number });
       const row = AI.docRow(draft, view, issued, deps.email);
       row.hash_kandungan = await AI.sha256Hex(AI.hashInput(row));
-      store.append('Dokumen', [row], 'doc_id');
-      store.append('Item', AI.itemRows(row), 'no_dokumen');
+      const existing = store.list('Dokumen').find((x) => str(x.doc_id) === draft.doc_id);
+      if (draft.editing && existing) {
+        // edit: baris & item yang sama diganti; maklumat terbit asal dan pautan PDF dikekalkan
+        ['diterbit_pada', 'diterbit_oleh', 'status_quotation', 'ditukar_kepada', 'pdf_url', 'pdf_id'].forEach((k) => { row[k] = existing[k]; });
+        row.dikemaskini_pada = new Date(now).toISOString();
+        store.update('Dokumen', 'doc_id', row);
+        store.replaceRows('Item', 'no_dokumen', issued.number, AI.itemRows(row));
+      } else {
+        store.append('Dokumen', [row], 'doc_id');
+        store.append('Item', AI.itemRows(row), 'no_dokumen');
+        // penukaran: tanda dokumen asal (Quotation → Ditukar; senarai ditukar_kepada)
+        const src = str(draft.sumber_no) && store.list('Dokumen').find((x) => str(x.no_dokumen) === str(draft.sumber_no));
+        if (src) store.update('Dokumen', 'no_dokumen', AI.sourceUpdate(src, issued.number));
+      }
       await store.flush();
 
       // 3) PDF
@@ -52,6 +70,8 @@
           appProperties: { [AI.APP_MARK]: 'pdf', doc_id: draft.doc_id } });
       }
       await api.uploadBytes(file.id, bytes, 'application/pdf');
+      const fname = AI.pdfName(issued.number, draft.bill_nama);
+      if (file.name && file.name !== fname) { try { await api.updateFile(file.id, { name: fname }); } catch (e) { /* nama lama kekal */ } }
       let shared = false, shareError = '';
       if (str(sk.kongsi_awam).toUpperCase() !== 'TIDAK') {
         try { await api.share(file.id); shared = true; } catch (e) { shareError = AI.googleErrorHint(e); }
@@ -61,7 +81,7 @@
       await store.flush();
 
       if (draft.id) await deps.dropDraft(draft.id);
-      return { number: issued.number, docId: draft.doc_id, url, fileId: file.id, bytes, shared, shareError, credits: issued.credits, charged: issued.charged, repeat: issued.repeat, view, row };
+      return { edited: !!draft.editing, number: issued.number, docId: draft.doc_id, url, fileId: file.id, bytes, shared, shareError, credits: issued.credits, charged: issued.charged, repeat: issued.repeat, view, row };
     } catch (e) {
       if (e.paywall || e.validation) throw e;
       e.step = at; e.issued = issued;   // nombor & baki kredit terkini walaupun langkah kemudian gagal
