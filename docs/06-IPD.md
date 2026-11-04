@@ -107,7 +107,7 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [ ] 9.6 Hantar verifikasi OAuth (nama dahulu, logo kemudian); UAT dengan AZN Power Solution (cipta 10 dokumen sebenar).
 
 ### Fasa 10 – Launch
-- [ ] 10.1 Domain `docs.annurpro.com` + Worker, tambah origin pada OAuth client, `canonicalHost` dalam `config.js` (hos lama `workers.dev` dihantar ke domain; `ALLOWED_ORIGINS` tidak perlu kerana asal sama). Nama app ditukar kepada Annur Docs. Langkah: `docs/10-LANCAR.md`.
+- [x] 10.1 Domain `docs.annurpro.com` + Worker, tambah origin pada OAuth client, `canonicalHost` dalam `config.js` (hos lama `workers.dev` dihantar ke domain; `ALLOWED_ORIGINS` tidak perlu kerana asal sama). Nama app ditukar kepada Annur Docs. Langkah: `docs/10-LANCAR.md`.
 - [ ] 10.2 Tukar OAuth ke Production; ujian RM1 sebenar melalui BCL (item sementara), sahkan `payments` dan lesen.
 - [ ] 10.3 Senarai semak launch skill `micro-saas-builder` §5 selesai; pantau webhook 48 jam.
 
