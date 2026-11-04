@@ -138,5 +138,28 @@
     ]
   };
 
-  window.TIMELINES = { intro, sistem };
+
+  // ---- Versi 2 (pengenalan): buang ayat "Word atau Excel" (jenama pihak ketiga) dan ulangan URL; tanpa tera URL sepanjang video ----
+  const OFF = 7.1, END = 76.3;
+  const TK = new Set(['at', 'until', 'btnAt', 'urlAt', 'headAt', 'subAt', 'phoneAt', 'emptyAt', 'bad']);
+  const shift = (o, key) => {
+    if (Array.isArray(o)) return o.map((x) => shift(x));
+    if (o && typeof o === 'object') { const r = {}; for (const k of Object.keys(o)) r[k] = shift(o[k], k); return r; }
+    if (typeof o === 'number' && (TK.has(key) || key === '_t')) return +(o - OFF).toFixed(2);
+    return o;
+  };
+  const shiftT = (o) => { const r = {}; for (const k of Object.keys(o)) r[k] = +(o[k] - OFF).toFixed(2); return r; };
+  const introV2 = {
+    duration: +(END - OFF).toFixed(2), steps: [], foot: false,
+    caps: intro.caps.filter((c) => c[0] >= OFF && c[1] <= END + 0.1).map((c) => [+(c[0] - OFF).toFixed(2), +(c[1] - OFF).toFixed(2), c[2]]),
+    scenes: [{ s: 0, e: 5.9, type: 'chips', p: { head: 'Dokumen jualan masih *leceh*?', headAt: 0.1, items: [
+      { t: 'Format berubah', i: '×', k: 'bad', at: 0.2 }, { t: 'Nombor dokumen terlepas', i: '×', k: 'bad', at: 1.6 }, { t: 'Cari dokumen lama makan masa', i: '×', k: 'bad', at: 3.5 }] } }]
+      .concat(intro.scenes.filter((x) => x.s >= 13.0).map((x) => {
+        const y = shift(x); y.s = +(x.s - OFF).toFixed(2); y.e = +(Math.min(x.e, END) - OFF).toFixed(2);
+        if (y.p && y.p.t && typeof y.p.t === 'object') y.p.t = shiftT(x.p.t);
+        return y;
+      }))
+  };
+  introV2.scenes.find((x) => x.type === 'phone').s = 5.9;
+  window.TIMELINES = { intro, sistem, introV2 };
 })();
