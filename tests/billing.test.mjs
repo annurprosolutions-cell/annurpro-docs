@@ -162,3 +162,17 @@ test('admin: tambah bulan, tetap tarikh, laras kredit, statistik, sahkan pesanan
   assert.equal(t.state, 'langganan'); assert.equal(t.credits, 75);
   assert.equal(ov.stats.mrr, 40);
 });
+
+test('Fasa 11: nama pek diutamakan, amaun jumlah baris, senarai pek dalam /api/check', async () => {
+  const env = { PACKS: '{"10":110,"20":230,"50":600}' };
+  // nombor dalam nama menang walaupun harga sama dengan pek lain
+  assert.deepEqual(planFromItems([{ name: 'PEK 600 KREDIT', amount: 50, quantity: 1 }], 50, env), { months: 0, credits: 600 });
+  assert.deepEqual(planFromItems([{ name: 'PEK 110 KREDIT', amount: 20, quantity: 2 }], 20, env), { months: 0, credits: 220 });
+  // tiada nombor dalam nama, amaun ialah jumlah baris (2 × RM10)
+  assert.deepEqual(planFromItems([{ name: 'Pek kredit kecil', amount: 20, quantity: 2 }], 20, { PACKS: '{"10":110}' }), { months: 0, credits: 220 });
+  // campuran langganan + pek dalam satu pesanan
+  assert.deepEqual(planFromItems([{ name: 'LANGGANAN BULANAN', amount: 20, quantity: 1 }, { name: 'PEK 230 KREDIT', amount: 20, quantity: 1 }], 40, env), { months: 1, credits: 230 });
+  const S = setup();
+  const chk = await S.call('POST', '/api/check', { token: 'tok-pemilik@contoh.my' });
+  assert.deepEqual(chk.packs, [{ price: 10, credits: 110 }, { price: 20, credits: 230 }, { price: 50, credits: 600 }]);
+});

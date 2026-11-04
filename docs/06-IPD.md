@@ -112,8 +112,8 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [ ] 10.3 Senarai semak launch skill `micro-saas-builder` §5 selesai; pantau webhook 48 jam.
 
 ### Fasa 11 – v1.1 Pek kredit (F-18)
-- [ ] 11.1 Item BCL RM10/RM20/RM50; `PACKS` var; tambah kredit melalui webhook (ledger `pack`, `ref=order_no`).
-- [ ] 11.2 S-11 butang beli pek, S-12 cadangan pek, notis kredit < 10, kemas kini panduan dan halaman jualan.
+- [ ] 11.1 Item BCL RM10/RM20/RM50; `PACKS` var; tambah kredit melalui webhook (ledger `pack`, `ref=order_no`). *Kod & `BUY_URL_PACK` siap; pemilik perlu tambah item `PEK 110 KREDIT` (RM10), `PEK 230 KREDIT` (RM20), `PEK 600 KREDIT` (RM50) dalam borang BCL 20718.*
+- [x] 11.2 S-11 butang beli pek, S-12 cadangan pek, notis kredit < 10, kemas kini panduan dan halaman jualan.
 
 ## 6. Pelan Testing
 | Ujian | Cara | Lulus bila |

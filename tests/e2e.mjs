@@ -36,7 +36,7 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css
 
 const BCL_KEY = 'e2e-' + 'k'.repeat(40);
 const BCL_TX = {};
-const env = { GOOGLE_CLIENT_ID: CLIENT, DB: createD1(), BUY_URL_SUB: 'https://bcl.test/form', BCL_WEBHOOK_KEY: BCL_KEY, BCL_API_TOKEN: 'bcl_e2e',
+const env = { GOOGLE_CLIENT_ID: CLIENT, DB: createD1(), BUY_URL_SUB: 'https://bcl.test/form', BUY_URL_PACK: 'https://bcl.test/form', PACKS: '{"10":110,"20":230,"50":600}', BCL_WEBHOOK_KEY: BCL_KEY, BCL_API_TOKEN: 'bcl_e2e',
   BCL_API_URL: 'https://api.bcl.test/v1', OWNER_EMAILS: 'pemilik@contoh.my' };
 const fakeFetch = async (url) => {
   if (String(url).startsWith('https://api.bcl.test/v1/transactions/')) {
@@ -522,6 +522,9 @@ try {
       await page.getByRole('dialog').getByText('Tidak dapat terbit').waitFor({ timeout: 15000 });
       assert.match(await page.getByRole('dialog').innerText(), /Baki kredit tidak cukup \(0 kredit/);
       assert.equal(await page.getByRole('link', { name: 'Langgan' }).getAttribute('href'), 'https://bcl.test/form');
+      const payTxt = await page.getByRole('dialog').innerText();
+      assert.match(payTxt, /110 kredit/); assert.match(payTxt, /600 kredit/); assert.match(payTxt, /22 dokumen/);
+      assert.equal(await page.getByRole('dialog').getByRole('link', { name: 'Beli kredit' }).getAttribute('href'), 'https://bcl.test/form');
       await shot('s12-desktop', false);
       await page.getByRole('button', { name: 'Tutup' }).click();
       assert.equal(AI_rows(sid).filter((r) => r.bill_nama === 'Pelanggan Tanpa Kredit').length, 0);
@@ -668,14 +671,26 @@ try {
       await page.locator('table.ltab').first().waitFor({ timeout: 8000 });
       const ltxt = await page.locator('table.ltab').first().innerText();
       assert.match(ltxt, /Terbit dokumen/); assert.match(ltxt, /Kredit percubaan/);
+      // Fasa 11: kad pek kredit, beli pek melalui BCL → kredit bertambah
+      const packSec = await page.locator('section', { hasText: 'Pek kredit' }).first().innerText();
+      assert.match(packSec, /230 kredit/); assert.match(packSec, /RM0\.45 sedokumen/); assert.match(packSec, /bonus 20%/);
       await shot('s11-sebelum', true);
+      const credPack = await env.DB.prepare('SELECT credits FROM tenants').first('credits');
+      BCL_TX['BCL-E2E-PACK'] = { record_id: 'rp', main_data: { order_number: 'BCL-E2E-PACK', status: 3, is_paid: true, amount: '10.00', subtotal_amount: '10.00', items: [{ name: 'PEK 110 KREDIT', quantity: 1, amount: 10 }], payer_email: 'pasangan@x.my' },
+        custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } };
+      const whp = await fetch(BASE + '/bcl/' + BCL_KEY, { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ event: 'payment-success', data: { record_id: 'rp', main_data: { order_number: 'BCL-E2E-PACK', amount: '10.00' }, custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } } }) }).then((r) => r.json());
+      assert.equal(whp.ok, true); assert.equal(whp.credits, 110);
+      await page.getByRole('button', { name: 'Saya sudah bayar, semak semula' }).first().click();
+      await until(async () => (await page.locator('.lic .big').innerText()) === (credPack + 110) + ' kredit', 6000, 'kredit pek masuk');
+      await until(async () => /Pek kredit/.test(await page.locator('table.ltab').first().innerText()), 6000, 'ledger pek');
       // bayaran BCL sebenar ke Worker → langganan aktif
       BCL_TX['BCL-E2E-0001'] = { record_id: 'r1', main_data: { order_number: 'BCL-E2E-0001', status: 3, is_paid: true, amount: '20.00', subtotal_amount: '20.00', items: [{ item: 'Langganan Bulanan', quantity: 1, price: '20.00' }], payer_email: 'pasangan@x.my' },
         custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } };
       const wh = await fetch(BASE + '/bcl/' + BCL_KEY, { method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ event: 'payment-success', data: { record_id: 'r1', main_data: { order_number: 'BCL-E2E-0001', amount: '20.00' }, custom_fields_data: { 'E-mel Google untuk sistem': 'pemilik@contoh.my' } } }) }).then((r) => r.json());
       assert.equal(wh.ok, true); assert.equal(wh.months, 1);
-      await page.getByRole('button', { name: 'Saya sudah bayar, semak semula' }).click();
+      await page.getByRole('button', { name: 'Saya sudah bayar, semak semula' }).first().click();
       await until(async () => /Tanpa had/.test(await page.locator('.lic').innerText()), 6000, 'langganan aktif');
       assert.match(await page.locator('.lic').innerText(), /Langganan Bulanan/);
       await until(async () => /Langganan Bulanan/.test(await page.locator('section', { hasText: 'Bayaran' }).last().innerText()), 6000, 'bayaran disenarai');
@@ -711,8 +726,8 @@ try {
       await page.locator('tr[data-email="pemilik@contoh.my"]').getByRole('button', { name: 'Kredit ±' }).click();
       await until(async () => (await env.DB.prepare('SELECT credits FROM tenants').first('credits')) === credAdm + 25, 6000, 'laras kredit');
       page.off('dialog', onDlg);
-      await page.getByRole('button', { name: /Bayaran \(1\)/ }).click();
-      assert.match(await page.locator('.atab').innerText(), /BCL-E2E-0001/);
+      await page.getByRole('button', { name: /Bayaran \(2\)/ }).click();
+      const payTab = await page.locator('.atab').innerText(); assert.match(payTab, /BCL-E2E-0001/); assert.match(payTab, /BCL-E2E-PACK/);
       await page.getByRole('button', { name: 'Log webhook' }).click();
       assert.match(await page.locator('.atab').innerText(), /OK/);
       await page.getByRole('button', { name: 'Tindakan' }).click();

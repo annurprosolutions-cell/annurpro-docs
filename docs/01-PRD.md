@@ -118,6 +118,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | Tarikh | Perubahan |
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
+| 04/11/2026 | Fasa 11 (v1.1): pek kredit RM10 = 110, RM20 = 230, RM50 = 600 kredit dalam borang BCL yang sama; kad pek dalam S-11 dan S-12, notis kredit rendah dengan butang Beli kredit; bilangan kredit dibaca daripada nama item (cth `PEK 110 KREDIT`) |
 | 04/11/2026 | Nama produk ditukar kepada **Annur Docs** (Invois, Quotation, DO); domain `docs.annurpro.com`. Folder & Sheet baharu: `[Nama Syarikat] – Annur Docs`. Nama dalaman (Worker `annur-invoice`, D1, kunci `annurInvoice`) dikekalkan |
 | 04/11/2026 | Fasa 9: had kadar Worker, header keselamatan, service worker diperkukuh, E2E Playwright, mod demo `/?demo`, S-13 Bantuan, halaman jualan, panduan pengguna (HTML + PDF) dan senarai semak verifikasi OAuth. Video tutorial ditangguhkan |
 | 03/11/2026 | Dokumen dipindah ke repo `annurpro-docs`; pembinaan Fasa 0 dan Fasa 1 dimulakan |

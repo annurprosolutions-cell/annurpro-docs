@@ -1,7 +1,7 @@
 // Tetapan pemasangan. Ubah fail ini tanpa menyentuh kod lain.
 window.APP_CONFIG = {
   appName: 'Annur Docs',
-  version: '0.10.1',
+  version: '0.11.0',
   vendor: 'AnnurPro Solutions',
   // Client ID OAuth Google (jenis "Web application"). Kosong = log masuk dimatikan (mod pembangunan).
   googleClientId: '933747272196-5ub5jst04ff6e3b21ou8muouvvlmfgae.apps.googleusercontent.com',

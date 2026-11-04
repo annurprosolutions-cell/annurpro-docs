@@ -18,7 +18,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 7 | Rekod penuh (tapis, cari, menu), edit 24 jam, batal, salin, tukar Quotation→Invois / →DO, Pelanggan (CRUD, arkib) | Siap |
 | 8 | Webhook BCL + pengesahan API, langganan & pek kredit, S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Siap (perlu langkah 6 di bawah) |
 | 9 | Pengukuhan: luar talian, had kadar, header keselamatan, E2E, mod demo `/?demo`, halaman jualan `salepage/`, panduan `panduan/` (HTML + PDF) | Siap (verifikasi OAuth & UAT: langkah 7 di bawah) |
-| 10 | Pelancaran: nama Annur Docs, domain `docs.annurpro.com`, OAuth Production, ujian bayaran RM1, UAT | Sedang berjalan (langkah pemilik: `docs/10-LANCAR.md`) |
+| 10 | Pelancaran: nama Annur Docs, domain `docs.annurpro.com`, OAuth Production, ujian bayaran RM1, UAT | Domain, OAuth & bayaran siap; UAT oleh pemilik (`docs/10-LANCAR.md`) |
+| 11 | v1.1 pek kredit: kad pek S-11/S-12, notis kredit rendah, kredit ikut nama item BCL | Siap (pemilik tambah item pek dalam BCL) |
 
 ## Struktur
 
@@ -146,6 +147,18 @@ Ringkas: custom domain pada Worker → buka `https://docs.annurpro.com/` → tam
 `ALLOWED_ORIGINS` tidak perlu diubah: app dan API pada asal yang sama. Webhook BCL boleh kekal pada alamat `workers.dev`.
 
 Selepas sebulan tiada isu, tukar CSP daripada `Content-Security-Policy-Report-Only` kepada `Content-Security-Policy` dalam `_headers`.
+
+### 8. Pek kredit (Fasa 11)
+
+Dalam borang BCL yang sama (Annur Docs, `invoice-system`), tambah tiga produk. **Nama mesti mengandungi bilangan kredit** diikuti perkataan KREDIT:
+
+| Nama produk | Harga | Kuantiti dibenarkan |
+|---|---|---|
+| `PEK 110 KREDIT` | RM10 | Ya |
+| `PEK 230 KREDIT` | RM20 | Ya |
+| `PEK 600 KREDIT` | RM50 | Ya |
+
+Jika harga atau bonus ditukar, kemas kini juga `PACKS` dalam `wrangler.jsonc` (harga → kredit) supaya kad dalam app sepadan.
 
 ### Masalah biasa
 | Gejala | Punca dan penyelesaian |

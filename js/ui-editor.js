@@ -299,7 +299,8 @@
         const msg = p.reason === 'tamat' ? 'Langganan anda telah tamat.' : `Baki kredit tidak cukup (${p.credits || 0} kredit; perlu ${p.creditsPerDoc || 5} untuk satu dokumen).`;
         return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="pTitle"><div class="sheet">
           <h2 id="pTitle">Tidak dapat terbit</h2><p>${esc(msg)} Draf anda selamat di peranti ini.</p>
-          <p class="muted">Langgan RM20 sebulan untuk terbit tanpa had${pack ? ', atau beli kredit' : ''}.</p>
+          <p class="muted">Langgan RM20 sebulan untuk terbit tanpa had${pack ? ', atau beli pek kredit jika anda jarang terbit dokumen' : ''}.</p>
+          ${pack && AI.packCards ? AI.packCards({ buyUrls: p.buyUrls, packs: p.packs || (UI.lic && UI.lic.packs) || [], creditsPerDoc: p.creditsPerDoc || 5 }, true) : ''}
           <div class="sheet-acts">
             ${sub ? `<a class="btn primary" href="${esc(sub)}" target="_blank" rel="noopener">Langgan</a>` : '<p class="note warn">Pautan bayaran belum disediakan. Hubungi sokongan.</p>'}
             ${pack ? `<a class="btn" href="${esc(pack)}" target="_blank" rel="noopener">Beli kredit</a>` : ''}

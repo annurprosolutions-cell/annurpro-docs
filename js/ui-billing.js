@@ -34,6 +34,19 @@
         <div class="lic-acts"><button class="btn ghost-light" data-act="billRecheck">Semak semula</button></div></section>`;
     }
 
+    // Pek kredit: kad harga, setara dokumen, kos sedokumen. Pulang '' bila tiada pautan atau senarai pek.
+    function packCards(L, compact) {
+      const packs = (L && L.packs) || [], per = (L && L.creditsPerDoc) || 5;
+      if (!(L && L.buyUrls && L.buyUrls.pack) || !packs.length) return '';
+      return `<div class="plans packs">${packs.map((p) => {
+        const docs = Math.floor(p.credits / per), bonus = Math.round((p.credits / p.price / 10 - 1) * 100);
+        return `<div class="plan${p === packs[packs.length - 1] && packs.length > 1 ? ' best' : ''}"><b>${esc(p.credits)} kredit</b>
+          <div class="price">RM${esc(p.price)}</div>
+          <small class="muted">${esc(docs)} dokumen · RM${esc((p.price / docs).toFixed(2))} sedokumen${!compact && bonus > 0 ? ` · bonus ${esc(bonus)}%` : ''}</small></div>`;
+      }).join('')}</div>`;
+    }
+    AI.packCards = packCards;
+
     function viewLangganan() {
       const L = UI.lic, B = UI.bill || {};
       const urls = (L && L.buyUrls) || {}, email = ctx.email();
@@ -56,16 +69,21 @@
           <div class="plans">
             <div class="plan"><b>Bulanan</b><div class="price">RM20<small>/bulan</small></div><small class="muted">Terbit dokumen tanpa had</small></div>
             <div class="plan best"><b>Tahunan</b><div class="price">RM200<small>/tahun</small></div><small class="muted">Jimat RM40 berbanding bulanan</small></div>
-            ${urls.pack ? '<div class="plan"><b>Pek kredit</b><div class="price">RM10<small> = 110 kredit</small></div><small class="muted">Bayar ikut guna; kredit tidak luput</small></div>' : ''}
           </div>
           ${urls.sub ? steps : `<p class="note warn">Pembayaran dalam talian belum dibuka. Hubungi sokongan${sup.whatsapp ? ` di WhatsApp <a href="https://wa.me/6${esc(String(sup.whatsapp).replace(/\D/g, ''))}" target="_blank" rel="noopener">${esc(sup.whatsapp)}</a>` : ''} untuk melanggan.</p>`}
           <div class="acts-row">
             ${urls.sub ? `<a class="btn primary" href="${esc(urls.sub)}" target="_blank" rel="noopener">Buka borang langganan</a>` : ''}
-            ${urls.pack ? `<a class="btn" href="${esc(urls.pack)}" target="_blank" rel="noopener">Beli kredit</a>` : ''}
             <button class="btn" data-act="billRecheck">Saya sudah bayar, semak semula</button>
           </div>
           <p class="fine">Pembayaran diproses oleh BCL (FPX dan kad). AnnurPro tidak menyimpan maklumat kad atau perbankan anda.</p>
         </section>
+        ${packCards(L) ? `<section class="card"><h2>Pek kredit</h2>
+          <p class="muted">Bayar ikut guna. ${esc((L && L.creditsPerDoc) || 5)} kredit untuk setiap dokumen, kredit tidak luput, dan kekal disimpan semasa anda berlangganan.</p>
+          ${packCards(L)}
+          <p class="fine">Cara bayar sama seperti langganan: salin e-mel di atas, buka borang, pilih pek, dan tampal e-mel dalam medan <b>"E-mel Google untuk sistem"</b>.</p>
+          <div class="acts-row"><a class="btn primary" href="${esc(urls.pack)}" target="_blank" rel="noopener">Beli kredit</a>
+            <button class="btn" data-act="billRecheck">Saya sudah bayar, semak semula</button></div>
+        </section>` : ''}
         <section class="card"><h2>Sejarah kredit</h2>${ledger}</section>
         <section class="card"><h2>Bayaran</h2>${B.loading ? '<p class="muted">Memuatkan...</p>' : pays}</section>`;
     }

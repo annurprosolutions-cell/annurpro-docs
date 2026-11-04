@@ -22,7 +22,7 @@
     email: b.email || '', businessName: b.businessName || '', mode: b.mode || 'habis', entitled: !!b.entitled,
     trial: !!b.trial, credits: b.credits || 0, creditsPerDoc: b.creditsPerDoc || 5, docsLeft: b.docsLeft || 0,
     plan: b.plan || null, expires: b.expires || null, daysLeft: b.daysLeft == null ? null : b.daysLeft,
-    graceLeft: b.graceLeft == null ? null : b.graceLeft, buyUrls: b.buyUrls || {}, reason: b.reason || ''
+    graceLeft: b.graceLeft == null ? null : b.graceLeft, buyUrls: b.buyUrls || {}, packs: Array.isArray(b.packs) ? b.packs : [], reason: b.reason || ''
   });
 
   /**
@@ -68,7 +68,7 @@
     if (d.mode === 'kredit') {
       if (d.trial && d.docsLeft <= 3) return { tone: 'warn', text: `Percubaan percuma hampir habis: ${d.docsLeft} dokumen lagi. Langgan untuk terbit tanpa had.`, action: 'buy-sub' };
       if (d.trial) return null; // baki percubaan sudah jelas pada kad lesen
-      if (d.credits < LOW_CREDITS) return { tone: 'warn', text: `Baki kredit rendah: ${d.credits} kredit (${d.docsLeft} dokumen).`, action: 'buy-sub' };
+      if (d.credits < LOW_CREDITS) return { tone: 'warn', text: `Baki kredit rendah: ${d.credits} kredit (${d.docsLeft} dokumen). Beli pek kredit atau langgan untuk terus terbit.`, action: d.buyUrls && d.buyUrls.pack ? 'buy-pack' : 'buy-sub' };
     }
     return null;
   };

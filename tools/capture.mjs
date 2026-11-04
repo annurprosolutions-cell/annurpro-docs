@@ -95,7 +95,7 @@ try {
   await page.getByRole('button', { name: 'Tetapan' }).first().click();
   await page.getByRole('button', { name: /Logo, Cop & Tandatangan/ }).click(); await page.locator('[data-sitem="cop"]').waitFor(); await shot(page, 'logo-cop-desktop', { full: true });
   await page.getByRole('button', { name: 'Tetapan' }).first().click();
-  await page.getByRole('button', { name: /Langganan & Kredit/ }).click(); await page.locator('table.ltab').first().waitFor(); await hideToast(page); await shot(page, 'langganan-desktop');
+  await page.getByRole('button', { name: /Langganan & Kredit/ }).click(); await page.locator('table.ltab').first().waitFor(); await hideToast(page); await shot(page, 'langganan-desktop'); await shot(page, 'pek-kredit', { el: 'section.card:has(.packs)' });
   await page.evaluate(() => window.AI.app.actions.resumeSetup());
   await page.getByRole('heading', { name: 'Penomboran' }).waitFor(); await shot(page, 'wizard-desktop');
   await ctx.close();

@@ -26,7 +26,7 @@
     "GRACE_DAYS": "7",
     "EDIT_WINDOW_HOURS": "24",
     "BUY_URL_SUB": "https://annurprosolutions1.bcl.my/form/invoice-system",
-    "BUY_URL_PACK": "",
+    "BUY_URL_PACK": "https://annurprosolutions1.bcl.my/form/invoice-system",
     "BCL_FORM_ID": "20718",
     "BCL_API_URL": "https://api.bcl.my/v1",
     "YEARLY_MIN_AMOUNT": "150",

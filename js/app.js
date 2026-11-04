@@ -226,7 +226,8 @@
     const n = AI.licenseNotice(d);
     const notice = n ? `<div class="notice ${n.tone}" role="status"><span>${esc(n.text)}</span>${n.action === 'recheck'
       ? '<button class="btn sm" data-act="recheck">Cuba lagi</button>'
-      : n.tone !== 'info' ? '<button class="btn sm" data-act="buy" data-k="sub">Langgan</button>' : ''}</div>` : '';
+      : n.action === 'buy-pack' ? '<button class="btn sm" data-act="openLangganan">Beli kredit</button>'
+        : n.tone !== 'info' ? '<button class="btn sm" data-act="buy" data-k="sub">Langgan</button>' : ''}</div>` : '';
     return `<header class="page-head"><div><small class="muted">Selamat datang</small><h1>${esc((d && d.businessName) || 'Utama')}</h1></div></header>
       ${notice}
       ${UI.ws && UI.ws.ready && !AI.setupComplete(UI.data && UI.data.syarikat) ? '<div class="notice warn"><span>Persediaan syarikat belum lengkap.</span><button class="btn sm" data-act="resumeSetup">Teruskan</button></div>' : ''}

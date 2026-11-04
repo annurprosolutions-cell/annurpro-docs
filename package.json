@@ -1,6 +1,6 @@
 {
   "name": "annur-docs",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": true,
   "description": "Annur Docs: penjana Invois, Quotation dan Delivery Order (PWA + Cloudflare Worker)",
   "scripts": {

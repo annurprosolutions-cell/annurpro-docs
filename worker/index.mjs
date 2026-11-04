@@ -17,8 +17,16 @@ const cfg = (env) => ({
   perDoc: int(env.CREDITS_PER_DOC, 5) || 5,
   graceDays: int(env.GRACE_DAYS, 7),
   editHours: int(env.EDIT_WINDOW_HOURS, 24),
-  buyUrls: { sub: env.BUY_URL_SUB || '', pack: env.BUY_URL_PACK || '' }
+  buyUrls: { sub: env.BUY_URL_SUB || '', pack: env.BUY_URL_PACK || '' },
+  packs: packList(env)
 });
+// PACKS {"10":110,...} → [{ price: 10, credits: 110 }] ikut harga menaik (untuk paparan app)
+function packList(env) {
+  let o = {};
+  try { o = JSON.parse(env.PACKS || '{}') || {}; } catch (e) { o = {}; }
+  return Object.entries(o).map(([k, v]) => ({ price: Number(k), credits: parseInt(v, 10) }))
+    .filter((x) => x.price > 0 && x.credits > 0).sort((a, b) => a.price - b.price).slice(0, 6);
+}
 
 // ---------- tarikh (ikut waktu Malaysia) ----------
 export const todayMY = (now) => new Date(now + MY_OFFSET_MS).toISOString().slice(0, 10);
@@ -145,7 +153,7 @@ async function check(req, env, deps) {
   const sub = await db.prepare('SELECT plan, expires FROM subscriptions WHERE email = ?').bind(email).first();
   const paid = await db.prepare("SELECT 1 AS x FROM credit_ledger WHERE email = ? AND reason = 'pack' LIMIT 1").bind(email).first();
   const ent = entitlement(t0, sub, !!paid, c, todayMY(deps.now()));
-  return json(Object.assign({ ok: true, email, businessName: t0.business_name, newAccount: created, buyUrls: c.buyUrls }, ent));
+  return json(Object.assign({ ok: true, email, businessName: t0.business_name, newAccount: created, buyUrls: c.buyUrls, packs: c.packs }, ent));
 }
 
 // ---------- had kadar (tetingkap tetap per minit, dalam D1) ----------
@@ -202,7 +210,7 @@ async function issue(req, env, deps) {
   const sub = await db.prepare('SELECT plan, expires FROM subscriptions WHERE email = ?').bind(email).first();
   const paid = await db.prepare("SELECT 1 AS x FROM credit_ledger WHERE email = ? AND reason = 'pack' LIMIT 1").bind(email).first();
   const ent = entitlement(tenant, sub, !!paid, c, today);
-  if (!ent.entitled) return json(Object.assign({ ok: false, error: ent.reason === 'tamat' ? 'Langganan telah tamat.' : 'Baki kredit tidak cukup.', buyUrls: c.buyUrls }, ent), 403);
+  if (!ent.entitled) return json(Object.assign({ ok: false, error: ent.reason === 'tamat' ? 'Langganan telah tamat.' : 'Baki kredit tidak cukup.', buyUrls: c.buyUrls, packs: c.packs }, ent), 403);
   const charge = ent.mode === 'langganan' || ent.mode === 'ihsan' ? 0 : c.perDoc;
 
   // 3) satu transaksi: kaunter → rekod terbit → potong kredit → ledger
@@ -226,7 +234,7 @@ async function issue(req, env, deps) {
     if (again && again.email === email) { const t = await getTenant(db, email); return json(issuedOut(again, c, { repeat: true, credits: t ? t.credits : 0 })); }
     if (/CHECK|constraint/i.test(String(e && e.message))) {
       const t = await getTenant(db, email);
-      return json({ ok: false, reason: 'tiada-kredit', error: 'Baki kredit tidak cukup.', credits: t ? t.credits : 0, creditsPerDoc: c.perDoc, buyUrls: c.buyUrls }, 403);
+      return json({ ok: false, reason: 'tiada-kredit', error: 'Baki kredit tidak cukup.', credits: t ? t.credits : 0, creditsPerDoc: c.perDoc, buyUrls: c.buyUrls, packs: c.packs }, 403);
     }
     throw e;
   }
@@ -297,8 +305,9 @@ export function planFromItems(items, amount, env, alt) {
     for (const it of list || []) {
       const n = nameOf(it || {}), q = qtyOf(it || {});
       if (/kredit|credit/i.test(n)) {
-        const packs = packsOf(env), p = priceOf(it);
-        const c = (Number.isFinite(p) && packs[String(Math.round(p))]) || parseInt((n.match(/(\d+)\s*(kredit|credit)/i) || [])[1], 10) || 0;
+        // Utamakan nombor dalam nama ("PEK 110 KREDIT"): tidak bergantung sama ada amaun BCL harga seunit atau jumlah baris
+        const packs = packsOf(env), p = priceOf(it), byPrice = (x) => (Number.isFinite(x) && x > 0 && packs[String(Math.round(x))]) || 0;
+        const c = parseInt((n.match(/(\d+)\s*(kredit|credit)/i) || [])[1], 10) || byPrice(p) || (q > 1 ? byPrice(p / q) : 0);
         if (c) { credits += c * q; known = true; }
       } else if (/tahun|year|annual|12 ?bulan/i.test(n)) { months += 12 * q; known = true; }
       else if (/bulan|month/i.test(n)) { months += q; known = true; }

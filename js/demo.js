@@ -1,5 +1,8 @@
 (function (root) {
   'use strict';
+  // Mod demo: pautan bayar ke bahagian harga halaman jualan (bukan borang sebenar, supaya tiada bayaran dengan e-mel demo)
+  const DEMO_BUY = { sub: 'salepage/#harga', pack: 'salepage/#harga' };
+  const DEMO_PACKS = [{ price: 10, credits: 110 }, { price: 20, credits: 230 }, { price: 50, credits: 600 }];
   const AI = root.AI || (root.AI = {});
 
   // Mod demo (/?demo): tiada Google, tiada Worker sebenar. Semua data dalam memori tab ini sahaja.
@@ -34,10 +37,10 @@
       const u = new URL(url, root.location ? root.location.href : 'https://demo.local/');
       const b = init.body ? JSON.parse(init.body) : {};
       switch ((init.method || 'GET') + ' ' + u.pathname) {
-        case 'POST /api/check': return res(200, Object.assign({ ok: true, email: AI.DEMO_EMAIL, businessName: 'AnnurPro Solutions', newAccount: false, buyUrls: {} }, ent()));
+        case 'POST /api/check': return res(200, Object.assign({ ok: true, email: AI.DEMO_EMAIL, businessName: 'AnnurPro Solutions', newAccount: false, buyUrls: DEMO_BUY, packs: DEMO_PACKS }, ent()));
         case 'POST /api/issue': {
           if (st.issues[b.docId]) return res(200, out(st.issues[b.docId], { repeat: true, credits: st.credits }));
-          if (st.credits < st.per) return res(403, Object.assign({ ok: false, error: 'Baki kredit tidak cukup.' }, ent()));
+          if (st.credits < st.per) return res(403, Object.assign({ ok: false, error: 'Baki kredit tidak cukup.', buyUrls: DEMO_BUY, packs: DEMO_PACKS }, ent()));
           const period = b.date.slice(5, 7) + b.date.slice(2, 4), key = [b.type, b.prefix, period].join('|');
           const seq = st.counters[key] = (st.counters[key] || 0) + 1;
           const r = { docId: b.docId, number: `${b.prefix}/${period}-${String(seq).padStart(3, '0')}`, type: b.type, issuedAt: iso(), status: 'issued', charged: st.per };
