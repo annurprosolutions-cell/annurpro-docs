@@ -22,7 +22,7 @@
     return data;
   };
 
-  // Nama folder & Sheet ikut nama syarikat pengguna (pilihan A): "AnnurPro Solutions – Annur Invoice"
+  // Nama folder & Sheet ikut nama syarikat pengguna (pilihan A): "AnnurPro Solutions – Annur Docs"
   AI.cleanName = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 60).trim();
   AI.workspaceName = (company) => { const n = AI.cleanName(company); return n ? n + ' – ' + AI.ROOT_FOLDER : AI.ROOT_FOLDER; };
 
@@ -70,7 +70,7 @@
    * Cipta atau jumpa semula ruang kerja pengguna (docs/05-BSD.md §6). Idempotent: tidak menimpa nilai
    * sedia ada dan tidak memadam data.
    * opts: { cachedId, company, title, folderName, email, writer, now }
-   *   company → nama folder & Sheet "<company> – Annur Invoice" (hanya semasa dicipta; tidak menukar nama sedia ada)
+   *   company → nama folder & Sheet "<company> – Annur Docs" (hanya semasa dicipta; tidak menukar nama sedia ada)
    * Pulang { id, url, title, folders, created, addedTabs, migrated, duplicates }
    */
   AI.ensureWorkspace = async (api, opts) => {
@@ -162,7 +162,7 @@
     }
 
     // 7) Meta
-    const metaUpd = { format: Math.max(AI.SHEET_FORMAT, Number(meta.format) || 0), aplikasi: 'Annur Invoice', folder_akar: rootFolder.id };
+    const metaUpd = { format: Math.max(AI.SHEET_FORMAT, Number(meta.format) || 0), aplikasi: 'Annur Docs', folder_akar: rootFolder.id };
     Object.keys(FKEY).forEach((k) => { metaUpd[FKEY[k]] = out.folders[k]; });
     if (out.created || missing.length || out.migrated.length || !meta.dikemaskini) Object.assign(metaUpd, { dikemaskini: nowIso, oleh: opts.email || '', penulis: opts.writer || '' });
     data.push(...AI.kvUpsert('Meta', withHead('Meta'), metaUpd));

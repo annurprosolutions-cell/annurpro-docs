@@ -1,5 +1,5 @@
-/* Service worker — Annur Invoice. Naikkan CACHE setiap rilis (sama dengan version dalam config.js). */
-const CACHE = 'annur-invoice-v0.9.0';
+/* Service worker — Annur Docs. Naikkan CACHE setiap rilis (sama dengan version dalam config.js). */
+const CACHE = 'annur-docs-v0.10.0';
 const CORE = [
   './', './config.js', './css/app.css', './js/core.js', './js/auth.js', './js/license.js', './js/schema.js', './js/google.js',
   './js/workspace.js', './js/store.js', './js/idb.js', './js/settings.js', './js/ui-settings.js', './js/images.js', './js/sign.js', './js/ui-images.js', './js/calc.js', './js/doc.js', './js/template.js', './js/pdf.js', './js/records.js', './js/issue.js', './js/ui-editor.js', './js/ui-records.js', './js/ui-billing.js', './js/fakegoogle.js', './js/demo.js', './js/ui-help.js', './js/app.js',

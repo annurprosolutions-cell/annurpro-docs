@@ -1,8 +1,8 @@
 {
-  "name": "annur-invoice",
-  "version": "0.9.0",
+  "name": "annur-docs",
+  "version": "0.10.0",
   "private": true,
-  "description": "Annur Invoice: penjana Invois, Quotation dan Delivery Order (PWA + Cloudflare Worker)",
+  "description": "Annur Docs: penjana Invois, Quotation dan Delivery Order (PWA + Cloudflare Worker)",
   "scripts": {
     "test": "node --no-warnings --test tests/*.test.js tests/*.test.mjs",
     "e2e": "node --no-warnings tests/e2e.mjs && node --no-warnings tests/e2e-demo.mjs"

@@ -1,8 +1,8 @@
-# PRD: Annur Invoice (nama sementara)
+# PRD: Annur Docs
 Tarikh: 03/11/2026 | Versi: 1.0 | Pemilik: AnnurPro Solutions
 
 ## 1. Overview
-Annur Invoice ialah web app (PWA) berlangganan untuk perniagaan Malaysia, kecil hingga besar, yang mahu menjana **Invois, Quotation dan Delivery Order (DO)** berjenama sendiri dalam beberapa minit. Pengguna log masuk dengan Google, tetapkan maklumat syarikat, logo, cop dan tandatangan sekali sahaja, kemudian isi borang dan dapat PDF kemas yang disimpan dalam Google Drive mereka. Semua data dokumen disimpan dalam Google Sheet milik pengguna sendiri; AnnurPro hanya simpan akaun, lesen dan baki kredit. Bayaran ikut model hybrid: percubaan percuma, langganan RM20 sebulan, dan pek kredit.
+Annur Docs ialah web app (PWA) berlangganan untuk perniagaan Malaysia, kecil hingga besar, yang mahu menjana **Invois, Quotation dan Delivery Order (DO)** berjenama sendiri dalam beberapa minit. Pengguna log masuk dengan Google, tetapkan maklumat syarikat, logo, cop dan tandatangan sekali sahaja, kemudian isi borang dan dapat PDF kemas yang disimpan dalam Google Drive mereka. Semua data dokumen disimpan dalam Google Sheet milik pengguna sendiri; AnnurPro hanya simpan akaun, lesen dan baki kredit. Bayaran ikut model hybrid: percubaan percuma, langganan RM20 sebulan, dan pek kredit.
 
 Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saas-builder`), bukan menyambung kod AZN Invoice lama.
 
@@ -30,7 +30,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 ## 5. Features
 | ID | Feature | Penerangan | Role | Keutamaan | Hasil yang dijangka |
 |----|---------|-----------|------|-----------|--------------------|
-| F-01 | Log masuk Google & ruang kerja | Sambung Google (scope `drive.file`), sistem cipta folder dan Sheet "[Syarikat] – Annur Invoice" dalam Drive pengguna selepas nama syarikat diisi; sambung semula bila token tamat | R-01 | Wajib | Pengguna ada Sheet dan folder sendiri tanpa setup manual |
+| F-01 | Log masuk Google & ruang kerja | Sambung Google (scope `drive.file`), sistem cipta folder dan Sheet "[Syarikat] – Annur Docs" dalam Drive pengguna selepas nama syarikat diisi; sambung semula bila token tamat | R-01 | Wajib | Pengguna ada Sheet dan folder sendiri tanpa setup manual |
 | F-02 | Persediaan pertama (wizard) | Langkah: syarikat, kod syarikat/prefix, logo, cop, tandatangan, bank, SST | R-01 | Wajib | Akaun sedia untuk terbit dokumen |
 | F-03 | Profil syarikat & tetapan admin | Nama, no. SSM, TIN/BRN (pilihan), alamat, emel, telefon, laman web, akaun bank, penandatangan, nota default setiap jenis dokumen, terma default, warna aksen, tajuk dokumen | R-01 | Wajib | Semua dokumen guna maklumat terkini tanpa sentuh kod |
 | F-04 | Logo, cop & tandatangan | Muat naik gambar, buang latar putih, drag/nudge/saiz kedudukan cop dan tandatangan dengan pratonton, tandatangan DO berasingan, butang reset | R-01 | Wajib | Cop bertindih tandatangan dengan cantik seperti dalam dokumen sebenar |
@@ -94,7 +94,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | F-20 | Demo boleh dicuba tanpa log masuk; halaman privasi menyatakan penggunaan data Google; OAuth verification boleh dihantar |
 
 ## 8. Andaian
-1. **Nama produk sementara "Annur Invoice"**, domain `annurinvoice.com` belum disahkan wujud.
+1. **Nama produk sementara "Annur Docs"**, domain `annurinvoice.com` belum disahkan wujud.
 2. Konsep PO dalam permintaan asal digugurkan daripada v1 kerana arahan terkini "fokus invois, quotation dan DO". Medan "Your Ref / PO No" kekal pada ketiga-tiga dokumen.
 3. SST dikekalkan dari awal (daripada keputusan terdahulu) sebagai kod cukai yang boleh disunting. Kadar default (jualan 5%/10%, perkhidmatan 6%/8%) **perlu disahkan dengan Kastam sebelum launch**.
 4. Satu akaun Google = satu syarikat. Staf berkongsi ditangguh.
@@ -118,6 +118,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | Tarikh | Perubahan |
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
+| 04/11/2026 | Nama produk ditukar kepada **Annur Docs** (Invois, Quotation, DO); domain `docs.annurpro.com`. Folder & Sheet baharu: `[Nama Syarikat] – Annur Docs`. Nama dalaman (Worker `annur-invoice`, D1, kunci `annurInvoice`) dikekalkan |
 | 04/11/2026 | Fasa 9: had kadar Worker, header keselamatan, service worker diperkukuh, E2E Playwright, mod demo `/?demo`, S-13 Bantuan, halaman jualan, panduan pengguna (HTML + PDF) dan senarai semak verifikasi OAuth. Video tutorial ditangguhkan |
 | 03/11/2026 | Dokumen dipindah ke repo `annurpro-docs`; pembinaan Fasa 0 dan Fasa 1 dimulakan |
 | 03/11/2026 | Fasa 8: webhook BCL `/bcl/<kunci>` dengan pengesahan semula transaksi melalui API BCL, langganan bulanan/tahunan (tambat hari, kuantiti, dari tarikh tamat jika aktif), pek kredit dikesan daripada nama item atau PACKS, idempoten ikut no. pesanan; S-11 Langganan & Kredit; dashboard pemilik `/admin/` (statistik, tambah bulan, tetap tarikh, laras kredit, bayaran, log, sahkan pesanan manual) |
@@ -125,4 +126,4 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | 03/11/2026 | Fasa 6: terbit dengan nombor rasmi dari Worker (atomik, idempoten ikut doc_id), caj 5 kredit (langganan/ihsan percuma), PDF A4 dijana di peranti dan disimpan dalam folder jenis dokumen di Drive, kongsi awam/WhatsApp/salin/muat turun, cuba semula selamat, dialog tiada kredit, senarai dokumen terbit dalam Rekod |
 | 03/11/2026 | Fasa 5: editor Invois/Quotation/DO dengan pratonton A4 langsung, kalkulator SST dalam sen (cukai peringkat kod), jumlah dalam perkataan English, draf di peranti, simpan pelanggan dari borang. Pembayang borang ditukar kepada contoh umum (AnnurPro Solutions) |
 | 03/11/2026 | Fasa 4: logo, cop, tandatangan dan tandatangan DO disimpan sebagai PNG dalam `_Tetapan`; kedudukan cop/tandatangan boleh disusun (seret, nudge, saiz, reset) |
-| 03/11/2026 | Nama folder & Sheet ikut nama syarikat pengguna: `[Nama Syarikat] – Annur Invoice` (pilihan A). Folder dicipta selepas nama syarikat diisi dalam wizard, bukan sejurus log masuk |
+| 03/11/2026 | Nama folder & Sheet ikut nama syarikat pengguna: `[Nama Syarikat] – Annur Docs` (pilihan A). Folder dicipta selepas nama syarikat diisi dalam wizard, bukan sejurus log masuk |

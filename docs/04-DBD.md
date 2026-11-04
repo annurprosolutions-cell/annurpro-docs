@@ -1,10 +1,10 @@
-# DBD: Annur Invoice
+# DBD: Annur Docs
 
 ## 1. Overview
 Bersih, tenang, profesional dan laju pada telefon. Antara muka app berwarna biru laut AnnurPro dengan aksen merah kecil; **dokumen yang dijana pula neutral dan berjenama pengguna** (logo, warna aksen pilihan pengguna). Prinsip: borang ringkas, jumlah sentiasa kelihatan, pratonton dokumen sentiasa dekat, butang utama satu sahaja pada satu skrin. Telefon diutamakan (pengguna sering di lapangan atau di kaunter), desktop sebagai lajur dua (borang | pratonton).
 
 ## 2. Brand Identity
-- **Produk:** Annur Invoice (nama sementara). **Vendor:** AnnurPro Solutions (guna semula `brand/annurpro-logo.png` dan ikon dari repo ruztimetable).
+- **Produk:** Annur Docs (nama sementara). **Vendor:** AnnurPro Solutions (guna semula `brand/annurpro-logo.png` dan ikon dari repo ruztimetable).
 - **Nada:** mesra tetapi formal, ayat pendek, Bahasa Malaysia santai-profesional dengan istilah teknikal English (Invoice, Quotation, Delivery Order, PDF, draf dikekalkan).
 - **Pengguna & konteks:** pemilik/pengurus SME, kontraktor, peniaga; telefon di tapak atau kaunter, laptop di pejabat; ramai bukan orang IT, jadi label jelas dan tiada jargon.
 - **Pengguna mengatur jenama dokumen sendiri:** logo, cop, tandatangan, warna aksen (hex). Jenama AnnurPro tidak muncul pada dokumen pengguna.

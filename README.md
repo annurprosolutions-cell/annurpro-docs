@@ -1,4 +1,4 @@
-# Annur Invoice
+# Annur Docs
 
 Penjana Invois, Quotation dan Delivery Order berlangganan untuk perniagaan Malaysia. PWA statik (tiada build), data pengguna dalam Google Sheet/Drive milik mereka, dan satu Cloudflare Worker + D1 untuk lesen, kredit, penomboran dan bayaran BCL.
 
@@ -18,7 +18,7 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 7 | Rekod penuh (tapis, cari, menu), edit 24 jam, batal, salin, tukar Quotation→Invois / →DO, Pelanggan (CRUD, arkib) | Siap |
 | 8 | Webhook BCL + pengesahan API, langganan & pek kredit, S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Siap (perlu langkah 6 di bawah) |
 | 9 | Pengukuhan: luar talian, had kadar, header keselamatan, E2E, mod demo `/?demo`, halaman jualan `salepage/`, panduan `panduan/` (HTML + PDF) | Siap (verifikasi OAuth & UAT: langkah 7 di bawah) |
-| 10 | Pelancaran: BCL hidup, OAuth Production, domain sendiri, ujian bayaran RM1 | Seterusnya |
+| 10 | Pelancaran: nama Annur Docs, domain `docs.annurpro.com`, OAuth Production, ujian bayaran RM1, UAT | Sedang berjalan (langkah pemilik: `docs/10-LANCAR.md`) |
 
 ## Struktur
 
@@ -56,10 +56,10 @@ js/fakegoogle.js       Google palsu dalam pelayar (mod demo + ujian)
 js/demo.js             mod demo /?demo: data contoh, tanpa Google, tanpa terbit sebenar
 js/ui-help.js          skrin S-13 Bantuan & Sokongan, soalan lazim
 salepage/              halaman jualan (guna tangkapan skrin dalam media/)
-panduan/               panduan pengguna HTML + Panduan-Annur-Invoice.pdf
+panduan/               panduan pengguna HTML + Panduan-Annur-Docs.pdf
 media/                 tangkapan skrin sebenar (dijana dari mod demo)
 tools/capture.mjs      jana semula media/*.jpg
-tools/manual-pdf.mjs   jana semula panduan/Panduan-Annur-Invoice.pdf
+tools/manual-pdf.mjs   jana semula panduan/Panduan-Annur-Docs.pdf
 _headers               header keselamatan (CSP Report-Only buat masa ini)
 tests/                 node --test (unit) + e2e.mjs, e2e-demo.mjs (Playwright)
 ```
@@ -105,9 +105,9 @@ Susunan penting kerana setiap langkah memberi maklumat kepada langkah seterusnya
 4. Buka `<alamat>/api/ping`. Jawapan `{"ok":true,...,"db":true}` bermaksud Worker dan D1 bersambung. Jika `db:false`, `database_id` dalam `wrangler.jsonc` belum betul.
 
 ### 3. Google Cloud: log masuk
-1. https://console.cloud.google.com → cipta projek `Annur Invoice`.
+1. https://console.cloud.google.com → cipta projek `Annur Docs`.
 2. **APIs & Services → Library**: aktifkan **Google Sheets API** dan **Google Drive API** (kedua-duanya wajib).
-3. **Google Auth Platform / OAuth consent screen**: User type *External*, nama app `Annur Invoice`, e-mel sokongan. Tambah scope `openid`, `.../auth/userinfo.email` dan `.../auth/drive.file`. Biarkan status **Testing**, dan tambah e-mel Google anda dalam **Test users**.
+3. **Google Auth Platform / OAuth consent screen**: User type *External*, nama app `Annur Docs`, e-mel sokongan. Tambah scope `openid`, `.../auth/userinfo.email` dan `.../auth/drive.file`. Biarkan status **Testing**, dan tambah e-mel Google anda dalam **Test users**.
 4. **Credentials → Create credentials → OAuth client ID → Web application**. *Authorized JavaScript origins*: tampal alamat Worker dari langkah 2 (tanpa garis condong di hujung). Tiada *redirect URI* diperlukan.
 5. Salin **Client ID** (berakhir `.apps.googleusercontent.com`) dan bagi kepada Claude. Jangan bagi *Client secret* (tidak digunakan).
 
@@ -115,15 +115,15 @@ Susunan penting kerana setiap langkah memberi maklumat kepada langkah seterusnya
 `googleClientId` dalam `config.js` **dan** `GOOGLE_CLIENT_ID` dalam `vars` di `wrangler.jsonc` mesti sama. Letakkan dalam `wrangler.jsonc`, bukan hanya dalam dashboard Cloudflare, kerana setiap deploy menimpa pembolehubah dashboard dengan nilai dalam fail. Selepas push, Cloudflare deploy semula dalam lebih kurang 30 saat.
 
 ### 5. Uji
-1. Buka alamat Worker, tekan **Sambung Google**, pilih akaun test, benarkan akses Drive. Amaran "Google hasn't verified this app" adalah normal dalam mod Testing: **Advanced → Go to Annur Invoice**.
-2. Wizard persediaan keluar. Isi nama syarikat, tekan **Seterusnya**: folder `[Nama Syarikat] – Annur Invoice` muncul dalam Google Drive anda bersama Sheet dengan nama sama.
+1. Buka alamat Worker, tekan **Sambung Google**, pilih akaun test, benarkan akses Drive. Amaran "Google hasn't verified this app" adalah normal dalam mod Testing: **Advanced → Go to Annur Docs**.
+2. Wizard persediaan keluar. Isi nama syarikat, tekan **Seterusnya**: folder `[Nama Syarikat] – Annur Docs` muncul dalam Google Drive anda bersama Sheet dengan nama sama.
 3. Lengkapkan wizard. Skrin Utama menunjukkan **50 kredit (10 dokumen)** dan pill **Tersimpan**.
 4. Tetapan → Profil Syarikat dan Dokumen, Penomboran & Cukai boleh disunting dan disimpan; semak Google Sheet (tab `Syarikat`) berubah.
 
 ### 6. BCL: bayaran langganan (Fasa 8)
 Rahsia (API token, kunci webhook) **jangan dihantar dalam chat**. Letakkan terus dalam Cloudflare sebagai *Secret*.
 
-1. **Borang BCL**: cipta borang `Annur Invoice – Langganan` dengan dua item: **Langganan Bulanan** RM20 dan **Langganan Tahunan** RM200. Benarkan kuantiti. Nama item mesti mengandungi perkataan *Bulanan* atau *Tahunan* (Worker mengenal pasti pelan daripada nama; jika tiada, amaun RM150 ke atas dikira 12 bulan).
+1. **Borang BCL**: cipta borang `Annur Docs – Langganan` dengan dua item: **Langganan Bulanan** RM20 dan **Langganan Tahunan** RM200. Benarkan kuantiti. Nama item mesti mengandungi perkataan *Bulanan* atau *Tahunan* (Worker mengenal pasti pelan daripada nama; jika tiada, amaun RM150 ke atas dikira 12 bulan).
 2. **Medan wajib** jenis e-mel bernama **E-mel Google untuk sistem**. Pilihan: medan **Nama syarikat**.
 3. **Redirect selepas bayar**: alamat app (`https://annur-invoice.<subdomain>.workers.dev/`).
 4. Salin **pautan borang** dan bagi kepada Claude (bukan rahsia). Ia dimasukkan sebagai `BUY_URL_SUB` dalam `wrangler.jsonc`. Jika mahu, bagi juga **Form ID** untuk `BCL_FORM_ID` (hanya terima bayaran dari borang ini).
@@ -137,18 +137,15 @@ BCL tidak menghantar semula webhook yang gagal secara automatik. Semak tab **Log
 
 Secret Cloudflare kekal selepas setiap deploy. Pembolehubah biasa (vars) pula ditimpa oleh nilai dalam `wrangler.jsonc`, sebab itu nilai bukan rahsia disimpan dalam fail.
 
-### 7. Sebelum lancar: verifikasi OAuth dan UAT
+### 7. Fasa 10: domain, OAuth Production dan UAT
 
-Selagi app Google dalam mod *Testing*, hanya akaun dalam senarai *Test users* boleh log masuk (had 100) dan token tamat setiap 7 hari. Untuk buka kepada semua:
+Domain: `docs.annurpro.com` (Worker `annur-invoice` kekal sama; nama dalaman tidak ditukar). Panduan penuh berjadual: [`docs/10-LANCAR.md`](docs/10-LANCAR.md).
 
-1. **Domain sendiri** (cth `invoice.annurpro.com`): Cloudflare → Worker → Settings → Domains & Routes → Add custom domain. Google tidak menerima `workers.dev` untuk verifikasi jenama.
-2. Sahkan domain dalam **Google Search Console** menggunakan akaun Google yang sama dengan projek Cloud.
-3. Google Cloud → OAuth consent screen (Branding): isi nama app, e-mel sokongan, logo (pilihan, boleh kemudian), **Home page** `https://<domain>/salepage/`, **Privacy policy** `https://<domain>/privasi.html`, dan domain di *Authorized domains*.
-4. Credentials → Client ID: tambah `https://<domain>` di *Authorized JavaScript origins*.
-5. Tukar `ALLOWED_ORIGINS` dalam `wrangler.jsonc` kepada `https://<domain>`.
-6. Audience → **Publish app** (Production). Skop `drive.file` bukan skop sensitif, jadi biasanya hanya verifikasi jenama diperlukan (beberapa hari). Ikut e-mel daripada Google jika mereka minta maklumat tambahan.
-7. UAT: guna akaun sebenar, cipta sekurang-kurangnya 10 dokumen (invois, quotation, DO, edit, batal, tukar) dan semak PDF dicetak.
-8. Selepas sebulan tiada isu, tukar CSP daripada `Content-Security-Policy-Report-Only` kepada `Content-Security-Policy` dalam `_headers`.
+Ringkas: custom domain pada Worker → buka `https://docs.annurpro.com/` → tambah origin pada Client ID Google → Search Console → Branding → Publish app → isi `canonicalHost` dalam `config.js` → ujian RM1 → UAT.
+
+`ALLOWED_ORIGINS` tidak perlu diubah: app dan API pada asal yang sama. Webhook BCL boleh kekal pada alamat `workers.dev`.
+
+Selepas sebulan tiada isu, tukar CSP daripada `Content-Security-Policy-Report-Only` kepada `Content-Security-Policy` dalam `_headers`.
 
 ### Masalah biasa
 | Gejala | Punca dan penyelesaian |

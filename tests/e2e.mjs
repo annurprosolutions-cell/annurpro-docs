@@ -116,14 +116,14 @@ try {
       await page.getByText('Nama syarikat wajib diisi.').waitFor();
       await page.getByLabel('Nama syarikat').fill('AZN Power Solution');
       await page.getByLabel('Alamat').fill('NO 32 LORONG 12\nTAMAN HALAMAN INDAH\n14200 SUNGAI JAWI');
-      assert.equal(await page.locator('[data-live="folder"]').innerText(), 'AZN Power Solution – Annur Invoice');
+      assert.equal(await page.locator('[data-live="folder"]').innerText(), 'AZN Power Solution – Annur Docs');
       await shot('s02-1');
       await page.getByRole('button', { name: 'Seterusnya' }).click();
       await page.getByRole('heading', { name: 'Penomboran' }).waitFor({ timeout: 8000 });
       const sh = sheetsNow();
       assert.equal(sh.length, 1);
-      assert.equal(sh[0].name, 'AZN Power Solution – Annur Invoice');
-      assert.equal(G.files.get(sh[0].parents[0]).name, 'AZN Power Solution – Annur Invoice');
+      assert.equal(sh[0].name, 'AZN Power Solution – Annur Docs');
+      assert.equal(G.files.get(sh[0].parents[0]).name, 'AZN Power Solution – Annur Docs');
       assert.equal(await page.getByLabel('Kod syarikat').inputValue(), 'APS', 'kod dicadangkan');
       await page.getByLabel('Kod syarikat').fill('azn');
       assert.equal(await page.getByLabel('Kod syarikat').inputValue(), 'AZN', 'huruf besar automatik');
@@ -252,7 +252,7 @@ try {
       await page.getByRole('button', { name: 'Simpan' }).click();
       await page.getByRole('dialog').getByText('Tukar nama folder & Sheet juga?').waitFor();
       await page.getByRole('button', { name: 'Ya, tukar nama' }).click();
-      const NEW = 'AZN Power Solution Sdn Bhd – Annur Invoice';
+      const NEW = 'AZN Power Solution Sdn Bhd – Annur Docs';
       await until(() => G.files.get(sid).name === NEW && G.files.get(G.files.get(sid).parents[0]).name === NEW, 6000, 'nama Sheet & folder ditukar');
       await until(() => kv(sid, 'Syarikat').emel === 'aznpowersolution@gmail.com', 6000, 'profil disimpan');
       assert.equal(kv(sid, 'Syarikat').warna_aksen, '#7c2d12');

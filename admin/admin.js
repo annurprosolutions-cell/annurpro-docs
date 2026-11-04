@@ -100,7 +100,7 @@
   function render() {
     const app = document.getElementById('app');
     if (S.view === 'main' && S.data) { app.innerHTML = viewMain(); return; }
-    app.innerHTML = `<div class="login"><div class="login-card"><div class="brand"><img src="../brand/annurpro-icon-64.png" alt="" width="40" height="40"><div><b>Dashboard Pemilik</b><small>Annur Invoice</small></div></div>
+    app.innerHTML = `<div class="login"><div class="login-card"><div class="brand"><img src="../brand/annurpro-icon-64.png" alt="" width="40" height="40"><div><b>Dashboard Pemilik</b><small>Annur Docs</small></div></div>
       <h1>Log masuk pemilik</h1><p class="muted">Hanya e-mel dalam OWNER_EMAILS pada Worker boleh masuk.</p>
       <button class="btn primary block" data-act="signIn" ${S.busy ? 'disabled' : ''}>${S.busy ? 'Menyambung...' : 'Sambung Google'}</button>
       ${S.error ? `<p class="note danger" role="alert">${esc(S.error)}</p>` : ''}${S.view === 'denied' ? '<button class="btn ghost block" data-act="signOut">Guna akaun lain</button>' : ''}</div></div>`;

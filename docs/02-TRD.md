@@ -1,4 +1,4 @@
-# TRD: Annur Invoice
+# TRD: Annur Docs
 
 ## 1. Overview
 Frontend ialah PWA statik (vanilla JS modules, tiada bundler) yang dihos pada Cloudflare Workers dengan static assets. Browser pengguna bercakap **terus dengan Google Sheets API dan Drive API** menggunakan access token pengguna sendiri (scope `drive.file`), jadi data dokumen tinggal dalam Drive pengguna dan tiada database dokumen di server. Satu Worker kecil (`/api/*`) pula mengurus **perkara yang tak boleh dipercayai pada browser**: semakan kelayakan, penomboran berserial, ledger kredit, webhook bayaran BCL dan dashboard pemilik. Worker menggunakan Cloudflare D1 (SQLite) kerana nombor berserial dan baki kredit perlu atomik.

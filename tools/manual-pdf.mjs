@@ -1,4 +1,4 @@
-// panduan/index.html → panduan/Panduan-Annur-Invoice.pdf (A4). Jalankan selepas tools/capture.mjs.
+// panduan/index.html → panduan/Panduan-Annur-Docs.pdf (A4). Jalankan selepas tools/capture.mjs.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -18,7 +18,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.goto(`http://localhost:${server.address().port}/panduan/`, { waitUntil: 'networkidle' });
 await page.evaluate(() => Promise.all(Array.from(document.images).map((i) => { i.loading = 'eager'; return i.decode().catch(() => {}); })));
-await page.pdf({ path: join(ROOT, 'panduan', 'Panduan-Annur-Invoice.pdf'), format: 'A4', printBackground: true, margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' },
-  displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#888">Panduan Annur Invoice · <span class="pageNumber"></span> / <span class="totalPages"></span></div>' });
+await page.pdf({ path: join(ROOT, 'panduan', 'Panduan-Annur-Docs.pdf'), format: 'A4', printBackground: true, margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' },
+  displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#888">Panduan Annur Docs · <span class="pageNumber"></span> / <span class="totalPages"></span></div>' });
 await browser.close(); server.close();
-console.log('Siap: panduan/Panduan-Annur-Invoice.pdf');
+console.log('Siap: panduan/Panduan-Annur-Docs.pdf');

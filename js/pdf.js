@@ -33,7 +33,7 @@
         if (i) pdf.addPage();
         pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
       }
-      pdf.setProperties({ title: (meta && meta.title) || 'Dokumen', creator: 'Annur Invoice' });
+      pdf.setProperties({ title: (meta && meta.title) || 'Dokumen', creator: 'Annur Docs' });
       return new Uint8Array(pdf.output('arraybuffer'));
     } finally { host.remove(); }
   };

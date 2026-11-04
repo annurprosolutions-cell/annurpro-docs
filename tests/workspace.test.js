@@ -10,7 +10,7 @@ const { fakeGoogle } = require('./helpers/fake-google.js');
 const TOKEN = 'ya29.test-token-panjang';
 const NOW = Date.parse('2026-11-03T02:00:00Z');
 const mkApi = (g, extra) => new AI.GoogleApi(Object.assign({ token: async () => TOKEN, fetch: g.fetch, sleep: async () => {} }, extra || {}));
-const OPTS = { email: 'pemilik@contoh.my', writer: 'w1', now: NOW, title: 'Annur Invoice – AZN' };
+const OPTS = { email: 'pemilik@contoh.my', writer: 'w1', now: NOW, title: 'Annur Docs – AZN' };
 
 test('ruang kerja baharu: folder, Sheet bertanda, tab, tajuk, seed, Meta', async () => {
   const g = fakeGoogle(TOKEN); const api = mkApi(g);

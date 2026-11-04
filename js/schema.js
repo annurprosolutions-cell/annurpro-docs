@@ -6,7 +6,7 @@
   AI.SHEET_FORMAT = 1;
   AI.APP_MARK = 'annurInvoice';           // kunci appProperties pada fail Drive ciptaan app
   AI.FOLDERS = { invoice: 'Invois', quotation: 'Quotation', do: 'Delivery Order', settings: '_Tetapan' };
-  AI.ROOT_FOLDER = 'Annur Invoice';
+  AI.ROOT_FOLDER = 'Annur Docs';
 
   AI.TABS = {
     Meta: ['kunci', 'nilai'],

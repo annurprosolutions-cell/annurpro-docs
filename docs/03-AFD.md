@@ -1,4 +1,4 @@
-# AFD: Annur Invoice
+# AFD: Annur Docs
 
 ## 1. Overview
 Pengguna baru masuk daripada halaman jualan atau demo, log masuk dengan Google, melalui wizard persediaan sekali sahaja, kemudian bekerja daripada skrin **Utama**: cipta dokumen (Invois, Quotation, DO), terbit, kongsi, dan semak di **Rekod**. Tetapan syarikat, logo/cop/tandatangan, penomboran dan cukai ada dalam **Tetapan**. Bayaran dan baki dalam **Langganan & Kredit**. Pemilik platform ada dashboard berasingan di `/admin/`.
@@ -30,7 +30,7 @@ Pengguna baru masuk daripada halaman jualan atau demo, log masuk dengan Google, 
 1. Buka halaman jualan S-15, cuba demo, tekan "Cuba percuma".
 2. S-01: tekan **Sambung Google**, benarkan scope. Worker `/api/check` cipta akaun dan beri 50 kredit (sekali). Jika gagal: paparan "Tidak dapat semak lesen, cuba lagi".
 3. Sistem cari ruang kerja sedia ada. Jika tiada, redirect ke S-02 (belum ada fail dicipta).
-4. S-02 wizard 5 langkah: (1) nama syarikat, no. SSM, alamat, telefon, emel; bila tekan Seterusnya, folder dan Sheet `[Nama Syarikat] – Annur Invoice` dicipta dalam Drive pengguna (F-01); (2) kod syarikat 2–6 huruf (dicadang daripada nama, cth `AZN`), prefix `AZN`, `AZN-Q`, `AZN-DO`; (3) penandatangan (gambar logo, cop, tandatangan dalam Tetapan, F-04); (4) bank; (5) berdaftar SST? Ya/Tidak + kod cukai. Langkah 3–4 boleh dilangkau. Pratonton kepala dokumen sentiasa kelihatan.
+4. S-02 wizard 5 langkah: (1) nama syarikat, no. SSM, alamat, telefon, emel; bila tekan Seterusnya, folder dan Sheet `[Nama Syarikat] – Annur Docs` dicipta dalam Drive pengguna (F-01); (2) kod syarikat 2–6 huruf (dicadang daripada nama, cth `AZN`), prefix `AZN`, `AZN-Q`, `AZN-DO`; (3) penandatangan (gambar logo, cop, tandatangan dalam Tetapan, F-04); (4) bank; (5) berdaftar SST? Ya/Tidak + kod cukai. Langkah 3–4 boleh dilangkau. Pratonton kepala dokumen sentiasa kelihatan.
 5. Tekan **Siap** → S-03 dengan banner "50 kredit percuma = 10 dokumen".
 6. Tekan **Invois Baharu** → S-04 → isi → **Terbit** → S-05 → buka PDF.
 

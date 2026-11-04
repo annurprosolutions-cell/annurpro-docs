@@ -1,4 +1,4 @@
-# BSD: Annur Invoice
+# BSD: Annur Docs
 
 ## 1. Overview
 Dua stor data dengan tanggungjawab berbeza:
@@ -27,7 +27,7 @@ Hubungan merentas stor hanya melalui `doc_id` (UUID) dan `no_dokumen`.
 
 ## 3. Jadual / Sheet
 
-### 3A. Sheet pengguna (nama fail: `[Nama Syarikat] – Annur Invoice`)
+### 3A. Sheet pengguna (nama fail: `[Nama Syarikat] – Annur Docs`)
 Penanda carian: fail dicipta dengan `appProperties { annurInvoice: "master" }` supaya boleh dijumpai semula pada peranti lain (jangan cari ikut tajuk). Baris 1 = tajuk lajur; lajur bertanda "(rujukan)" untuk dibaca manusia dan **diabaikan** semasa memuat.
 
 #### `Meta` (Feature: F-01, F-14)
@@ -265,7 +265,7 @@ R-04 tidak mempunyai sebarang akses D1 atau Sheet. R-02 hanya dikuatkuasakan di 
 ## 5. Storan Fail
 - **Susun atur Drive pengguna** (dicipta oleh app, kelihatan kepada app melalui `drive.file`):
   ```
-  Annur Invoice/
+  Annur Docs/
     Invois/            PDF invois
     Quotation/
     Delivery Order/
@@ -277,10 +277,10 @@ R-04 tidak mempunyai sebarang akses D1 atau Sheet. R-02 hanya dikuatkuasakan di 
 - **Gambar tetapan** dimuat ke browser melalui Drive API dengan token dan di-cache di IndexedDB; pada Worker ia tidak pernah lalu.
 
 ## 6. Setup Function (Sheet) — `ensureWorkspace()`
-Tiada Apps Script. Selepas log masuk, app hanya **mencari** ruang kerja sedia ada (`findWorkspace()`, tidak mencipta). Jika tiada, wizard S-02 meminta nama syarikat dahulu, kemudian `ensureWorkspace()` mencipta folder dan Sheet bernama `[Nama Syarikat] – Annur Invoice` (pengguna boleh ubah nama sebelum dicipta). Fungsi ini selamat dijalankan berulang (**idempotent**: tidak menimpa nilai sedia ada, tidak memadam data, tidak menukar nama fail sedia ada). Nama boleh ditukar kemudian melalui Tetapan → Profil (atas persetujuan pengguna) atau terus dalam Drive; app mencari fail ikut `appProperties`, bukan nama.
+Tiada Apps Script. Selepas log masuk, app hanya **mencari** ruang kerja sedia ada (`findWorkspace()`, tidak mencipta). Jika tiada, wizard S-02 meminta nama syarikat dahulu, kemudian `ensureWorkspace()` mencipta folder dan Sheet bernama `[Nama Syarikat] – Annur Docs` (pengguna boleh ubah nama sebelum dicipta). Fungsi ini selamat dijalankan berulang (**idempotent**: tidak menimpa nilai sedia ada, tidak memadam data, tidak menukar nama fail sedia ada). Nama boleh ditukar kemudian melalui Tetapan → Profil (atas persetujuan pengguna) atau terus dalam Drive; app mencari fail ikut `appProperties`, bukan nama.
 1. Cari fail induk: `Drive files.list` dengan `q = appProperties has { key='annurInvoice' and value='master' } and trashed = false`. Jika ada lebih satu, pilih yang terkini dan amaran pada S-17.
 2. Jika tiada: `spreadsheets.create` dengan tab `Meta, Syarikat, KodCukai, Pelanggan, Dokumen, Item`, kemudian `files.update` tetapkan `appProperties`.
-3. Cari/cipta folder `Annur Invoice` dan subfolder `Invois`, `Quotation`, `Delivery Order`, `_Tetapan` (cari ikut nama dalam folder induk, cipta jika tiada); simpan id dalam `Meta`.
+3. Cari/cipta folder `Annur Docs` dan subfolder `Invois`, `Quotation`, `Delivery Order`, `_Tetapan` (cari ikut nama dalam folder induk, cipta jika tiada); simpan id dalam `Meta`.
 4. Tulis tajuk lajur (baris 1), bekukan baris 1, tetapkan format teks pada kolum `tarikh`, `no_dokumen`, `bill_tel`, `tel`, format `#,##0.00` pada kolum jumlah, lebar kolum munasabah, validasi dropdown (`jenis`, `status`, `status_quotation`, `aktif`, `sst_berdaftar`, `kongsi_awam`).
 5. Seed `Syarikat` (kunci yang belum wujud sahaja, default seperti jadual) dan `KodCukai` (lima baris seed).
 6. Tulis `Meta.format = 1`. Jika `format` dalam fail lebih kecil daripada versi app, jalankan `migrate()` (tambah lajur baharu di hujung dengan default, jangan ubah susunan lajur sedia ada).

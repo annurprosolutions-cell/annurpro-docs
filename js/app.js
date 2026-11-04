@@ -74,7 +74,7 @@
 
   // ---------- ruang kerja Google (Sheet + Drive) ----------
   // Lepas log masuk: CARI ruang kerja sedia ada sahaja. Jika tiada, wizard minta nama syarikat dahulu,
-  // kemudian createWorkspace() mencipta folder & Sheet "<syarikat> – Annur Invoice".
+  // kemudian createWorkspace() mencipta folder & Sheet "<syarikat> – Annur Docs".
   async function openStore(ws, email) {
     AI.local.set(WS_KEY(email), { id: ws.id, url: ws.url, folders: ws.folders });
     store = new AI.Store(api, {
@@ -94,7 +94,7 @@
     if (pend && pend.length) { store.restore(pend); store.flush().catch(() => {}); }
     else UI.sync = { state: 'saved', info: {} };
     I.loadAll();
-    if (ws.duplicates) toast('Ada lebih daripada satu Sheet Annur Invoice dalam Drive. Yang terkini digunakan.');
+    if (ws.duplicates) toast('Ada lebih daripada satu Sheet Annur Docs dalam Drive. Yang terkini digunakan.');
   }
 
   const wsFail = async (e, email) => {
@@ -188,7 +188,7 @@
     const noClient = !CFG.googleClientId;
     return `<div class="login">
       <div class="login-card">
-        <div class="brand"><img src="brand/annurpro-icon-64.png" alt="" width="40" height="40"><div><b>${esc(CFG.appName || 'Annur Invoice')}</b><small>${esc(CFG.vendor || '')}</small></div></div>
+        <div class="brand"><img src="brand/annurpro-icon-64.png" alt="" width="40" height="40"><div><b>${esc(CFG.appName || 'Annur Docs')}</b><small>${esc(CFG.vendor || '')}</small></div></div>
         <h1>Invois, Quotation dan DO yang kemas, dalam beberapa minit.</h1>
         <p class="muted">Log masuk dengan Google. Semua dokumen disimpan dalam Google Sheet dan Drive milik anda sendiri.</p>
         <button class="btn primary block" data-act="signIn" ${UI.busy || noClient ? 'disabled' : ''}>${icon('google')}${UI.busy ? 'Menyambung...' : 'Sambung Google'}</button>

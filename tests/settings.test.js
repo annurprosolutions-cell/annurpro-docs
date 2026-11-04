@@ -8,10 +8,10 @@ const AI = require('../js/settings.js');
 const { fakeGoogle } = require('./helpers/fake-google.js');
 
 test('nama folder & Sheet ikut syarikat (pilihan A)', () => {
-  assert.equal(AI.workspaceName('AZN POWER SOLUTION'), 'AZN POWER SOLUTION – Annur Invoice');
-  assert.equal(AI.workspaceName('  Kedai   Ali \n Runcit '), 'Kedai Ali Runcit – Annur Invoice');
-  assert.equal(AI.workspaceName(''), 'Annur Invoice');
-  assert.equal(AI.workspaceName('x'.repeat(100)).length, 60 + ' – Annur Invoice'.length);
+  assert.equal(AI.workspaceName('AZN POWER SOLUTION'), 'AZN POWER SOLUTION – Annur Docs');
+  assert.equal(AI.workspaceName('  Kedai   Ali \n Runcit '), 'Kedai Ali Runcit – Annur Docs');
+  assert.equal(AI.workspaceName(''), 'Annur Docs');
+  assert.equal(AI.workspaceName('x'.repeat(100)).length, 60 + ' – Annur Docs'.length);
 });
 
 test('ensureWorkspace guna nama syarikat semasa cipta; findWorkspace tidak mencipta', async () => {
@@ -21,8 +21,8 @@ test('ensureWorkspace guna nama syarikat semasa cipta; findWorkspace tidak menci
   assert.equal(await AI.findWorkspace(api, {}), null);
   assert.equal(g.files.size, 0, 'findWorkspace tidak mencipta fail');
   const ws = await AI.ensureWorkspace(api, { company: 'AZN POWER SOLUTION', email: 'a@b.my', writer: 'w' });
-  assert.equal(g.files.get(ws.id).name, 'AZN POWER SOLUTION – Annur Invoice');
-  assert.equal(g.files.get(ws.folders.root).name, 'AZN POWER SOLUTION – Annur Invoice');
+  assert.equal(g.files.get(ws.id).name, 'AZN POWER SOLUTION – Annur Docs');
+  assert.equal(g.files.get(ws.folders.root).name, 'AZN POWER SOLUTION – Annur Docs');
   assert.equal(g.files.get(ws.folders.invoice).name, 'Invois');
   const f = await AI.findWorkspace(api, {});
   assert.equal(f.id, ws.id);
@@ -32,8 +32,8 @@ test('ensureWorkspace guna nama syarikat semasa cipta; findWorkspace tidak menci
   assert.equal(again.id, ws.id); assert.equal(g.files.get(ws.id).name, 'Fail Invois Saya');
   // tukar nama atas persetujuan
   await AI.renameWorkspace(api, ws, 'AZN POWER SOLUTION SDN BHD');
-  assert.equal(g.files.get(ws.id).name, 'AZN POWER SOLUTION SDN BHD – Annur Invoice');
-  assert.equal(g.files.get(ws.folders.root).name, 'AZN POWER SOLUTION SDN BHD – Annur Invoice');
+  assert.equal(g.files.get(ws.id).name, 'AZN POWER SOLUTION SDN BHD – Annur Docs');
+  assert.equal(g.files.get(ws.folders.root).name, 'AZN POWER SOLUTION SDN BHD – Annur Docs');
 });
 
 test('prefix: diterbit dari kod, nilai sendiri diutamakan, contoh nombor', () => {

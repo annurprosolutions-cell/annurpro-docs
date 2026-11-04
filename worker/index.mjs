@@ -1,4 +1,4 @@
-// Annur Invoice — Worker (Cloudflare Workers + D1)
+// Annur Docs — Worker (Cloudflare Workers + D1)
 // Laluan: /api/ping, /api/check (Fasa 1). /api/issue, /api/void, /api/issues, /api/ledger,
 // /bcl/<key> dan /api/admin/* ditambah dalam fasa berikutnya (rujuk docs/06-IPD.md).
 //
@@ -8,7 +8,7 @@
 //
 // handle(req, env, deps) ialah fungsi tulen supaya boleh diuji: deps.fetch (tokeninfo), deps.now (ms).
 
-const APP = 'Annur Invoice API';
+const APP = 'Annur Docs API';
 const MY_OFFSET_MS = 8 * 3600 * 1000; // Asia/Kuala_Lumpur, tiada DST
 
 const int = (v, d) => { const n = parseInt(v, 10); return Number.isFinite(n) && n >= 0 ? n : d; };
@@ -313,7 +313,7 @@ export async function verifyOrder(env, order, fetchFn) {
   if (!env.BCL_API_TOKEN) return { paid: false, reason: 'tiada-token-api' };
   const base = String(env.BCL_API_URL || 'https://api.bcl.my/v1').replace(/\/$/, '');
   let res;
-  try { res = await fetchFn(`${base}/transactions/${encodeURIComponent(order)}`, { headers: { authorization: 'Bearer ' + env.BCL_API_TOKEN, accept: 'application/json', 'user-agent': 'AnnurInvoice-Billing/1.0' } }); }
+  try { res = await fetchFn(`${base}/transactions/${encodeURIComponent(order)}`, { headers: { authorization: 'Bearer ' + env.BCL_API_TOKEN, accept: 'application/json', 'user-agent': 'AnnurDocs-Billing/1.0' } }); }
   catch (e) { return { paid: false, reason: 'api-bcl-gagal' }; }
   if (!res.ok) return { paid: false, reason: 'api-bcl-' + res.status };
   let j; try { j = await res.json(); } catch (e) { return { paid: false, reason: 'api-bcl-json' }; }

@@ -1,4 +1,4 @@
-# IPD: Annur Invoice
+# IPD: Annur Docs
 
 ## 1. Overview
 Bina dalam repo `annurprosolutions-cell/annurpro-docs` mengikut pola Annur Time Table dan skill `micro-saas-builder`: PWA statik tanpa build, data pengguna dalam Google Sheet/Drive mereka, satu Cloudflare Worker + D1 untuk lesen, penomboran, kredit dan webhook BCL. Susunan kerja: asas dan lesen dahulu, kemudian penyimpanan Sheet, tetapan, enjin dokumen, terbit + PDF, rekod/tukar, bayaran + dashboard pemilik, dan akhir sekali pengukuhan, ujian, halaman jualan, verifikasi Google dan launch. **v1** = percubaan + langganan; **v1.1** = jualan pek kredit (ledger sudah siap dalam v1, jadi v1.1 kecil).
@@ -107,7 +107,7 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [ ] 9.6 Hantar verifikasi OAuth (nama dahulu, logo kemudian); UAT dengan AZN Power Solution (cipta 10 dokumen sebenar).
 
 ### Fasa 10 – Launch
-- [ ] 10.1 Domain + Worker, tambah origin pada OAuth client, `ALLOWED_ORIGINS`, `canonicalUrl` jika ada hos lama.
+- [ ] 10.1 Domain `docs.annurpro.com` + Worker, tambah origin pada OAuth client, `canonicalHost` dalam `config.js` (hos lama `workers.dev` dihantar ke domain; `ALLOWED_ORIGINS` tidak perlu kerana asal sama). Nama app ditukar kepada Annur Docs. Langkah: `docs/10-LANCAR.md`.
 - [ ] 10.2 Tukar OAuth ke Production; ujian RM1 sebenar melalui BCL (item sementara), sahkan `payments` dan lesen.
 - [ ] 10.3 Senarai semak launch skill `micro-saas-builder` §5 selesai; pantau webhook 48 jam.
 
@@ -141,7 +141,7 @@ Langkah ringkas untuk pemilik (bukan orang IT). Claude akan beri arahan klik dem
 3. **D1:** Storage & Databases → D1 → Create `annur-invoice` → Console → tampal isi `schema.sql` → Run.
 4. **Pembolehubah & rahsia:** Worker → Settings → Variables: isi var dalam TRD §9; tambah *secrets* `BCL_API_TOKEN`, `BCL_WEBHOOK_KEY` (jana dengan `openssl rand -hex 24`), `ADMIN_TOKEN`. **Jangan tampal rahsia dalam chat.**
 5. **Google Cloud:** Credentials → OAuth client (Web) → Authorized JavaScript origins = alamat `*.workers.dev` dan domain; salin Client ID ke `config.js` dan var `GOOGLE_CLIENT_ID`. Consent screen: Testing → tambah test users; Production sebelum jual.
-6. **BCL:** cipta borang "Annur Invoice" dengan item Bulanan RM20 dan Tahunan RM200 (kuantiti dibenarkan), medan wajib "E-mel Google untuk sistem", webhook = `https://<domain>/bcl/<BCL_WEBHOOK_KEY>`, acara Payment Success.
+6. **BCL:** cipta borang "Annur Docs" dengan item Bulanan RM20 dan Tahunan RM200 (kuantiti dibenarkan), medan wajib "E-mel Google untuk sistem", webhook = `https://<domain>/bcl/<BCL_WEBHOOK_KEY>`, acara Payment Success.
 7. **Domain:** Worker → Custom domains → tambah domain (dan www).
 8. Setiap kemas kini: `git push` ke `main`; Cloudflare deploy ~30 saat; naikkan `version` dalam `config.js` dan nama cache `sw.js`.
 
