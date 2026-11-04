@@ -137,3 +137,13 @@ test('had kadar: terbit dihadkan 30/minit per token, minit seterusnya pulih; web
   for (let i = 0; i < 70; i++) await call('/api/ping');
   assert.equal((await call('/api/ping')).status, 200);
 });
+
+test('borang BCL sebenar (20718): nama item & medan e-mel', async () => {
+  const { planFromItems, pickEmail, pickBusiness } = await import('../worker/index.mjs');
+  const env = { PACKS: '{"10":110}', YEARLY_MIN_AMOUNT: '150' };
+  assert.deepEqual(planFromItems([{ name: 'LANGGANAN BULANAN', quantity: 3, price: '20.00' }], 60, env), { months: 3, credits: 0 });
+  assert.deepEqual(planFromItems([{ name: 'LANGGANAN TAHUNAN', quantity: 1, price: '200.00' }], 200, env), { months: 12, credits: 0 });
+  const custom = { e_mel_akaun_google_untuk_log_masuk: ' Owner@Gmail.com ', nama_syarikat: 'Contoh Trading' };
+  assert.equal(pickEmail(custom, 'lain@x.my'), 'owner@gmail.com');
+  assert.equal(pickBusiness(custom), 'Contoh Trading');
+});
