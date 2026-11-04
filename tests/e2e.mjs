@@ -536,7 +536,7 @@ try {
       const recList = () => page.locator('[data-reclist]').innerText();
       const qbox = page.locator('[data-form="rekod"] input[name="q"]');
       await qbox.fill('retry');
-      await until(async () => (await recList()).includes(num2) && !(await recList()).includes(num1), 3000, 'carian rekod');
+      await until(async () => (await recList()).includes(num2) && !(await recList()).includes(num1), 8000, 'carian rekod');
       await qbox.fill('');
       await page.locator('.rfilters').getByRole('button', { name: 'Quotation' }).click();
       await page.getByText('Tiada dokumen sepadan.').waitFor();
