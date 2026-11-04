@@ -61,6 +61,9 @@ panduan/               panduan pengguna HTML + Panduan-Annur-Docs.pdf
 media/                 tangkapan skrin sebenar (dijana dari mod demo)
 tools/capture.mjs      jana semula media/*.jpg
 tools/manual-pdf.mjs   jana semula panduan/Panduan-Annur-Docs.pdf
+tools/make-icons.mjs   jana ikon PWA (icons/)
+tools/video/           video TikTok 1080x1920 disegerakkan dengan audio (lihat tools/video/README.md)
+media/video/           video siap (pengenalan dan cara berfungsi)
 _headers               header keselamatan (CSP Report-Only buat masa ini)
 tests/                 node --test (unit) + e2e.mjs, e2e-demo.mjs (Playwright)
 ```

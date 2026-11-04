@@ -62,6 +62,13 @@ try {
   });
   await page.setViewportSize({ width: 1366, height: 1130 });
   await shot(page, 'dokumen-invois', { el: '#docshot' });
+  // versi "diterbit": nombor rasmi, tanpa tera DRAF (untuk video)
+  await page.evaluate(() => {
+    const h = document.getElementById('docshot');
+    h.querySelectorAll('.dv-draft').forEach((n) => n.remove());
+    h.innerHTML = h.innerHTML.replace(/APS\/1126-XXX/g, 'APS/1126-001');
+  });
+  await shot(page, 'dokumen-invois-terbit', { el: '#docshot' });
   await page.evaluate(() => document.getElementById('docshot').remove());
   await page.setViewportSize({ width: 1366, height: 860 });
   await page.locator('.ed-acts').getByRole('button', { name: 'Terbit' }).click();

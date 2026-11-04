@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ms"><head><meta charset="utf-8">
+<title>Video Annur Docs 1080x1920</title>
+<style>
+/* Pentas 1080x1920 (TikTok). Kawasan selamat: kandungan y 215-1225, sari kata y 1265-1470; bawah 1470 dibiarkan untuk UI TikTok. */
+:root{--navy:#0b1d4d;--deep:#070f2b;--blue:#4f7cff;--soft:#a9c0ff;--amber:#ffcf5a;--green:#3ddc97;--red:#ff7a7a;--ink:#0f172a;--mute:#9db0d6}
+*{box-sizing:border-box}
+html,body{margin:0;background:#000}
+body{font-family:Inter,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;color:#fff;
+  background:radial-gradient(900px 700px at 85% 8%,rgba(79,124,255,.28),transparent 60%),radial-gradient(800px 700px at 5% 70%,rgba(61,220,151,.10),transparent 60%),linear-gradient(180deg,#0b1d4d 0%,#081538 55%,#060d26 100%)}
+#progress{position:absolute;left:0;top:0;height:8px;width:0;background:linear-gradient(90deg,var(--blue),var(--green));z-index:30}
+#brand{position:absolute;left:60px;top:70px;display:flex;align-items:center;gap:18px;font:800 40px/1 "Inter Display",Inter,sans-serif;letter-spacing:-.01em}
+#brand img{width:60px;height:60px;border-radius:14px}
+#stepchip{position:absolute;right:60px;top:78px;height:50px;padding:0 22px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);font:700 25px/50px Inter,sans-serif;color:var(--soft);white-space:nowrap}
+#stepchip b{color:#fff}
+#scenes{position:absolute;left:0;top:215px;width:1080px;height:1010px}
+.scene{position:absolute;inset:0;display:none}
+.inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 70px}
+#cap{position:absolute;left:70px;width:940px;top:1262px;height:215px;display:flex;align-items:flex-start;justify-content:center;text-align:center;font:800 58px/1.2 "Inter Display",Inter,sans-serif;letter-spacing:-.01em;text-shadow:0 3px 14px rgba(0,0,0,.5);text-wrap:balance}
+#cap em{font-style:normal;color:var(--amber)}
+#foot{position:absolute;left:0;right:0;top:1500px;display:flex;justify-content:center}
+#foot span{padding:14px 34px;border-radius:99px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);font:700 32px/1 Inter,sans-serif;color:var(--soft);letter-spacing:.01em}
+em{font-style:normal;color:var(--amber)}
+[data-at]{opacity:0}
+h1.big{font:800 76px/1.08 "Inter Display",Inter,sans-serif;letter-spacing:-.025em;margin:0;text-align:center;text-wrap:balance}
+h1.big em,.sub em{font-style:normal;color:var(--amber)}
+.sub{font:600 38px/1.3 Inter,sans-serif;color:var(--mute);text-align:center;margin:18px 0 0}
+.col{display:flex;flex-direction:column;align-items:center;gap:26px;width:100%}
+.pill{display:flex;align-items:center;gap:26px;width:940px;padding:26px 34px;border-radius:30px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.16);font:700 46px/1.15 Inter,sans-serif}
+.pill small{display:block;font:500 29px/1.3 Inter,sans-serif;color:var(--mute);margin-top:6px}
+.pill .ic{flex:none;width:76px;height:76px;border-radius:24px;display:grid;place-items:center;font:800 40px/1 Inter,sans-serif}
+.pill.bad .ic{background:rgba(255,122,122,.18);color:var(--red)}
+.pill.good .ic{background:rgba(61,220,151,.18);color:var(--green)}
+.pill.info .ic{background:rgba(79,124,255,.25);color:var(--soft)}
+.pill.warn .ic{background:rgba(255,207,90,.2);color:var(--amber)}
+.files{display:flex;gap:44px;margin:6px 0}
+.file{position:relative;width:190px;height:230px;border-radius:26px;display:grid;place-items:center;font:800 110px/1 "Inter Display",sans-serif;color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.file.w{background:linear-gradient(160deg,#3d7bff,#1d4fd6)}
+.file.x{background:linear-gradient(160deg,#27c281,#13874f)}
+.file .x{position:absolute;right:-18px;top:-18px;width:62px;height:62px;border-radius:50%;background:var(--red);display:grid;place-items:center;font:800 40px/1 Inter,sans-serif;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.phone{position:relative;width:432px;border-radius:64px;padding:12px;background:#0b1220;box-shadow:0 40px 90px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,255,.12) inset}
+.phone .scr{position:relative;width:408px;height:882px;border-radius:52px;overflow:hidden;background:#eef1f6}
+.phone .scr img,.cardimg img,.layer{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.cardimg{position:relative;width:960px;border-radius:30px;overflow:hidden;background:#eef1f6;box-shadow:0 36px 80px rgba(0,0,0,.5),0 0 0 2px rgba(255,255,255,.1)}
+.co{position:absolute;transform:translate(-50%,-50%);padding:18px 30px;border-radius:99px;background:var(--amber);color:#2a1d00;font:800 36px/1.1 Inter,sans-serif;white-space:nowrap;box-shadow:0 14px 34px rgba(0,0,0,.4);z-index:5}
+.co.b{background:#fff;color:#0b1d4d}
+.co.g{background:var(--green);color:#052b1a}
+.docwrap{position:relative;width:880px;height:900px;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 36px 80px rgba(0,0,0,.5)}
+.docin{position:absolute;left:0;top:0;width:880px;height:1244px}
+.docin img{width:880px;height:1244px;display:block}
+.hl{position:absolute;border:5px solid var(--amber);border-radius:12px;background:rgba(255,207,90,.18);box-shadow:0 0 0 9999px rgba(7,15,43,0) }
+.dcard{width:940px;border-radius:34px;background:#fff;color:var(--ink);padding:30px 36px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+.dcard h3{margin:0 0 16px;font:800 34px/1.1 Inter,sans-serif;color:#0b1d4d;display:flex;align-items:center;gap:14px}
+.row{display:flex;align-items:center;gap:20px;padding:14px 0;font:600 33px/1.2 Inter,sans-serif;border-top:1px solid #e6eaf2}
+.row small{display:block;font:500 25px/1.3 Inter,sans-serif;color:#64748b;margin-top:3px}
+.fold{flex:none;width:62px;height:48px;border-radius:8px 8px 10px 10px;background:#f6b73c;position:relative}
+.fold:before{content:"";position:absolute;left:0;top:-9px;width:26px;height:12px;border-radius:7px 7px 0 0;background:#f6b73c}
+.sheetic{flex:none;width:46px;height:58px;border-radius:8px;background:#1fa463;position:relative}
+.sheetic:after{content:"";position:absolute;left:10px;right:10px;top:16px;bottom:12px;background:repeating-linear-gradient(#fff 0 4px,transparent 4px 10px);opacity:.9}
+.pdfic{flex:none;width:46px;height:58px;border-radius:8px;background:#e5484d;color:#fff;display:grid;place-items:center;font:800 17px/1 Inter,sans-serif}
+.tag{padding:8px 18px;border-radius:99px;font:800 27px/1 Inter,sans-serif;background:rgba(61,220,151,.18);color:#0f8a57;white-space:nowrap}
+.plan{width:940px;border-radius:34px;padding:26px 38px;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 28px 64px rgba(0,0,0,.4)}
+.plan .l{font:800 40px/1.1 Inter,sans-serif;color:#0b1d4d}
+.plan .l small{display:block;font:500 28px/1.3 Inter,sans-serif;color:#64748b;margin-top:6px}
+.plan .r{font:800 72px/1 "Inter Display",sans-serif;color:#1d3a8a;letter-spacing:-.03em;white-space:nowrap}
+.plan .r small{font:600 30px/1 Inter,sans-serif;color:#64748b;letter-spacing:0}
+.plan.best{background:linear-gradient(135deg,#e7edff,#fff)}
+.plan .tg{position:absolute;right:46px;top:-18px;padding:10px 22px;border-radius:99px;background:var(--green);color:#052b1a;font:800 27px/1 Inter,sans-serif}
+.big2{font:800 250px/1 "Inter Display",sans-serif;letter-spacing:-.05em;color:#fff;text-align:center}
+.big2 small{font:800 110px/1 "Inter Display",sans-serif;color:var(--amber);letter-spacing:-.02em}
+.urlpill{padding:30px 54px;border-radius:99px;background:#fff;color:#0b1d4d;font:800 66px/1 "Inter Display",sans-serif;letter-spacing:-.02em;box-shadow:0 26px 60px rgba(0,0,0,.45)}
+.gbtn{display:flex;align-items:center;gap:20px;padding:26px 46px;border-radius:99px;background:#fff;color:#1f2937;font:700 44px/1 Inter,sans-serif;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.gbtn i{font:800 52px/1 Inter,sans-serif;font-style:normal;background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0);-webkit-background-clip:text;color:transparent}
+.numbig{font:800 112px/1 "Inter Display",sans-serif;letter-spacing:-.03em;display:flex;gap:6px;align-items:flex-start}
+.numbig .p{display:flex;flex-direction:column;align-items:center;gap:14px}
+.numbig .p span{font:700 30px/1 Inter,sans-serif;color:var(--amber);letter-spacing:0}
+.numbig .p i{display:block;height:8px;width:100%;border-radius:4px;background:var(--amber)}
+.cta-logo{width:210px;height:210px;border-radius:50px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+.arrow{font:800 70px/1 Inter,sans-serif;color:var(--soft)}
+.dev{display:flex;gap:30px;align-items:center}
+.devbox{padding:26px 40px;border-radius:30px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);font:800 44px/1.15 Inter,sans-serif;text-align:center}
+.devbox small{display:block;font:700 34px/1 "Inter Display",sans-serif;color:var(--amber);margin-top:12px}
+</style></head>
+<body>
+<div id="stage">
+  <div id="progress"></div>
+  <div id="brand"><img src="../../brand/annurpro-icon-64.png" alt=""><span>Annur Docs</span></div>
+  <div id="stepchip"></div>
+  <div id="scenes"></div>
+  <div id="cap"></div>
+  <div id="foot"><span>docs.annurpro.com</span></div>
+</div>
+<script src="timelines.js"></script>
+<script>
+(function () {
+  'use strict';
+  const M = '../../media/';
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+  const pop = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const em = (s) => String(s).replace(/\*(.+?)\*/g, '<em>$1</em>');
+  const A = (at, anim, extra) => `data-at="${at}" data-anim="${anim || 'up'}"${extra ? ' ' + extra : ''}`;
+  const until = (u) => (u ? ` data-until="${u}"` : '');
+  const co = (c, cls) => `<div class="co ${c.k || cls || ''}" style="left:${c.x}px;top:${c.y}px" ${A(c.at, 'pop', 'data-d="0.4"')}${until(c.until)}>${em(c.t)}</div>`;
+
+  const B = {
+    // masalah: tajuk, fail Word/Excel, chip masalah
+    pain: (p) => `<div class="inner"><div class="col">
+      <h1 class="big" ${A(p.at || 0.2)}>${em(p.head)}</h1>
+      <div class="files">${p.files.map((f) => `<div class="file ${f.k.toLowerCase()}" ${A(f.at, 'pop')}>${f.k}<div class="x" ${A(f.bad, 'pop')}>×</div></div>`).join('')}</div>
+      ${p.items.map((i) => `<div class="pill bad" ${A(i.at)}><div class="ic">×</div><div>${em(i.t)}</div></div>`).join('')}</div></div>`,
+    chips: (p) => `<div class="inner"><div class="col">
+      ${p.head ? `<h1 class="big" ${A(p.headAt || 0.1)}${until(p.headUntil)}>${em(p.head)}</h1>` : ''}
+      ${(p.sub ? `<div class="sub" ${A(p.subAt || p.headAt || 0.1)}>${em(p.sub)}</div>` : '')}
+      ${(p.items || []).map((i) => `<div class="pill ${i.k || 'info'}" ${A(i.at, 'up')}><div class="ic">${i.i || '✓'}</div><div>${em(i.t)}${i.s ? `<small>${em(i.s)}</small>` : ''}</div></div>`).join('')}</div></div>`,
+    title: (p) => `<div class="inner"><div class="col" style="gap:34px">
+      <img class="cta-logo" src="../../icons/icon-512.png" alt="" ${A(p.at, 'pop')}>
+      <h1 class="big" ${A(p.at + 0.25)}>${em(p.head)}</h1><div class="sub" ${A(p.at + 0.5)}>${em(p.sub)}</div></div></div>`,
+    step: (p) => `<div class="inner"><div class="col" style="gap:30px">
+      <div style="width:230px;height:230px;border-radius:70px;background:linear-gradient(145deg,#4f7cff,#2748c9);display:grid;place-items:center;font:800 150px/1 'Inter Display',sans-serif;box-shadow:0 30px 70px rgba(0,0,0,.45)" ${A(p.at, 'pop')}>${p.n}</div>
+      <h1 class="big" ${A(p.at + 0.2)}>${em(p.head)}</h1></div></div>`,
+    phone: (p) => `<div class="inner"><div class="phone"><div class="scr">${p.imgs.map((i) => `<img src="${M + i.src}" ${A(i.at, 'fade', 'data-d="0.3"')}${until(i.until)} style="object-position:${i.pos || 'top'}">`).join('')}</div></div>${(p.co || []).map((c) => co(c)).join('')}</div>`,
+    card: (p) => `<div class="inner"><div class="cardimg" style="height:${p.h || 604}px">${p.imgs.map((i) => `<img src="${M + i.src}" ${A(i.at, 'fade', 'data-d="0.3"')}${until(i.until)} style="object-position:${i.pos || 'top'}">`).join('')}</div>${(p.co || []).map((c) => co(c)).join('')}</div>`,
+    doc: (p) => `<div class="inner"><div class="docwrap"><div class="docin"><img src="${M}dokumen-invois-terbit.jpg" alt="">
+      ${(p.hl || []).map((h) => `<div class="hl" style="left:${h.b[0]}%;top:${h.b[1]}%;width:${h.b[2]}%;height:${h.b[3]}%" ${A(h.at, 'fade', 'data-d="0.3"')}${until(h.until)}></div>`).join('')}</div></div>
+      ${(p.co || []).map((c) => co(c)).join('')}</div>`,
+    drive: (p) => `<div class="inner"><div class="col" style="gap:24px">
+      <div class="dcard" ${A(p.t.card)}><h3><span class="fold" style="width:42px;height:32px"></span>Google Drive anda</h3>
+        <div class="row" ${A(p.t.folder)}><span class="fold"></span><div>${p.folder}<small>Folder dicipta dalam Drive anda</small></div></div>
+        <div class="row" ${A(p.t.sheet)}><span class="sheetic"></span><div>Google Sheet<small>Dokumen, pelanggan dan tetapan anda</small></div></div>
+        <div class="row" ${A(p.t.pdf)}><span class="pdfic">PDF</span><div>PDF dokumen<small>Disusun mengikut jenis dokumen</small></div></div></div>
+      <div class="dcard" style="background:#10224f;color:#fff;border:1.5px solid rgba(255,255,255,.2)" ${A(p.server.at)}><h3 style="color:#a9c0ff">Pelayan Annur Docs</h3>
+        ${p.server.empty ? `<div class="row" style="border-color:rgba(255,255,255,.14)" ${A(p.server.emptyAt, 'up')}><span class="tag" style="background:rgba(255,122,122,.2);color:#ff9a9a">Tiada</span><div>Dokumen anda tidak disimpan di sini</div></div>`
+          : p.server.items.map((i) => `<div class="row" style="border-color:rgba(255,255,255,.14)" ${A(i.at, 'up')}><span class="tag" style="background:rgba(79,124,255,.25);color:#a9c0ff">✓</span><div>${i.t}</div></div>`).join('')}</div>
+      ${p.badge ? `<div class="pill good" style="width:auto;padding:18px 40px" ${A(p.badge.at, 'pop')}><div class="ic" style="width:56px;height:56px">✓</div><div>${em(p.badge.t)}</div></div>` : ''}</div></div>`,
+    price: (p) => `<div class="inner"><div class="col" style="gap:34px">${p.items.map((i) => `<div class="plan ${i.best ? 'best' : ''}" style="position:relative" ${A(i.at)}${until(i.until)}>
+      <div class="l">${em(i.t)}<small>${em(i.s)}</small></div><div class="r">${i.r}</div>${i.tag ? `<div class="tg" ${A(i.tag.at, 'pop')}>${i.tag.t}</div>` : ''}</div>`).join('')}</div></div>`,
+    big: (p) => `<div class="inner"><div class="col" style="gap:26px"><div class="big2" ${A(p.at, 'pop')}>${p.big}</div><div class="sub" ${A(p.subAt)}>${em(p.sub)}</div></div></div>`,
+    url: (p) => `<div class="inner"><div class="col" style="gap:44px"><div class="urlpill" ${A(p.at, 'pop')}>docs.annurpro.com</div><div class="arrow" ${A(p.at + 0.4)}>↓</div>
+      <div class="gbtn" ${A(p.btnAt, 'pop')} data-pulse="1"><i>G</i>Sambung Google</div></div></div>`,
+    number: (p) => `<div class="inner"><div class="col" style="gap:56px">
+      <div class="numbig" ${A(p.at, 'pop')}>${p.parts.map((x) => `<div class="p"><div>${x.v}</div><i ${A(x.at, 'fade')}></i><span ${A(x.at, 'up')}>${x.l}</span></div>`).join('')}</div>
+      <div class="dev">${p.dev.map((d) => `<div class="devbox" ${A(d.at, 'pop')}>${d.t}<small>${d.n}</small></div>`).join('')}</div></div></div>`,
+    devices: (p) => `<div class="inner"><div style="position:relative;width:960px;height:760px"><div class="cardimg" style="height:604px;position:absolute;left:0;top:30px" ${A(p.at)}><img src="${M}utama-desktop.jpg"></div>
+      <div class="phone" style="position:absolute;right:-6px;top:10px;width:300px;border-radius:48px;padding:9px" ${A(p.phoneAt, 'pop')}><div class="scr" style="width:282px;height:610px;border-radius:40px"><img src="${M}utama-telefon.jpg"></div></div></div></div>`,
+    cta: (p) => `<div class="inner"><div class="col" style="gap:34px"><img class="cta-logo" src="../../icons/icon-512.png" alt="" ${A(p.at, 'pop')}>
+      <h1 class="big" ${A(p.at + 0.2)}>${em(p.head)}</h1>
+      <div class="urlpill" ${A(p.urlAt, 'pop')} data-pulse="1">docs.annurpro.com</div>
+      <div class="sub" ${A(p.urlAt + 0.4)}>${em(p.sub)}</div></div></div>`
+  };
+
+  let TL = null, scenes = [], caps = [];
+  function build(tl) {
+    TL = tl;
+    const host = document.getElementById('scenes');
+    host.innerHTML = tl.scenes.map((s, i) => `<div class="scene" id="sc${i}"><div class="inner0" style="position:absolute;inset:0">${B[s.type](s.p)}</div></div>`).join('');
+    scenes = tl.scenes.map((s, i) => ({ s: s.s, e: s.e, el: document.getElementById('sc' + i) }));
+    caps = tl.caps;
+    document.getElementById('foot').style.display = tl.foot === false ? 'none' : '';
+  }
+
+  function setT(t) {
+    document.getElementById('progress').style.width = (t / TL.duration * 100).toFixed(2) + '%';
+    // adegan
+    scenes.forEach((s) => {
+      const on = t >= s.s - 0.02 && t < s.e + 0.35;
+      s.el.style.display = on ? 'block' : 'none';
+      if (!on) return;
+      const fin = easeOut(clamp((t - s.s) / 0.4, 0, 1)), fout = t > s.e ? 1 - clamp((t - s.e) / 0.3, 0, 1) : 1;
+      s.el.style.opacity = (fin * fout).toFixed(3);
+      s.el.firstChild.style.transform = `translateY(${((1 - fin) * 30).toFixed(1)}px)`;
+      s.el.querySelectorAll('[data-at]').forEach((n) => {
+        const at = +n.dataset.at, d = +(n.dataset.d || 0.5), u = n.dataset.until ? +n.dataset.until : null, anim = n.dataset.anim;
+        let x = clamp((t - at) / d, 0, 1), vis = x > 0;
+        let o = easeOut(x);
+        if (u != null) { const y = clamp((u - t) / 0.25, 0, 1); o *= y; if (t >= u + 0.25) vis = false; }
+        let tf = '';
+        if (anim === 'up') tf = `translateY(${((1 - easeOut(x)) * 36).toFixed(1)}px)`;
+        else if (anim === 'pop') { const k = 0.82 + 0.18 * pop(x); tf = `scale(${k.toFixed(3)})`; }
+        if (n.classList.contains('co')) tf = `translate(-50%,-50%) ${tf}`;
+        if (n.dataset.pulse && x >= 1) tf += ` scale(${(1 + 0.03 * Math.sin((t - at) * 5)).toFixed(3)})`;
+        n.style.opacity = vis ? o.toFixed(3) : 0;
+        n.style.transform = tf;
+      });
+    });
+    // sari kata
+    const cap = document.getElementById('cap');
+    const c = caps.find((c) => t >= c[0] && t < c[1] + 0.12);
+    if (c) {
+      if (cap.dataset.k !== String(c[0])) { cap.innerHTML = `<div>${em(c[2])}</div>`; cap.dataset.k = String(c[0]); }
+      const x = clamp((t - c[0]) / 0.18, 0, 1);
+      cap.style.opacity = x.toFixed(3);
+      cap.firstChild.style.transform = `translateY(${((1 - easeOut(x)) * 14).toFixed(1)}px) scale(${(0.96 + 0.04 * easeOut(x)).toFixed(3)})`;
+    } else { cap.innerHTML = ''; cap.dataset.k = ''; cap.style.opacity = 0; }
+    // langkah
+    const chip = document.getElementById('stepchip');
+    const st = (TL.steps || []).filter((x) => t >= x.at).pop();
+    chip.style.display = st ? '' : 'none';
+    if (st) chip.innerHTML = `<b>${st.n}/${TL.steps.length}</b> · ${st.label}`;
+  }
+
+  window.loadTimeline = (name) => { build(window.TIMELINES[name]); setT(0); };
+  window.setT = setT;
+  window.ready = async () => {
+    await document.fonts.ready;
+    await Promise.all(Array.from(document.images).map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
+    return true;
+  };
+})();
+</script>
+</body></html>
