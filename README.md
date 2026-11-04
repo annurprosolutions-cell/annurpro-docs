@@ -17,7 +17,8 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 6 | Terbit: `/api/issue` (nombor atomik + caj kredit), `/api/void`, `/api/issues`, `/api/ledger`; PDF (html2canvas + jsPDF dalam `vendor/`) ke Drive; kongsi; cuba semula; S-12 | Siap |
 | 7 | Rekod penuh (tapis, cari, menu), edit 24 jam, batal, salin, tukar Quotation→Invois / →DO, Pelanggan (CRUD, arkib) | Siap |
 | 8 | Webhook BCL + pengesahan API, langganan & pek kredit, S-11 Langganan & Kredit, dashboard pemilik `/admin/` | Siap (perlu langkah 6 di bawah) |
-| 9 | Pengukuhan: luar talian, had kadar, demo, halaman jualan, panduan, verifikasi OAuth | Seterusnya |
+| 9 | Pengukuhan: luar talian, had kadar, header keselamatan, E2E, mod demo `/?demo`, halaman jualan `salepage/`, panduan `panduan/` (HTML + PDF) | Siap (verifikasi OAuth & UAT: langkah 7 di bawah) |
+| 10 | Pelancaran: BCL hidup, OAuth Production, domain sendiri, ujian bayaran RM1 | Seterusnya |
 
 ## Struktur
 
@@ -51,7 +52,16 @@ worker/index.mjs       API: /api/ping, /api/check, /api/issue, /api/void, /api/i
 admin/                 dashboard pemilik platform (S-14)
 js/ui-billing.js       skrin S-11 Langganan & Kredit
 schema.sql             jadual D1 (docs/05-BSD.md §3B)
-tests/                 node --test (unit) + e2e.mjs (Playwright)
+js/fakegoogle.js       Google palsu dalam pelayar (mod demo + ujian)
+js/demo.js             mod demo /?demo: data contoh, tanpa Google, tanpa terbit sebenar
+js/ui-help.js          skrin S-13 Bantuan & Sokongan, soalan lazim
+salepage/              halaman jualan (guna tangkapan skrin dalam media/)
+panduan/               panduan pengguna HTML + Panduan-Annur-Invoice.pdf
+media/                 tangkapan skrin sebenar (dijana dari mod demo)
+tools/capture.mjs      jana semula media/*.jpg
+tools/manual-pdf.mjs   jana semula panduan/Panduan-Annur-Invoice.pdf
+_headers               header keselamatan (CSP Report-Only buat masa ini)
+tests/                 node --test (unit) + e2e.mjs, e2e-demo.mjs (Playwright)
 ```
 
 ## Ujian
@@ -61,7 +71,17 @@ npm test
 ```
 
 ```bash
-node --no-warnings tests/e2e.mjs
+NODE_PATH=$(npm root -g) npm run e2e
+```
+
+Selepas UI berubah, jana semula tangkapan skrin dan PDF panduan:
+
+```bash
+NODE_PATH=$(npm root -g) node tools/capture.mjs
+```
+
+```bash
+NODE_PATH=$(npm root -g) node tools/manual-pdf.mjs
 ```
 
 `npm test` menjalankan ujian unit Worker (dengan D1 palsu atas `node:sqlite` yang memuatkan `schema.sql` sebenar) dan logik lesen. `tests/e2e.mjs` memerlukan Playwright dan menguji log masuk hingga skrin Utama pada saiz telefon dan desktop, dengan Google dimock.
@@ -116,6 +136,19 @@ Rahsia (API token, kunci webhook) **jangan dihantar dalam chat**. Letakkan terus
 BCL tidak menghantar semula webhook yang gagal secara automatik. Semak tab **Log webhook** di dashboard sekali seminggu; untuk yang gagal, guna BCL → Webhook Logs → Resend, atau **Tindakan → Sahkan pesanan** di dashboard.
 
 Secret Cloudflare kekal selepas setiap deploy. Pembolehubah biasa (vars) pula ditimpa oleh nilai dalam `wrangler.jsonc`, sebab itu nilai bukan rahsia disimpan dalam fail.
+
+### 7. Sebelum lancar: verifikasi OAuth dan UAT
+
+Selagi app Google dalam mod *Testing*, hanya akaun dalam senarai *Test users* boleh log masuk (had 100) dan token tamat setiap 7 hari. Untuk buka kepada semua:
+
+1. **Domain sendiri** (cth `invoice.annurpro.com`): Cloudflare → Worker → Settings → Domains & Routes → Add custom domain. Google tidak menerima `workers.dev` untuk verifikasi jenama.
+2. Sahkan domain dalam **Google Search Console** menggunakan akaun Google yang sama dengan projek Cloud.
+3. Google Cloud → OAuth consent screen (Branding): isi nama app, e-mel sokongan, logo (pilihan, boleh kemudian), **Home page** `https://<domain>/salepage/`, **Privacy policy** `https://<domain>/privasi.html`, dan domain di *Authorized domains*.
+4. Credentials → Client ID: tambah `https://<domain>` di *Authorized JavaScript origins*.
+5. Tukar `ALLOWED_ORIGINS` dalam `wrangler.jsonc` kepada `https://<domain>`.
+6. Audience → **Publish app** (Production). Skop `drive.file` bukan skop sensitif, jadi biasanya hanya verifikasi jenama diperlukan (beberapa hari). Ikut e-mel daripada Google jika mereka minta maklumat tambahan.
+7. UAT: guna akaun sebenar, cipta sekurang-kurangnya 10 dokumen (invois, quotation, DO, edit, batal, tukar) dan semak PDF dicetak.
+8. Selepas sebulan tiada isu, tukar CSP daripada `Content-Security-Policy-Report-Only` kepada `Content-Security-Policy` dalam `_headers`.
 
 ### Masalah biasa
 | Gejala | Punca dan penyelesaian |

@@ -97,7 +97,9 @@ test('renderDoc: halaman A4, lajur ikut jenis, escape HTML, tera DRAF', () => {
   assert.equal((html.match(/class="a4"/g) || []).length, 1);
   assert.doesNotMatch(html, /<script>/); assert.match(html, /&lt;script&gt;/); assert.match(html, /Baris dua/);
   assert.match(html, /Disc \(RM\)/); assert.match(html, />Tax</); assert.match(html, /TOTAL \(RM\)/); assert.match(html, /RINGGIT MALAYSIA/);
-  assert.match(html, /dv-draft/); assert.match(html, /Authorised Signature/); assert.match(html, /src="data:image\/png;base64,AA=="/);
+  assert.match(html, /dv-draft/); assert.match(html, /Authorised Signature/); assert.match(html, /\(202401012345\)/);
+  const paren = AI.renderDoc(AI.docView(d, Object.assign({}, SK, { ssm: '202401012345 (1234567-A)' }), CODES), {});
+  assert.match(paren, /<span>202401012345 \(1234567-A\)<\/span>/, 'tiada kurungan berganda'); assert.match(html, /src="data:image\/png;base64,AA=="/);
   const doHtml = AI.renderDoc(AI.docView(filled('do', 1), SK, CODES), {});
   assert.doesNotMatch(doHtml, /Price \(RM\)/); assert.match(doHtml, /Received By/); assert.match(doHtml, /Total quantity/);
   const issued = AI.renderDoc(AI.docView(filled('invoice', 1), SK, CODES, { number: 'APS/1126-001' }), {});

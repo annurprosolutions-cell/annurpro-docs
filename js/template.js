@@ -24,7 +24,7 @@
     const ids = [v.co.sst && 'SST No: ' + esc(v.co.sst), v.co.tin && 'TIN: ' + esc(v.co.tin)].filter(Boolean).join(' &nbsp;|&nbsp; ');
     const head = `<header class="dv-head">
         <div class="dv-logo">${assets.logo ? `<img src="${esc(assets.logo)}" alt="">` : ''}</div>
-        <div class="dv-co"><div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>(${esc(v.co.reg)})</span>` : ''}</div>
+        <div class="dv-co"><div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
           ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}</div>
       </header>
       <div class="dv-titlebar"><h1>${esc(v.title)}</h1></div>`;

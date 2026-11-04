@@ -99,11 +99,11 @@ Struktur repo yang dicadang: `index.html`, `config.js`, `sw.js`, `manifest.webma
 - [x] 8.5 Dashboard dilindungi `OWNER_EMAILS`; ujian akses ditolak.
 
 ### Fasa 9 – Pengukuhan (F-14, F-20)
-- [ ] 9.1 Service worker (precache `./`, jangan cache respons redirect, navigasi fallback), versi cache dinaikkan setiap rilis; banner luar talian.
-- [ ] 9.2 Had kadar Worker; semak CORS; audit keselamatan (`/security-review`).
-- [ ] 9.3 E2E Playwright dengan mock Google/Sheets/BCL: Journey A–D; masa tetap; `serviceWorkers:'block'`.
-- [ ] 9.4 Mod demo `/?demo` (data contoh, tanpa Google, tanpa terbit sebenar).
-- [ ] 9.5 `salepage/` (tangkapan skrin sebenar, FAQ, harga), `privasi.html` (BSD/TRD §6), `panduan/`, S-13 dan video ringkas.
+- [x] 9.1 Service worker (precache `./`, jangan cache respons redirect, navigasi fallback), versi cache dinaikkan setiap rilis; banner luar talian.
+- [x] 9.2 Had kadar Worker; semak CORS; audit keselamatan (`/security-review`).
+- [x] 9.3 E2E Playwright dengan mock Google/Sheets/BCL: Journey A–D; masa tetap; `serviceWorkers:'block'`.
+- [x] 9.4 Mod demo `/?demo` (data contoh, tanpa Google, tanpa terbit sebenar).
+- [x] 9.5 `salepage/` (tangkapan skrin sebenar, FAQ, harga), `privasi.html` (BSD/TRD §6), `panduan/`, S-13 dan video ringkas. *(Video belum dibuat; tangkapan skrin & PDF panduan siap.)*
 - [ ] 9.6 Hantar verifikasi OAuth (nama dahulu, logo kemudian); UAT dengan AZN Power Solution (cipta 10 dokumen sebenar).
 
 ### Fasa 10 – Launch

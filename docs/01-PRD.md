@@ -118,6 +118,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | Tarikh | Perubahan |
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
+| 04/11/2026 | Fasa 9: had kadar Worker, header keselamatan, service worker diperkukuh, E2E Playwright, mod demo `/?demo`, S-13 Bantuan, halaman jualan, panduan pengguna (HTML + PDF) dan senarai semak verifikasi OAuth. Video tutorial ditangguhkan |
 | 03/11/2026 | Dokumen dipindah ke repo `annurpro-docs`; pembinaan Fasa 0 dan Fasa 1 dimulakan |
 | 03/11/2026 | Fasa 8: webhook BCL `/bcl/<kunci>` dengan pengesahan semula transaksi melalui API BCL, langganan bulanan/tahunan (tambat hari, kuantiti, dari tarikh tamat jika aktif), pek kredit dikesan daripada nama item atau PACKS, idempoten ikut no. pesanan; S-11 Langganan & Kredit; dashboard pemilik `/admin/` (statistik, tambah bulan, tetap tarikh, laras kredit, bayaran, log, sahkan pesanan manual) |
 | 03/11/2026 | Fasa 7: Rekod (tapis jenis/status/bulan, carian no./pelanggan/PO, menu tindakan), edit dalam 24 jam (nombor & fail PDF sama, tiada caj; jenis & tarikh dikunci), batal dengan sebab (nombor tidak digunakan semula), salin sebagai draf, tukar Quotation→Invois dan Invois/Quotation→DO dengan rujukan dua hala, Pelanggan (tambah, edit, arkib, amaran duplikasi, invois baharu dari pelanggan) |

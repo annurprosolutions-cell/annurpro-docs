@@ -38,7 +38,7 @@
     function docHeader(v) {
       const accent = /^#[0-9a-f]{6}$/i.test(str(v.warna_aksen)) ? v.warna_aksen : '#0f172a';
       const addr = str(v.alamat).split('\n').filter(Boolean);
-      const reg = [str(v.ssm) && `(${esc(v.ssm)})`].filter(Boolean).join(' ');
+      const reg = str(v.ssm) ? (/\(/.test(v.ssm) ? esc(v.ssm) : `(${esc(v.ssm)})`) : '';
       const contact = [str(v.tel) && 'Tel: ' + esc(v.tel), str(v.emel) && esc(v.emel), str(v.laman) && esc(v.laman)].filter(Boolean).join(' · ');
       const sst = str(v.sst_berdaftar).toUpperCase() === 'YA' && str(v.sst_no) ? `<div>SST No: ${esc(v.sst_no)}</div>` : '';
       const no = AI.sampleNumber(AI.prefixFor(v, 'invoice'), today());

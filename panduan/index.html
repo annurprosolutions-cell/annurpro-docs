@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panduan Pengguna · Annur Invoice</title>
+<meta name="description" content="Panduan langkah demi langkah Annur Invoice: persediaan, tetapan syarikat, cipta dan terbit Invois, Quotation dan DO, rekod, pelanggan, langganan.">
+<link rel="icon" href="../brand/annurpro-icon-64.png">
+<style>
+:root{--ink:#0f172a;--mute:#5b6b82;--line:#e4e8ef;--bg:#f6f8fb;--blue:#1e3a8a;--soft:#e7edfb;--amber:#8a5a00;--amber-soft:#fff2d9;--font:Inter,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--font)}
+a{color:var(--blue)}img{max-width:100%;display:block}
+.top{background:#0b1d4d;color:#fff;padding:28px 20px}.top .in{max-width:900px;margin:0 auto}
+.top h1{margin:0 0 6px;font-size:30px}.top p{margin:0;color:#c9d2e3}.top .links{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+.top .links a{color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:8px 14px;text-decoration:none;font-weight:600;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:24px 20px 60px}
+nav.toc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 22px;margin-bottom:28px}nav.toc ol{margin:6px 0 0;padding-left:22px}nav.toc li{margin:4px 0}
+section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:22px}
+h2{margin:0 0 10px;font-size:23px}h3{font-size:18px;margin:22px 0 8px}
+ol.steps{padding-left:22px}ol.steps li{margin:6px 0}
+figure{margin:16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#f1f4f9}figure figcaption{font-size:13px;color:var(--mute);padding:8px 12px;background:#fff;border-top:1px solid var(--line)}
+.pair{display:grid;gap:14px;grid-template-columns:1fr 1fr}.pair figure{margin:8px 0}
+.tip{background:var(--soft);color:var(--blue);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:15px}
+.warn{background:var(--amber-soft);color:var(--amber);border-radius:12px;padding:12px 14px;margin:14px 0;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mute);font-size:13px}
+kbd{background:#eef1f6;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+footer{color:var(--mute);font-size:14px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.pair{grid-template-columns:1fr}}
+@media print{body{background:#fff;font-size:12pt}.top{background:#fff;color:#000;padding:0 0 10px;border-bottom:2px solid #0b1d4d}.top p{color:#333}.top .links{display:none}
+  section,nav.toc{border:0;padding:0;break-inside:auto}section{break-before:page}figure{break-inside:avoid}h2{color:#0b1d4d}a{color:#000;text-decoration:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <h1>Panduan Pengguna Annur Invoice</h1>
+  <p>Jana Invois, Quotation dan Delivery Order berjenama syarikat anda. Versi 1, November 2026.</p>
+  <div class="links"><a href="../">Buka app</a><a href="../?demo">Cuba demo</a><a href="Panduan-Annur-Invoice.pdf">Muat turun PDF</a></div>
+</div></header>
+<main>
+<nav class="toc"><b>Kandungan</b><ol>
+  <li><a href="#mula">Mula: log masuk dan persediaan</a></li><li><a href="#tetapan">Tetapan syarikat</a></li><li><a href="#gambar">Logo, cop dan tandatangan</a></li>
+  <li><a href="#cipta">Cipta dokumen</a></li><li><a href="#terbit">Terbit dan kongsi</a></li><li><a href="#rekod">Rekod: edit, batal, tukar</a></li>
+  <li><a href="#pelanggan">Pelanggan</a></li><li><a href="#langganan">Langganan dan kredit</a></li><li><a href="#telefon">Telefon dan luar talian</a></li>
+  <li><a href="#data">Data anda</a></li><li><a href="#soalan">Soalan lazim dan bantuan</a></li></ol></nav>
+
+<section id="mula"><h2>1. Mula: log masuk dan persediaan</h2>
+  <ol class="steps"><li>Buka app dan tekan <b>Sambung Google</b>. Pilih akaun Google syarikat anda dan benarkan akses ke Google Drive.</li>
+  <li>Isi <b>nama syarikat</b> dan tekan <b>Seterusnya</b>. Folder dan Google Sheet bernama <i>"[Nama Syarikat] – Annur Invoice"</i> dicipta dalam Drive anda.</li>
+  <li>Tetapkan <b>kod syarikat</b> (2 hingga 6 huruf, cth APS). Nombor dokumen anda akan jadi seperti <b>APS/1126-001</b> (invois), <b>APS-Q/1126-001</b> (quotation) dan <b>APS-DO/1126-001</b> (DO).</li>
+  <li>Isi penandatangan, akaun bank dan status SST. Langkah penandatangan dan bank boleh dilangkau dan diisi kemudian.</li></ol>
+  <figure><img src="../media/wizard-desktop.jpg" alt="Wizard persediaan, langkah penomboran" loading="lazy"><figcaption>Wizard persediaan: contoh nombor dipaparkan semasa anda menaip.</figcaption></figure>
+  <div class="tip">Akaun baharu mendapat 50 kredit percuma, cukup untuk 10 dokumen.</div>
+</section>
+
+<section id="tetapan"><h2>2. Tetapan syarikat</h2>
+  <p>Semua tetapan berada di <b>Tetapan</b> (ikon gear).</p>
+  <h3>Profil Syarikat</h3><p>Nama, no. pendaftaran, TIN/BRN (pilihan), alamat, telefon, e-mel, bank, penandatangan, penandatangan khas untuk DO, dan warna dokumen. Pratonton di sebelah menunjukkan rupa kepala dokumen.</p>
+  <figure><img src="../media/profil-desktop.jpg" alt="Profil syarikat" loading="lazy"><figcaption>Profil Syarikat dengan pratonton.</figcaption></figure>
+  <p>Jika anda menukar nama syarikat, app akan bertanya sama ada mahu menukar nama folder dan Google Sheet juga.</p>
+  <h3>Dokumen, Penomboran &amp; Cukai</h3>
+  <ul><li><b>Prefix</b> setiap jenis dokumen (kosong = guna kod syarikat).</li><li><b>Tajuk invois</b> INVOICE atau TAX INVOICE, terma bayaran, tempoh sah quotation.</li>
+  <li><b>Nota</b> di bawah setiap jenis dokumen.</li><li><b>Perkongsian PDF</b>: sama ada pautan boleh dibuka sesiapa yang menerimanya.</li>
+  <li><b>SST</b>: aktifkan jika berdaftar, isi no. SST dan pilih kod cukai yang digunakan. Kadar boleh diubah; kod baharu boleh ditambah.</li></ul>
+  <div class="warn">Kadar cukai default perlu disemak dengan Kastam. Anda bertanggungjawab ke atas ketepatan cukai dalam dokumen anda.</div>
+</section>
+
+<section id="gambar"><h2>3. Logo, cop dan tandatangan</h2>
+  <ol class="steps"><li>Tetapan → <b>Logo, Cop &amp; Tandatangan</b>.</li><li>Tekan <b>Muat naik</b> pada Logo, Cop atau Tandatangan. Gambar PNG, JPG atau WebP, maksimum 5 MB.</li>
+  <li>Untuk cop dan tandatangan, <b>Buang latar putih</b> dihidupkan secara automatik. Laras <b>Toleransi</b> jika masih ada kesan kertas atau tinta jadi terlalu nipis.</li>
+  <li>Dalam <b>Kedudukan cop &amp; tandatangan</b>, seret dengan jari atau tetikus. Guna butang anak panah untuk gerak 1px (tahan untuk laju), atau kekunci anak panah pada komputer (<kbd>Shift</kbd> = 10px). Laraskan saiz dengan gelangsar.</li>
+  <li>Tekan <b>Simpan</b>. Gambar disimpan dalam folder <i>_Tetapan</i> di Drive anda.</li></ol>
+  <figure><img src="../media/logo-cop-desktop.jpg" alt="Tetapan logo, cop dan tandatangan" loading="lazy"><figcaption>Gambar dan penyusun kedudukan. Dalam PDF, tandatangan sentiasa di atas cop.</figcaption></figure>
+  <div class="tip">Tangkap gambar cop di atas kertas putih dengan cahaya terang dan tanpa bayang untuk hasil terbaik. Tandatangan DO boleh berbeza; jika kosong, DO guna tandatangan utama.</div>
+</section>
+
+<section id="cipta"><h2>4. Cipta dokumen</h2>
+  <ol class="steps"><li>Tekan <b>Dokumen baharu</b> (atau butang + di telefon). Pilih <b>Invois</b>, <b>Quotation</b> atau <b>Delivery Order</b>. Jenis boleh ditukar bila-bila masa sebelum terbit; data kekal.</li>
+  <li>Taip nama pelanggan: pelanggan sedia ada dicadangkan. Untuk pelanggan baharu, tekan <b>Simpan ke senarai pelanggan</b>.</li>
+  <li>Isi item: penerangan, kuantiti, unit, harga, diskaun (RM) dan kod cukai jika berdaftar SST. Item boleh disusun semula atau dibuang.</li>
+  <li>Isi tarikh, terma, Our Ref dan Your Ref / No. PO pelanggan. Quotation ada tempoh sah; DO ada alamat hantar (Ship To) dan tiada harga.</li></ol>
+  <figure><img src="../media/editor-desktop.jpg" alt="Editor dokumen di komputer" loading="lazy"><figcaption>Di komputer: borang di kiri, pratonton A4 di kanan, dikemas kini semasa menaip.</figcaption></figure>
+  <div class="pair"><figure><img src="../media/editor-telefon.jpg" alt="Borang di telefon" loading="lazy"><figcaption>Di telefon: tab Borang.</figcaption></figure><figure><img src="../media/pratonton-telefon.jpg" alt="Pratonton di telefon" loading="lazy"><figcaption>Tab Pratonton.</figcaption></figure></div>
+  <div class="tip">Draf disimpan automatik di peranti dan disenaraikan dalam <b>Rekod → Draf di peranti ini</b>. Nombor dokumen hanya dikeluarkan bila anda tekan Terbit.</div>
+</section>
+
+<section id="terbit"><h2>5. Terbit dan kongsi</h2>
+  <ol class="steps"><li>Tekan <b>Terbit</b>. App menunjukkan kos (5 kredit, atau tiada jika berlangganan). Tekan <b>Terbit sekarang</b>.</li>
+  <li>App mengeluarkan nombor rasmi, menyimpan dokumen dalam Google Sheet, menjana PDF dan memuat naik ke folder Drive mengikut jenis dokumen.</li>
+  <li>Selepas selesai: <b>Buka PDF</b>, hantar melalui <b>WhatsApp</b>, <b>Salin pautan</b>, <b>Muat turun</b> atau <b>Kongsi</b> (telefon).</li></ol>
+  <div class="pair"><figure><img src="../media/terbit-sahkan.jpg" alt="Pengesahan terbit" loading="lazy"><figcaption>Pengesahan dan kos kredit.</figcaption></figure><figure><img src="../media/terbit-berjaya.jpg" alt="Dokumen diterbit" loading="lazy"><figcaption>Dokumen diterbit dengan pilihan kongsi.</figcaption></figure></div>
+  <figure><img src="../media/dokumen-invois.jpg" alt="Contoh dokumen" loading="lazy"><figcaption>Contoh invois A4 (gambar ini daripada mod demo).</figcaption></figure>
+  <div class="tip">Jika internet terputus semasa terbit, tekan <b>Cuba lagi</b>. Nombor yang sama digunakan dan tiada kredit tambahan diambil.</div>
+</section>
+
+<section id="rekod"><h2>6. Rekod: edit, batal, tukar</h2>
+  <p>Menu <b>Rekod</b> menyenaraikan semua dokumen diterbit. Tapis ikut jenis, status dan bulan, atau cari ikut nombor, nama pelanggan atau No. PO. Tekan <b>⋯</b> pada dokumen untuk tindakan:</p>
+  <table><tr><th>Tindakan</th><th>Bila</th><th>Hasil</th></tr>
+  <tr><td>Edit</td><td>Dalam 24 jam selepas terbit</td><td>Nombor dan pautan PDF kekal; PDF dan Sheet dikemas kini; tiada kredit.</td></tr>
+  <tr><td>Tukar jadi Invois</td><td>Quotation</td><td>Invois baharu dengan item dan pelanggan sama; quotation ditanda <i>Ditukar</i>.</td></tr>
+  <tr><td>Buat Delivery Order</td><td>Invois atau Quotation</td><td>DO dengan item yang sama (tanpa harga) dan No. PO.</td></tr>
+  <tr><td>Salin sebagai draf baharu</td><td>Bila-bila</td><td>Draf baharu bertarikh hari ini, tanpa nombor.</td></tr>
+  <tr><td>Batal dokumen</td><td>Dokumen belum batal</td><td>Status <i>Batal</i> dengan sebab; nombor tidak digunakan semula; kredit tidak dikembalikan.</td></tr></table>
+  <div class="pair"><figure><img src="../media/rekod-desktop.jpg" alt="Senarai rekod" loading="lazy"><figcaption>Senarai dokumen dengan status.</figcaption></figure><figure><img src="../media/rekod-menu.jpg" alt="Menu tindakan" loading="lazy"><figcaption>Menu tindakan.</figcaption></figure></div>
+  <p>Selepas 24 jam, dokumen jadi <b>Dikunci</b>. Untuk membetulkan, batalkan dan salin sebagai draf baharu.</p>
+</section>
+
+<section id="pelanggan"><h2>7. Pelanggan</h2>
+  <p>Menu <b>Pelanggan</b>: tambah, edit, cari, dan arkibkan pelanggan yang tidak aktif. App memberi amaran jika nama sama dengan pelanggan sedia ada. Tekan <b>Invois baharu</b> untuk terus membuat invois dengan maklumat pelanggan terisi.</p>
+  <figure><img src="../media/pelanggan-desktop.jpg" alt="Senarai pelanggan" loading="lazy"><figcaption>Senarai pelanggan dan bilangan dokumen.</figcaption></figure>
+</section>
+
+<section id="langganan"><h2>8. Langganan dan kredit</h2>
+  <table><tr><th>Pelan</th><th>Harga</th><th>Terbit</th></tr><tr><td>Percubaan</td><td>Percuma</td><td>50 kredit = 10 dokumen</td></tr>
+  <tr><td>Bulanan</td><td>RM20 sebulan</td><td>Tanpa had</td></tr><tr><td>Tahunan</td><td>RM200 setahun</td><td>Tanpa had</td></tr></table>
+  <ol class="steps"><li>Tetapan → <b>Langganan &amp; Kredit</b>.</li><li>Tekan <b>Salin</b> untuk menyalin e-mel Google anda.</li>
+  <li>Tekan <b>Buka borang langganan</b>, pilih pelan, dan <b>tampal e-mel tadi</b> dalam medan <i>E-mel Google untuk sistem</i>.</li>
+  <li>Selepas bayaran, tekan <b>Saya sudah bayar, semak semula</b>.</li></ol>
+  <figure><img src="../media/langganan-desktop.jpg" alt="Langganan dan kredit" loading="lazy"><figcaption>Status pelan, cara bayar, sejarah kredit dan bayaran.</figcaption></figure>
+  <div class="warn">Jika e-mel dalam borang bayaran berbeza dengan akaun Google anda, langganan akan masuk ke akaun lain. Hubungi sokongan dengan nombor pesanan untuk dipindahkan.</div>
+  <p>Kredit tidak luput. Semasa berlangganan, kredit tidak digunakan dan kekal untuk kemudian.</p>
+</section>
+
+<section id="telefon"><h2>9. Telefon dan luar talian</h2>
+  <ul><li><b>Android (Chrome)</b>: menu ⋮ → <i>Install app</i> atau <i>Add to Home screen</i>.</li><li><b>iPhone (Safari sahaja)</b>: butang Kongsi → <i>Add to Home Screen</i>.</li>
+  <li>Tanpa internet, app masih boleh dibuka dan draf boleh dibuat. <b>Terbit</b> memerlukan internet.</li></ul>
+  <div class="pair"><figure><img src="../media/utama-telefon.jpg" alt="Skrin utama telefon" loading="lazy"><figcaption>Skrin utama.</figcaption></figure><figure><img src="../media/rekod-telefon.jpg" alt="Rekod di telefon" loading="lazy"><figcaption>Rekod di telefon.</figcaption></figure></div>
+</section>
+
+<section id="data"><h2>10. Data anda</h2>
+  <ul><li>Dokumen, pelanggan dan tetapan disimpan dalam <b>Google Sheet</b> anda (tab Dokumen, Item, Pelanggan, Syarikat, KodCukai, Meta) dan PDF dalam <b>Google Drive</b> anda.</li>
+  <li>Anda boleh membuka Sheet terus (Tetapan → Storan Google → Buka Google Sheet) untuk laporan sendiri. Jangan padam atau tukar nama lajur sedia ada.</li>
+  <li>Jika Sheet diubah dari peranti atau tab lain semasa anda menyunting, app memaparkan amaran <b>Konflik</b> supaya tiada data ditimpa tanpa sedar.</li>
+  <li>AnnurPro hanya menyimpan e-mel Google, baki kredit, status langganan dan nombor dokumen. Lihat <a href="../privasi.html">dasar privasi</a>.</li></ul>
+  <figure><img src="../media/tetapan-desktop.jpg" alt="Tetapan" loading="lazy"><figcaption>Tetapan: storan Google dan menu tetapan.</figcaption></figure>
+</section>
+
+<section id="soalan"><h2>11. Soalan lazim dan bantuan</h2>
+  <p>Soalan lazim lengkap ada dalam app: Tetapan → <b>Bantuan &amp; Sokongan</b>.</p>
+  <table><tr><th>Masalah</th><th>Penyelesaian</th></tr>
+  <tr><td>Popup log masuk tidak keluar</td><td>Benarkan popup untuk laman ini dalam pelayar.</td></tr>
+  <tr><td>"Sambung semula" pada status</td><td>Sesi Google tamat (kira-kira sejam). Tekan butang itu; perubahan anda tidak hilang.</td></tr>
+  <tr><td>PDF tidak boleh dibuka pelanggan</td><td>Akaun Google Workspace anda mungkin menyekat perkongsian awam. Hantar fail PDF (Muat turun) secara manual.</td></tr>
+  <tr><td>Tiada kredit</td><td>Langgan atau hubungi kami. Draf anda selamat.</td></tr></table>
+  <p><b>Hubungi kami:</b> WhatsApp <a href="https://wa.me/601120879149">011-2087 9149</a> · e-mel <a href="mailto:annurprosolutions@gmail.com">annurprosolutions@gmail.com</a>. Sertakan e-mel Google anda dan nombor dokumen atau pesanan.</p>
+</section>
+</main>
+<footer>© 2026 AnnurPro Solutions · <a href="../salepage/">Annur Invoice</a> · <a href="../privasi.html">Privasi</a></footer>
+</body>
+</html>
