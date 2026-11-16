@@ -1,7 +1,7 @@
 // Tetapan pemasangan. Ubah fail ini tanpa menyentuh kod lain.
 window.APP_CONFIG = {
   appName: 'Annur Docs',
-  version: '0.12.0',
+  version: '0.12.1',
   vendor: 'AnnurPro Solutions',
   // Client ID OAuth Google (jenis "Web application"). Kosong = log masuk dimatikan (mod pembangunan).
   googleClientId: '933747272196-5ub5jst04ff6e3b21ou8muouvvlmfgae.apps.googleusercontent.com',
@@ -14,8 +14,14 @@ window.APP_CONFIG = {
   support: { whatsapp: '01120879149', email: 'annurprosolutions@gmail.com' }
 };
 
+// Hantar ke alamat utama: (1) *.workers.dev -> domain utama; (2) http:// -> https:// (Google hanya menerima asal https yang didaftarkan,
+// jika tidak: ralat 400 origin_mismatch). localhost dikecualikan untuk pembangunan dan ujian.
 (function (c, l) {
-  if (c.canonicalHost && l && /\.workers\.dev$/.test(l.hostname) && l.hostname !== c.canonicalHost) {
+  if (!l) return;
+  const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(l.hostname);
+  if (c.canonicalHost && /\.workers\.dev$/.test(l.hostname) && l.hostname !== c.canonicalHost) {
     l.replace('https://' + c.canonicalHost + l.pathname + l.search + l.hash);
+  } else if (l.protocol === 'http:' && !local) {
+    l.replace('https://' + l.host + l.pathname + l.search + l.hash);
   }
 })(window.APP_CONFIG, window.location);
