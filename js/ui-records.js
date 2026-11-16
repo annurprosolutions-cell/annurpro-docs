@@ -13,19 +13,29 @@
     const sk = () => (UI.data && UI.data.syarikat) || {};
     const codes = () => (UI.data && UI.data.kodCukai) || [];
     const docs = () => (UI.data && UI.data.dokumen) || [];
-    const rf = () => UI.rf || (UI.rf = { jenis: '', status: '', bulan: '', q: '' });
+    const rf = () => UI.rf || (UI.rf = { jenis: '', status: '', bayaran: '', bulan: '', q: '' });
     const byId = (id) => docs().find((r) => str(r.doc_id) === id);
     const money = (r) => (r.jenis === 'do' ? '' : 'RM' + AI.fmtMoney(AI.toCents(r.jumlah) || 0));
 
     // ---------- S-06 ----------
     function rowHtml(r) {
-      const st = AI.docState(r), qs = AI.quoteState(r);
+      const st = AI.docState(r), qs = AI.quoteState(r), ps = AI.payState(r);
+      const payBadge = !ps ? '' : ps.paid ? `<span class="badge green" title="Dibayar ${esc(AI.fmtDate(ps.paidOn))}">Dibayar</span>`
+        : `<button type="button" class="badge ${ps.tone} bbtn" data-act="payAsk" data-id="${esc(r.doc_id)}" aria-label="Tandakan ${esc(r.no_dokumen)} sebagai dibayar">${ps.label}</button>`;
       return `<div class="drow rec"><button class="dopen" data-act="docMenu" data-id="${esc(r.doc_id)}" aria-label="Tindakan untuk ${esc(r.no_dokumen)}">
           <b>${esc(r.no_dokumen)}</b><small class="muted">${esc((T[r.jenis] || {}).label || r.jenis)} · ${esc(AI.fmtDate(r.tarikh))} · ${esc(r.bill_nama)}</small>
           ${str(r.ditukar_kepada) ? `<small class="muted">→ ${esc(r.ditukar_kepada)}</small>` : ''}</button>
-        <div class="dright">${money(r) ? `<b>${esc(money(r))}</b>` : ''}<span class="badge ${st.tone}">${st.label}</span>${qs ? `<span class="badge ${qs.tone}">${qs.label}</span>` : ''}
+        <div class="dright">${money(r) ? `<b>${esc(money(r))}</b>` : ''}<span class="badge ${st.tone}">${st.label}</span>${qs ? `<span class="badge ${qs.tone}">${qs.label}</span>` : ''}${payBadge}
           ${r.pdf_url ? `<a class="btn sm" href="${esc(r.pdf_url)}" target="_blank" rel="noopener">PDF</a>` : '<span class="badge amber">PDF belum siap</span>'}
           <button class="ib" data-act="docMenu" data-id="${esc(r.doc_id)}" aria-label="Menu ${esc(r.no_dokumen)}">⋯</button></div></div>`;
+    }
+    function payBar() {
+      const t = AI.payTotals(docs()), rm = (c) => 'RM' + AI.fmtMoney(c);
+      if (!t.belum.n && !t.dibayar.n) return '';
+      return `<div class="paybar" role="group" aria-label="Ringkasan bayaran invois">
+        <button type="button" class="pb ${rf().bayaran === 'belum' ? 'on' : ''}" data-act="payFilter" data-v="belum"><small>Belum dibayar</small><b>${esc(rm(t.belum.cents))}</b><small>${t.belum.n} invois</small></button>
+        <button type="button" class="pb red ${rf().bayaran === 'tertunggak' ? 'on' : ''}" data-act="payFilter" data-v="tertunggak"><small>Tertunggak</small><b>${esc(rm(t.tertunggak.cents))}</b><small>${t.tertunggak.n} invois</small></button>
+        <button type="button" class="pb green ${rf().bayaran === 'dibayar' ? 'on' : ''}" data-act="payFilter" data-v="dibayar"><small>Dibayar</small><b>${esc(rm(t.dibayar.cents))}</b><small>${t.dibayar.n} invois</small></button></div>`;
     }
     function listHtml() {
       const all = docs();
@@ -43,21 +53,37 @@
           <div class="rf-row">
             <input class="inp" type="search" name="q" value="${esc(f.q)}" placeholder="Cari no. dokumen, pelanggan atau PO" aria-label="Cari">
             <select class="inp" name="status" aria-label="Status">${[['', 'Semua status'], ['terbit', 'Terbit (boleh edit)'], ['dikunci', 'Dikunci'], ['batal', 'Batal'], ['menunggu', 'Quotation menunggu'], ['ditukar', 'Quotation ditukar']].map(([v, l]) => `<option value="${v}" ${f.status === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+            <select class="inp" name="bayaran" aria-label="Bayaran">${[['', 'Semua bayaran'], ['belum', 'Belum dibayar'], ['tertunggak', 'Tertunggak'], ['dibayar', 'Dibayar']].map(([v, l]) => `<option value="${v}" ${f.bayaran === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
             <select class="inp" name="bulan" aria-label="Bulan"><option value="">Semua bulan</option>${months.map((m) => `<option value="${m}" ${f.bulan === m ? 'selected' : ''}>${mon(m)}</option>`).join('')}</select>
           </div>
         </form>
+        <div data-paybar>${payBar()}</div>
         <div data-reclist>${listHtml()}</div></section>`;
     }
     function onInput(el) {
       const form = el.closest && el.closest('[data-form="rekod"]'); if (!form || !el.name) return false;
       rf()[el.name] = el.value;
       const box = document.querySelector('[data-reclist]'); if (box) box.innerHTML = listHtml();
+      const pb = document.querySelector('[data-paybar]'); if (pb) pb.innerHTML = payBar();
       return true;
+    }
+
+    // Tandakan dibayar: pilih tarikh bayar (lalai hari ini)
+    function payModal() {
+      const r = UI.menuDoc && byId(UI.menuDoc); if (!r) return '';
+      const today = AI.todayMY();
+      return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="pyTitle"><div class="sheet">
+        <h2 id="pyTitle">Tandakan dibayar</h2>
+        <p class="muted">${esc(r.no_dokumen)} · ${esc(r.bill_nama)} · <b>${esc(money(r))}</b></p>
+        <div class="fld"><label for="payDate">Tarikh bayaran diterima</label><input id="payDate" class="inp" type="date" value="${esc(UI.payDate || today)}" max="${esc(today)}">${UI.payErr ? `<p class="ferr">${esc(UI.payErr)}</p>` : ''}</div>
+        <p class="fine">Status bayaran hanya disimpan dalam Google Sheet anda. PDF dan nombor invois tidak berubah, jadi boleh dikemas kini bila-bila masa.</p>
+        <div class="sheet-acts"><button class="btn primary" data-act="payGo" data-id="${esc(r.doc_id)}">Simpan sebagai dibayar</button>
+          <button class="btn ghost" data-act="closeModal">Batal</button></div></div></div>`;
     }
 
     function menuModal() {
       const r = UI.menuDoc && byId(UI.menuDoc); if (!r) return '';
-      const st = AI.docState(r), batal = st.key === 'batal';
+      const st = AI.docState(r), batal = st.key === 'batal', ps = AI.payState(r);
       const wa = r.pdf_url ? 'https://wa.me/?text=' + encodeURIComponent(AI.waText(((T[r.jenis] || {}).title) || '', r.no_dokumen, r.bill_nama, r.pdf_url)) : '';
       const b = (act, label, extra) => `<button class="btn${extra || ''}" data-act="${act}" data-id="${esc(r.doc_id)}">${label}</button>`;
       return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="sheet">
@@ -65,8 +91,11 @@
         <p class="muted">${esc((T[r.jenis] || {}).label)} · ${esc(r.bill_nama)}${money(r) ? ' · ' + esc(money(r)) : ''}</p>
         <p><span class="badge ${st.tone}">${st.label}</span> ${st.editable ? `<small class="muted">Boleh diedit sehingga ${esc(new Date(st.until).toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'short', timeStyle: 'short' }))}</small>` : ''}
           ${batal ? `<small class="muted">Dibatalkan ${esc(AI.fmtDate(str(r.dibatalkan_pada).slice(0, 10)))}: ${esc(r.sebab_batal)}</small>` : ''}</p>
+        ${ps ? `<p><span class="badge ${ps.tone}">${ps.label}</span> <small class="muted">${ps.paid ? 'Dibayar ' + esc(AI.fmtDate(ps.paidOn)) : ps.key === 'tertunggak' ? 'Lewat ' + esc(ps.daysLate) + ' hari (jatuh tempo ' + esc(AI.fmtDate(ps.due)) + ')' : ps.due ? 'Jatuh tempo ' + esc(AI.fmtDate(ps.due)) : ''}</small></p>` : ''}
         <div class="sheet-acts">
           ${r.pdf_url ? `<a class="btn primary" href="${esc(r.pdf_url)}" target="_blank" rel="noopener">Buka PDF</a>` : ''}
+          ${ps && !ps.paid ? b('payAsk', 'Tandakan dibayar', ' ok-btn') : ''}
+          ${ps && ps.paid ? b('payUndo', 'Tandakan belum bayar') : ''}
           ${st.editable ? b('docEdit', 'Edit') : ''}
           ${!batal && r.jenis === 'quotation' ? b('docToInvoice', 'Tukar jadi Invois') : ''}
           ${!batal && r.jenis !== 'do' ? b('docToDo', 'Buat Delivery Order') : ''}
@@ -136,8 +165,26 @@
       return c;
     };
 
+    async function savePay(r, upd, msg) {
+      try {
+        ctx.store().update('Dokumen', 'doc_id', upd);
+        Object.assign(r, upd);
+        await ctx.store().flush();
+        UI.modal = ''; UI.menuDoc = null; ctx.toast(msg);
+      } catch (e) { ctx.toast(e.network ? 'Tiada sambungan internet.' : AI.googleErrorHint(e), true); }
+      ctx.render();
+    }
     const actions = {
       recType(el) { rf().jenis = el.dataset.v; ctx.render(); },
+      payFilter(el) { const f = rf(); f.bayaran = f.bayaran === el.dataset.v ? '' : el.dataset.v; ctx.render(); },
+      payAsk(el) { UI.menuDoc = el.dataset.id; UI.payDate = ''; UI.payErr = ''; UI.modal = 'pay'; ctx.render(); },
+      async payGo(el) {
+        const r = byId(el.dataset.id); if (!r) return;
+        const date = str((document.getElementById('payDate') || {}).value);
+        let upd; try { upd = AI.payUpdate(r, true, date); } catch (e) { UI.payDate = date; UI.payErr = e.message; ctx.render(); return; }
+        await savePay(r, upd, r.no_dokumen + ' ditandakan dibayar.');
+      },
+      async payUndo(el) { const r = byId(el.dataset.id); if (r) await savePay(r, AI.payUpdate(r, false), r.no_dokumen + ' ditandakan belum bayar.'); },
       docMenu(el) { UI.menuDoc = el.dataset.id; UI.modal = 'docmenu'; ctx.render(); },
       docEdit(el) {
         const r = byId(el.dataset.id); if (!r) return;
@@ -199,7 +246,7 @@
       const box = document.querySelector('[data-custlist]'); if (box) box.innerHTML = custList();
       return true;
     }
-    function modal() { return UI.modal === 'docmenu' ? menuModal() : UI.modal === 'void' ? voidModal() : UI.modal === 'cust' ? custModal() : ''; }
+    function modal() { return UI.modal === 'docmenu' ? menuModal() : UI.modal === 'pay' ? payModal() : UI.modal === 'void' ? voidModal() : UI.modal === 'cust' ? custModal() : ''; }
 
     return { section, views: { pelanggan: viewPelanggan }, actions, modal, onInput: (el) => onInput(el) || onInputCust(el) };
   };

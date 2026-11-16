@@ -94,3 +94,46 @@ test('Store.replaceRows: tulis di tempat, kosongkan lebihan, tambah kekurangan',
   rows = AI.rowsToObjects(g.tab(ws.id, 'Item')).rows;
   assert.deepEqual(rows.map((r) => r.desc).sort(), ['A1-baru', 'b1', 'b2']);
 });
+
+test('status bayaran: dueDate, payState, tertunggak, batal, bukan invois', () => {
+  assert.equal(AI.dueDate(row({ terma: '30 DAYS', tarikh: '2026-10-01' })), '2026-10-31');
+  assert.equal(AI.dueDate(row({ terma: 'COD' })), '2026-11-03');
+  assert.equal(AI.dueDate(row({ terma: '' })), '');
+  assert.equal(AI.dueDate(row({ terma: '7 DAYS', tarikh: '2026-02-25' })), '2026-03-04');
+  // invois lama (lajur kosong) = Belum bayar; belum lewat
+  const a = AI.payState(row({ terma: '30 DAYS' }), NOW);
+  assert.equal(a.key, 'belum'); assert.equal(a.paid, false); assert.equal(a.due, '2026-12-03');
+  // lewat
+  const late = AI.payState(row({ terma: '14 DAYS', tarikh: '2026-10-01' }), NOW);
+  assert.equal(late.key, 'tertunggak'); assert.equal(late.daysLate, 19); assert.equal(late.tone, 'red');
+  // tiada terma berangka: tidak pernah tertunggak
+  assert.equal(AI.payState(row({ terma: '', tarikh: '2020-01-01' }), NOW).key, 'belum');
+  // dibayar menang walaupun lewat
+  const paid = AI.payState(row({ terma: '7 DAYS', tarikh: '2026-10-01', status_bayaran: 'Dibayar', tarikh_bayar: '2026-10-09' }), NOW);
+  assert.equal(paid.key, 'dibayar'); assert.equal(paid.paid, true); assert.equal(paid.paidOn, '2026-10-09');
+  assert.equal(AI.payState(row({ status: 'Batal' }), NOW), null);
+  assert.equal(AI.payState(row({ jenis: 'quotation' }), NOW), null);
+  assert.equal(AI.payState(row({ jenis: 'do' }), NOW), null);
+});
+
+test('status bayaran: payUpdate, tarikh masa hadapan ditolak, ringkasan jumlah, penapis', () => {
+  const r = row({ jumlah: '1000.00' });
+  assert.deepEqual(AI.payUpdate(r, true, '2026-11-02', NOW), { doc_id: 'd1', status_bayaran: 'Dibayar', tarikh_bayar: '2026-11-02' });
+  assert.deepEqual(AI.payUpdate(r, true, '', NOW), { doc_id: 'd1', status_bayaran: 'Dibayar', tarikh_bayar: '2026-11-03' }, 'lalai hari ini (waktu Malaysia)');
+  assert.deepEqual(AI.payUpdate(r, false, '', NOW), { doc_id: 'd1', status_bayaran: 'Belum bayar', tarikh_bayar: '' });
+  assert.throws(() => AI.payUpdate(r, true, '2026-11-04', NOW), /masa hadapan/);
+  assert.throws(() => AI.payUpdate(r, true, 'esok', NOW), /tidak sah/);
+  assert.throws(() => AI.payUpdate(row({ jenis: 'quotation' }), true, '', NOW), /untuk invois/);
+  assert.throws(() => AI.payUpdate(row({ status: 'Batal' }), true, '', NOW), /dibatalkan/);
+
+  const rows = [row({ doc_id: 'a', jumlah: '1000.00', status_bayaran: 'Dibayar', tarikh_bayar: '2026-11-01' }),
+    row({ doc_id: 'b', jumlah: '250.50', terma: '30 DAYS' }),
+    row({ doc_id: 'c', jumlah: '400.00', terma: '7 DAYS', tarikh: '2026-10-01', diterbit_pada: '2026-10-01T01:00:00.000Z' }),
+    row({ doc_id: 'd', jumlah: '999.00', status: 'Batal' }), row({ doc_id: 'e', jenis: 'quotation', jumlah: '5000.00' })];
+  const t = AI.payTotals(rows, NOW);
+  assert.deepEqual(t, { belum: { n: 2, cents: 65050 }, tertunggak: { n: 1, cents: 40000 }, dibayar: { n: 1, cents: 100000 } });
+  assert.deepEqual(AI.filterDocs(rows, { bayaran: 'belum' }, NOW).map((x) => x.doc_id).sort(), ['b', 'c']);
+  assert.deepEqual(AI.filterDocs(rows, { bayaran: 'tertunggak' }, NOW).map((x) => x.doc_id), ['c']);
+  assert.deepEqual(AI.filterDocs(rows, { bayaran: 'dibayar' }, NOW).map((x) => x.doc_id), ['a']);
+  assert.equal(AI.filterDocs(rows, { bayaran: 'belum', jenis: 'quotation' }, NOW).length, 0, 'quotation tiada status bayaran');
+});

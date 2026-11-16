@@ -93,7 +93,7 @@ footer{color:var(--mute);font-size:14px;text-align:center;padding:10px 0 30px}
 </section>
 
 <section id="rekod"><h2>6. Rekod: edit, batal, tukar</h2>
-  <p>Menu <b>Rekod</b> menyenaraikan semua dokumen diterbit. Tapis ikut jenis, status dan bulan, atau cari ikut nombor, nama pelanggan atau No. PO. Tekan <b>⋯</b> pada dokumen untuk tindakan:</p>
+  <p>Menu <b>Rekod</b> menyenaraikan semua dokumen diterbit. Tapis ikut jenis, status, bayaran dan bulan, atau cari ikut nombor, nama pelanggan atau No. PO. Tekan <b>⋯</b> pada dokumen untuk tindakan:</p>
   <table><tr><th>Tindakan</th><th>Bila</th><th>Hasil</th></tr>
   <tr><td>Edit</td><td>Dalam 24 jam selepas terbit</td><td>Nombor dan pautan PDF kekal; PDF dan Sheet dikemas kini; tiada kredit.</td></tr>
   <tr><td>Tukar jadi Invois</td><td>Quotation</td><td>Invois baharu dengan item dan pelanggan sama; quotation ditanda <i>Ditukar</i>.</td></tr>
@@ -101,6 +101,13 @@ footer{color:var(--mute);font-size:14px;text-align:center;padding:10px 0 30px}
   <tr><td>Salin sebagai draf baharu</td><td>Bila-bila</td><td>Draf baharu bertarikh hari ini, tanpa nombor.</td></tr>
   <tr><td>Batal dokumen</td><td>Dokumen belum batal</td><td>Status <i>Batal</i> dengan sebab; nombor tidak digunakan semula; kredit tidak dikembalikan.</td></tr></table>
   <div class="pair"><figure><img src="../media/rekod-desktop.jpg" alt="Senarai rekod" loading="lazy"><figcaption>Senarai dokumen dengan status.</figcaption></figure><figure><img src="../media/rekod-menu.jpg" alt="Menu tindakan" loading="lazy"><figcaption>Menu tindakan.</figcaption></figure></div>
+  <h3>Status bayaran (invois)</h3>
+  <p>Setiap invois baharu bermula dengan <b>Belum bayar</b>. Bila pelanggan dah bayar, tekan lencana <b>Belum bayar</b> pada senarai (atau ⋯ → <b>Tandakan dibayar</b>), pilih tarikh bayaran diterima dan simpan. Boleh diubah balik melalui ⋯ → <b>Tandakan belum bayar</b>.</p>
+  <ul><li>Di atas senarai ada ringkasan: <b>Belum dibayar</b>, <b>Tertunggak</b> dan <b>Dibayar</b> (jumlah RM dan bilangan invois). Tekan satu kotak untuk menapis.</li>
+  <li><b>Tertunggak</b> dikira sendiri: tarikh invois tambah terma (cth 30 DAYS). Terma CASH atau COD jatuh tempo pada hari yang sama.</li>
+  <li>Status bayaran boleh diubah bila-bila masa, walaupun selepas 24 jam, kerana ia hanya disimpan dalam Google Sheet anda dan tidak mengubah PDF.</li>
+  <li>Quotation dan DO tiada status bayaran. Invois yang dibatalkan pun tidak.</li></ul>
+  <div class="pair"><figure><img src="../media/bayaran-tandakan.jpg" alt="Tandakan dibayar" loading="lazy"><figcaption>Pilih tarikh bayaran diterima.</figcaption></figure><figure><img src="../media/rekod-dibayar.jpg" alt="Rekod dengan status bayaran" loading="lazy"><figcaption>Ringkasan dan lencana bayaran.</figcaption></figure></div>
   <p>Selepas 24 jam, dokumen jadi <b>Dikunci</b>. Untuk membetulkan, batalkan dan salin sebagai draf baharu.</p>
 </section>
 

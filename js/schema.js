@@ -3,7 +3,7 @@
   const AI = root.AI || (root.AI = {});
 
   // Skema Sheet pengguna (docs/05-BSD.md §3A). Baca/tulis sentiasa ikut NAMA lajur, bukan indeks.
-  AI.SHEET_FORMAT = 1;
+  AI.SHEET_FORMAT = 2;
   AI.APP_MARK = 'annurInvoice';           // kunci appProperties pada fail Drive ciptaan app
   AI.FOLDERS = { invoice: 'Invois', quotation: 'Quotation', do: 'Delivery Order', settings: '_Tetapan' };
   AI.ROOT_FOLDER = 'Annur Docs';
@@ -18,7 +18,7 @@
       'ship_nama', 'ship_alamat', 'ship_attn', 'ship_tel', 'sumber_jenis', 'sumber_no', 'ditukar_kepada',
       'subtotal', 'jumlah_cukai', 'jumlah', 'jumlah_perkataan', 'jumlah_qty', 'bil_item', 'items_json',
       'ringkasan_cukai_json', 'pdf_url', 'pdf_id', 'hash_kandungan', 'diterbit_pada', 'diterbit_oleh',
-      'dikemaskini_pada', 'dibatalkan_pada', 'sebab_batal', 'skema'],
+      'dikemaskini_pada', 'dibatalkan_pada', 'sebab_batal', 'skema', 'status_bayaran', 'tarikh_bayar'],
     Item: ['no_dokumen', 'n', 'desc', 'qty', 'unit', 'price', 'disc', 'tax_code', 'amount']
   };
   AI.TAB_ORDER = ['Dokumen', 'Pelanggan', 'Syarikat', 'KodCukai', 'Item', 'Meta'];
@@ -29,7 +29,7 @@
     Syarikat: { text: ['nilai'] },
     KodCukai: { text: ['kod'] },
     Pelanggan: { text: ['tel', 'tin', 'brn'] },
-    Dokumen: { text: ['no_dokumen', 'tarikh', 'bill_tel', 'ship_tel', 'our_ref', 'your_ref', 'sumber_no'], money: ['subtotal', 'jumlah_cukai', 'jumlah'] },
+    Dokumen: { text: ['no_dokumen', 'tarikh', 'bill_tel', 'ship_tel', 'our_ref', 'your_ref', 'sumber_no', 'tarikh_bayar'], money: ['subtotal', 'jumlah_cukai', 'jumlah'] },
     Item: { text: ['no_dokumen'], money: ['price', 'disc', 'amount'] }
   };
 
@@ -37,7 +37,7 @@
   AI.TAB_ENUMS = {
     KodCukai: { jenis: ['tiada', 'sst_jualan', 'sst_perkhidmatan'], aktif: ['YA', 'TIDAK'] },
     Pelanggan: { arkib: ['YA', 'TIDAK'] },
-    Dokumen: { jenis: ['invoice', 'quotation', 'do'], status: ['Terbit', 'Batal'], status_quotation: ['', 'Menunggu', 'Ditukar'] }
+    Dokumen: { jenis: ['invoice', 'quotation', 'do'], status: ['Terbit', 'Batal'], status_quotation: ['', 'Menunggu', 'Ditukar'], status_bayaran: ['', 'Belum bayar', 'Dibayar'] }
   };
 
   // Tetapan syarikat default: [kunci, nilai, keterangan]. Hanya kunci yang belum wujud ditambah.

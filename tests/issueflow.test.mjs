@@ -123,6 +123,7 @@ test('quotation & DO: status_quotation, folder ikut jenis, prefix sendiri', asyn
   assert.deepEqual(S.g.files.get(rd.fileId).parents, [S.ws.folders.do]);
   const rows = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows;
   assert.equal(rows.find((r) => r.jenis === 'quotation').status_quotation, 'Menunggu');
+  assert.equal(rows.find((r) => r.jenis === 'quotation').status_bayaran, '', 'quotation tiada status bayaran');
   const drow = rows.find((r) => r.jenis === 'do');
   assert.equal(drow.jumlah, ''); assert.equal(drow.jumlah_qty, 2); assert.equal(drow.ship_alamat, 'Jalan 2');
 });
@@ -140,13 +141,17 @@ test('edit dalam 24 jam: nombor & fail PDF sama, baris & Item diganti, tiada caj
   const d = S.draft(); d.items.push({ desc: 'Hosting', qty: '1', unit: 'UNIT', price: '50', disc: '', tax_code: 'TIADA' });
   const r1 = await AI.issueDocument(S.deps(), d);
   const row = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows[0];
-  const ed = AI.draftForEdit(row, S.store.snapshot().syarikat, S.store.snapshot().kodCukai, 'p@contoh.my');
+  assert.equal(row.status_bayaran, 'Belum bayar', 'invois baharu: Belum bayar'); assert.equal(row.tarikh_bayar, '');
+  // pengguna tandakan dibayar (cara Rekod), kemudian edit dalam 24 jam: status bayaran kekal
+  await S.store.update('Dokumen', 'doc_id', AI.payUpdate(row, true, '2026-11-03', NOW)); await S.store.flush();
+  const ed = AI.draftForEdit(AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows[0], S.store.snapshot().syarikat, S.store.snapshot().kodCukai, 'p@contoh.my');
   ed.items = [{ desc: 'Website maintenance (revised)', qty: '3', unit: 'JOB', price: '150', disc: '', tax_code: 'TIADA' }];
   ed.bill_nama = 'Contoh Trading (M) Sdn Bhd';
   const r2 = await AI.issueDocument(Object.assign(S.deps(), { now: () => NOW + 3600e3 }), ed);
   assert.equal(r2.number, r1.number); assert.equal(r2.edited, true); assert.equal(r2.charged, 5, 'caj asal (tiada caj baharu)'); assert.equal(r2.credits, 45);
   assert.equal(r2.fileId, r1.fileId, 'fail PDF sama');
   const rows = AI.rowsToObjects(S.g.tab(S.ws.id, 'Dokumen')).rows;
+  assert.equal(rows[0].status_bayaran, 'Dibayar', 'edit tidak menimpa status bayaran'); assert.equal(rows[0].tarikh_bayar, '2026-11-03');
   assert.equal(rows.length, 1); assert.equal(rows[0].jumlah, 450); assert.equal(rows[0].bill_nama, 'Contoh Trading (M) Sdn Bhd');
   assert.equal(rows[0].diterbit_pada, row.diterbit_pada); assert.notEqual(rows[0].dikemaskini_pada, row.dikemaskini_pada); assert.equal(rows[0].pdf_id, r1.fileId);
   assert.notEqual(rows[0].hash_kandungan, row.hash_kandungan);

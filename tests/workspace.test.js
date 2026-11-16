@@ -29,7 +29,7 @@ test('ruang kerja baharu: folder, Sheet bertanda, tab, tajuk, seed, Meta', async
   assert.equal(sk.tajuk_invois, 'INVOICE'); assert.equal(sk.validity_default, '30 DAYS'); assert.equal(sk.dikemaskini, new Date(NOW).toISOString());
   assert.equal(AI.rowsToObjects(g.tab(ws.id, 'KodCukai')).rows.length, 5);
   const meta = AI.kvOf(g.tab(ws.id, 'Meta'));
-  assert.equal(meta.format, '1'); assert.equal(meta.folder_invois, ws.folders.invoice); assert.equal(meta.oleh, 'pemilik@contoh.my');
+  assert.equal(meta.format, '2'); assert.equal(meta.folder_invois, ws.folders.invoice); assert.equal(meta.oleh, 'pemilik@contoh.my');
   // format kolum & validasi dihantar
   const fm = g.books.get(ws.id).formats;
   assert.ok(fm.some((r) => r.updateSheetProperties)); assert.ok(fm.some((r) => r.setDataValidation));

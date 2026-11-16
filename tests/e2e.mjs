@@ -545,6 +545,26 @@ try {
       await page.getByText('Tiada dokumen sepadan.').waitFor();
       await page.locator('.rfilters').getByRole('button', { name: 'Semua' }).click();
 
+      // Status bayaran (invois): lalai Belum bayar → tandakan dibayar → penapis & ringkasan → kembali belum
+      const payRow = (n) => AI_rows(sid).find((r) => r.no_dokumen === n);
+      assert.equal(payRow(num1).status_bayaran, 'Belum bayar');
+      assert.match(await page.locator('[data-paybar]').innerText(), /Belum dibayar[\s\S]*3 invois/);
+      await page.getByRole('button', { name: 'Menu ' + num2 }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Tandakan dibayar' }).click();
+      await page.getByRole('heading', { name: 'Tandakan dibayar' }).waitFor();
+      await page.getByRole('button', { name: 'Simpan sebagai dibayar' }).click();
+      await until(() => payRow(num2).status_bayaran === 'Dibayar' && /^\d{4}-\d{2}-\d{2}$/.test(String(payRow(num2).tarikh_bayar)), 8000, 'status dibayar dalam Sheet');
+      assert.equal(payRow(num1).status_bayaran, 'Belum bayar', 'invois lain tidak terjejas');
+      assert.match(await page.locator('[data-paybar]').innerText(), /Dibayar[\s\S]*1 invois/);
+      await page.locator('[data-form="rekod"] select[name="bayaran"]').selectOption('dibayar');
+      await until(async () => (await recList()).includes(num2) && !(await recList()).includes(num1), 4000, 'penapis dibayar');
+      await page.locator('[data-form="rekod"] select[name="bayaran"]').selectOption('belum');
+      await until(async () => (await recList()).includes(num1) && !(await recList()).includes(num2), 4000, 'penapis belum');
+      await page.locator('[data-form="rekod"] select[name="bayaran"]').selectOption('');
+      await page.getByRole('button', { name: 'Menu ' + num2 }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Tandakan belum bayar' }).click();
+      await until(() => payRow(num2).status_bayaran === 'Belum bayar' && !payRow(num2).tarikh_bayar, 8000, 'kembali belum bayar');
+
       // Edit dalam 24 jam: nombor & fail PDF sama, jumlah dikemas kini, tiada caj
       const pdfBefore = Buffer.from(pdf1.bytes).toString('base64');
       const credEdit = await env.DB.prepare('SELECT credits FROM tenants').first('credits');

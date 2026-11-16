@@ -92,6 +92,12 @@ try {
   await page.getByRole('button', { name: /Menu APS\// }).first().click();
   await shot(page, 'rekod-menu');
   await page.getByRole('dialog').getByRole('button', { name: 'Tutup' }).click();
+  // status bayaran: tandakan satu invois dibayar
+  await page.locator('.drow .bbtn').first().click(); await page.getByRole('heading', { name: 'Tandakan dibayar' }).waitFor();
+  await shot(page, 'bayaran-tandakan');
+  await page.getByRole('button', { name: 'Simpan sebagai dibayar' }).click();
+  await page.locator('.paybar .pb.green small:last-child', { hasText: '1 invois' }).waitFor(); await hideToast(page);
+  await shot(page, 'rekod-dibayar');
   await page.locator('.side').getByRole('button', { name: 'Pelanggan' }).click(); await hideToast(page);
   await shot(page, 'pelanggan-desktop');
   await page.locator('.side').getByRole('button', { name: 'Tetapan' }).click();

@@ -17,9 +17,46 @@
   AI.quoteState = (row) => (row.jenis !== 'quotation' || str(row.status) === 'Batal' ? null
     : str(row.status_quotation) === 'Ditukar' ? { label: 'Ditukar', tone: 'green' } : { label: 'Menunggu', tone: 'amber' });
 
+  // Status bayaran (invois sahaja). Lajur kosong (invois lama) dianggap Belum bayar.
+  // Tarikh jatuh tempo = tarikh invois + terma (cth "30 DAYS"; CASH/COD = hari yang sama). Tiada terma berangka: tiada penanda tertunggak.
+  AI.dueDate = (row) => {
+    const t = str(row.terma).toUpperCase(), d = str(row.tarikh);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+    const days = /^(CASH|COD)$/.test(t) ? 0 : (t.match(/(\d+)\s*(DAY|HARI)/) || [])[1];
+    if (days == null) return '';
+    return new Date(Date.parse(d + 'T00:00:00Z') + Number(days) * 864e5).toISOString().slice(0, 10);
+  };
+  AI.payState = (row, now) => {
+    if (!row || row.jenis !== 'invoice' || str(row.status) === 'Batal') return null;
+    if (str(row.status_bayaran) === 'Dibayar') return { key: 'dibayar', label: 'Dibayar', tone: 'green', paid: true, paidOn: str(row.tarikh_bayar) };
+    const due = AI.dueDate(row), today = AI.todayMY(now);
+    if (due && today > due) return { key: 'tertunggak', label: 'Tertunggak', tone: 'red', paid: false, due, daysLate: Math.round((Date.parse(today) - Date.parse(due)) / 864e5) };
+    return { key: 'belum', label: 'Belum bayar', tone: 'amber', paid: false, due };
+  };
+  // Jumlah (sen) invois belum dibayar / tertunggak / dibayar, tidak termasuk yang dibatalkan
+  AI.payTotals = (rows, now) => {
+    const o = { belum: { n: 0, cents: 0 }, tertunggak: { n: 0, cents: 0 }, dibayar: { n: 0, cents: 0 } };
+    (rows || []).forEach((r) => {
+      const ps = AI.payState(r, now); if (!ps) return;
+      const c = AI.toCents(r.jumlah) || 0;
+      if (ps.key === 'dibayar') { o.dibayar.n++; o.dibayar.cents += c; } else { o.belum.n++; o.belum.cents += c; if (ps.key === 'tertunggak') { o.tertunggak.n++; o.tertunggak.cents += c; } }
+    });
+    return o;
+  };
+  // Kemas kini bayaran: pulang medan untuk store.update. Tarikh bayar tidak boleh pada masa hadapan.
+  AI.payUpdate = (row, paid, date, now) => {
+    if (!row || row.jenis !== 'invoice') throw new Error('Status bayaran hanya untuk invois.');
+    if (str(row.status) === 'Batal') throw new Error('Invois yang dibatalkan tidak mempunyai status bayaran.');
+    if (!paid) return { doc_id: row.doc_id, status_bayaran: 'Belum bayar', tarikh_bayar: '' };
+    const today = AI.todayMY(now), d = str(date) || today;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error('Tarikh bayar tidak sah.');
+    if (d > today) throw new Error('Tarikh bayar tidak boleh pada masa hadapan.');
+    return { doc_id: row.doc_id, status_bayaran: 'Dibayar', tarikh_bayar: d };
+  };
+
   AI.monthsOf = (rows) => Array.from(new Set((rows || []).map((r) => str(r.tarikh).slice(0, 7)).filter((m) => /^\d{4}-\d{2}$/.test(m)))).sort().reverse();
 
-  // f: { jenis: ''|invoice|quotation|do, status: ''|terbit|dikunci|batal|menunggu|ditukar, bulan: ''|YYYY-MM, q }
+  // f: { jenis: ''|invoice|quotation|do, status: ''|terbit|dikunci|batal|menunggu|ditukar, bayaran: ''|belum|tertunggak|dibayar, bulan: ''|YYYY-MM, q }
   AI.filterDocs = (rows, f, now) => {
     f = f || {};
     const q = AI.normName(f.q);
@@ -31,6 +68,13 @@
         if (['terbit', 'dikunci', 'batal'].includes(f.status) && st !== f.status) return false;
         if (f.status === 'menunggu' && !(qs && qs.label === 'Menunggu')) return false;
         if (f.status === 'ditukar' && !(qs && qs.label === 'Ditukar')) return false;
+      }
+      if (f.bayaran) {
+        const ps = AI.payState(r, now);
+        if (!ps) return false;
+        if (f.bayaran === 'dibayar' && ps.key !== 'dibayar') return false;
+        if (f.bayaran === 'belum' && ps.paid) return false;
+        if (f.bayaran === 'tertunggak' && ps.key !== 'tertunggak') return false;
       }
       if (q && !(AI.normName(r.no_dokumen).includes(q) || AI.normName(r.bill_nama).includes(q) || AI.normName(r.your_ref).includes(q))) return false;
       return true;

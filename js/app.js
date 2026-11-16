@@ -266,7 +266,7 @@
   }
   function modal() {
     if (UI.modal === 'issue' || UI.modal === 'paywall') return E.modal();
-    if (UI.modal === 'docmenu' || UI.modal === 'void' || UI.modal === 'cust') return R.modal();
+    if (UI.modal === 'docmenu' || UI.modal === 'pay' || UI.modal === 'void' || UI.modal === 'cust') return R.modal();
     if (UI.modal === 'rename') return S.renameModal();
     if (UI.modal !== 'conflict') return '';
     const r = (UI.sync.info && UI.sync.info.remote) || {};

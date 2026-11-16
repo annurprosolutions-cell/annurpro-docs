@@ -145,7 +145,8 @@
       jumlah_perkataan: doo ? '' : v.totals.words, jumlah_qty: doo ? Number(v.totals.qty) || 0 : '', bil_item: items.length,
       items_json: JSON.stringify(items), ringkasan_cukai_json: doo || !c.taxes.length ? '' : JSON.stringify(c.taxes.map((t) => ({ kod: t.kod, kadar: t.kadar, asas: AI.fromCents(t.base), cukai: AI.fromCents(t.tax) }))),
       pdf_url: '', pdf_id: '', hash_kandungan: '', diterbit_pada: issued.issuedAt, diterbit_oleh: email || '', dikemaskini_pada: issued.issuedAt,
-      dibatalkan_pada: '', sebab_batal: '', skema: 1
+      dibatalkan_pada: '', sebab_batal: '', skema: 1,
+      status_bayaran: d.jenis === 'invoice' ? 'Belum bayar' : '', tarikh_bayar: ''
     };
   };
   AI.itemRows = (row) => JSON.parse(row.items_json || '[]').map((it) => ({ no_dokumen: row.no_dokumen, n: it.n, desc: it.desc, qty: it.qty, unit: it.unit, price: it.price, disc: it.disc, tax_code: it.tax_code, amount: it.amount }));

@@ -43,7 +43,7 @@
       const existing = store.list('Dokumen').find((x) => str(x.doc_id) === draft.doc_id);
       if (draft.editing && existing) {
         // edit: baris & item yang sama diganti; maklumat terbit asal dan pautan PDF dikekalkan
-        ['diterbit_pada', 'diterbit_oleh', 'status_quotation', 'ditukar_kepada', 'pdf_url', 'pdf_id'].forEach((k) => { row[k] = existing[k]; });
+        ['diterbit_pada', 'diterbit_oleh', 'status_quotation', 'ditukar_kepada', 'pdf_url', 'pdf_id', 'status_bayaran', 'tarikh_bayar'].forEach((k) => { row[k] = existing[k]; });
         row.dikemaskini_pada = new Date(now).toISOString();
         store.update('Dokumen', 'doc_id', row);
         store.replaceRows('Item', 'no_dokumen', issued.number, AI.itemRows(row));

@@ -375,7 +375,7 @@ a.btn { text-decoration: none; }
 /* ---------- S-06 Rekod & S-07 Pelanggan ---------- */
 .rfilters { display: grid; gap: 10px; margin-bottom: 10px; }
 .rf-row { display: grid; gap: 8px; grid-template-columns: 1fr; align-items: center; }
-@media (min-width: 640px) { .rf-row { grid-template-columns: minmax(0, 1fr) 190px 150px; } }
+@media (min-width: 640px) { .rf-row { grid-template-columns: minmax(0, 1fr) 170px 175px 140px; } }
 [data-form="cust-filter"] .rf-row { grid-template-columns: 1fr auto; }
 .drow.rec .dright { flex-wrap: wrap; justify-content: flex-end; }
 .drow .dright .ib { font-size: 18px; line-height: 1; }
@@ -408,3 +408,17 @@ table.ltab .neg { color: var(--red); } table.ltab .pos { color: var(--green); }
 .faq details:last-child { border-bottom: 0; }
 .faq summary { color: var(--ink); min-height: 44px; }
 .faq p { margin: 0 0 12px; color: var(--ink2, #334155); }
+
+/* Status bayaran (Rekod) */
+.bbtn { border: 0; cursor: pointer; font-family: inherit; }
+.bbtn:focus-visible, .pb:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.paybar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 12px; }
+.pb { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card, #fff); cursor: pointer; font-family: inherit; color: var(--ink); min-width: 0; }
+.pb b { font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pb small { font-size: 11px; color: var(--mute); }
+.pb.on { border-color: var(--primary); background: var(--blue-soft); }
+.pb.red b { color: var(--red); }
+.pb.green b { color: var(--green); }
+@media (max-width: 520px) { .paybar { gap: 6px; } .pb { padding: 8px 8px; } .pb b { font-size: 13px; } .pb small { font-size: 10px; } }
+/* Baris rekod di telefon: maklumat penuh di atas, amaun dan lencana di bawah (elak bertindih) */
+@media (max-width: 520px) { .drow.rec { flex-direction: column; gap: 6px; } .drow.rec .dright { justify-content: flex-start; text-align: left; } .drow.rec .dright b { flex-basis: 100%; } }
