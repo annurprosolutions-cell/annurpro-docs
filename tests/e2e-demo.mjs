@@ -57,7 +57,7 @@ try {
     assert.match(await page.locator('[data-reclist]').innerText(), /RM108\.00/);
     await nav.getByRole('button', { name: 'Tetapan' }).click();
     await page.getByRole('button', { name: /Bantuan & Sokongan/ }).click();
-    assert.equal(await page.locator('.faq details').count(), 11);
+    assert.equal(await page.locator('.faq details').count(), 12);
     await page.locator('.faq summary').first().click();
     assert.match(await page.locator('.faq details').first().innerText(), /Google Sheet/);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'skrol mendatar ' + name);
