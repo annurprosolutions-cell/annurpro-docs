@@ -10,6 +10,11 @@
   AI.SIGN_LIMITS = { cop: { min: 40, max: 200 }, tt: { min: 60, max: 240 } };
   AI.SIGN_KEYS = { cop: ['cop_x', 'cop_y', 'cop_saiz'], tt: ['tt_x', 'tt_y', 'tt_lebar'] };
 
+  // Saiz logo pada kepala dokumen: lebar maksimum (px dokumen A4). Tinggi maksimum = lebar × 0.75 (asal 96 × 72), imej kekal nisbah.
+  AI.LOGO = { def: 96, min: 40, max: 240, ratio: 0.75 };
+  AI.logoSize = (sk) => clamp(Math.round(num(sk && sk.logo_saiz, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max);
+  AI.logoBox = (w) => { const W = clamp(Math.round(num(w, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max); return { w: W, h: Math.round(W * AI.LOGO.ratio) }; };
+
   // Daripada tab Syarikat (nilai teks) → { cop:{x,y,w}, tt:{x,y,w} } dalam had yang sah
   AI.signPos = (sk) => {
     sk = sk || {};

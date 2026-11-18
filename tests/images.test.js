@@ -161,3 +161,13 @@ test('ImageStore.put: muat naik gagal → fail separuh dibuang', async () => {
   assert.equal(imgs.length, 1); assert.equal(imgs[0].trashed, true);
   assert.ok(store);
 });
+
+
+test('saiz logo: lalai, had, nilai teks Sheet, kotak (tinggi = 0.75 × lebar)', () => {
+  assert.equal(AI.logoSize({}), 96); assert.equal(AI.logoSize(null), 96);
+  assert.equal(AI.logoSize({ logo_saiz: '150' }), 150);
+  assert.equal(AI.logoSize({ logo_saiz: '5' }), 40); assert.equal(AI.logoSize({ logo_saiz: '999' }), 240);
+  assert.equal(AI.logoSize({ logo_saiz: 'abc' }), 96); assert.equal(AI.logoSize({ logo_saiz: '' }), 96);
+  assert.deepEqual(AI.logoBox(96), { w: 96, h: 72 }, 'lalai sama seperti sebelum ciri ini');
+  assert.deepEqual(AI.logoBox(200), { w: 200, h: 150 }); assert.deepEqual(AI.logoBox(1000), { w: 240, h: 180 });
+});

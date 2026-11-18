@@ -23,7 +23,7 @@
     const coLine = [v.co.tel && 'Tel: ' + esc(v.co.tel), v.co.email && esc(v.co.email), v.co.web && esc(v.co.web)].filter(Boolean).join(' &nbsp;|&nbsp; ');
     const ids = [v.co.sst && 'SST No: ' + esc(v.co.sst), v.co.tin && 'TIN: ' + esc(v.co.tin)].filter(Boolean).join(' &nbsp;|&nbsp; ');
     const head = `<header class="dv-head">
-        <div class="dv-logo">${assets.logo ? `<img src="${esc(assets.logo)}" alt="">` : ''}</div>
+        <div class="dv-logo" style="width:${v.logo.w}px;height:${v.logo.h}px">${assets.logo ? `<img src="${esc(assets.logo)}" alt="" style="max-width:${v.logo.w}px;max-height:${v.logo.h}px">` : ''}</div>
         <div class="dv-co"><div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
           ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}</div>
       </header>

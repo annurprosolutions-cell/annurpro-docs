@@ -328,6 +328,13 @@ try {
       assert.ok((await page.evaluate(() => window.AI.app.UI.img.pos.cop.y)) > after.y + 5, 'Shift+anak panah = 10px');
       await page.locator('#signSize').fill('120');
       assert.equal(await page.evaluate(() => Math.round(window.AI.app.UI.img.pos.cop.w)), 120);
+      // saiz logo: gelangsar + pratonton langsung
+      const dhLogoW = () => page.evaluate(() => Math.round(document.querySelector('[data-live="header"] .dh-logo').getBoundingClientRect().width));
+      const dhBefore = await dhLogoW();
+      await page.locator('#logoSize').fill('180');
+      assert.equal(await page.evaluate(() => window.AI.app.UI.img.logoW), 180);
+      assert.equal(await page.locator('#logoSizeVal').innerText(), '180px');
+      assert.ok((await dhLogoW()) > dhBefore + 20, 'pratonton logo membesar');
       await page.getByRole('button', { name: 'Tandatangan', exact: true }).click();
       await page.locator('[data-sitem="tt"]').waitFor();
       await shot('s09-b', true);
@@ -339,7 +346,7 @@ try {
       await until(() => kv(sid, 'Syarikat').cop_id && kv(sid, 'Syarikat').tt_gambar_id && kv(sid, 'Syarikat').logo_id, 6000, 'id gambar dalam Sheet');
       let sy = kv(sid, 'Syarikat');
       assert.equal(sy.do_tt_gambar_id, '');
-      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36');
+      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36'); assert.equal(sy.logo_saiz, '180', 'saiz logo disimpan dalam Sheet');
       const oldCop = sy.cop_id;
 
       // muat semula: gambar dimuat dari cache/Drive, kedudukan kekal
@@ -350,6 +357,7 @@ try {
       await page.locator('.itile[data-kind="cop"] .ithumb img').waitFor({ timeout: 8000 });
       await page.locator('[data-sitem="cop"]').waitFor();
       assert.equal(await page.evaluate(() => Math.round(window.AI.app.UI.img.pos.cop.w)), 120);
+      assert.equal(await page.evaluate(() => window.AI.app.UI.img.logoW), 180, 'saiz logo kekal selepas muat semula');
 
       // ganti cop: fail lama ke tong sampah selepas rujukan baharu disimpan
       await page.locator('[data-imgfile="cop"]').setInputFiles({ name: 'cop2.png', mimeType: 'image/png', buffer: STAMP2 });

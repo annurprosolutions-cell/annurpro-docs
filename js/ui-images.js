@@ -19,7 +19,7 @@
     const { UI, esc } = ctx;
     let imgStore = null;
     const origs = {};                       // gambar asal (belum diproses) untuk proses semula bila toleransi diubah
-    const S = () => UI.img || (UI.img = { items: {}, pos: AI.signPos({}), sel: 'cop', loaded: false, busy: false });
+    const S = () => UI.img || (UI.img = { items: {}, pos: AI.signPos({}), logoW: AI.LOGO.def, sel: 'cop', loaded: false, busy: false });
     const sk = () => (UI.data && UI.data.syarikat) || {};
     const store = () => {
       if (!imgStore || imgStore.api !== ctx.api()) { imgStore = new AI.ImageStore({ api: ctx.api(), idb: AI.idb, folderId: UI.ws && UI.ws.folders.settings }); imgStore.api = ctx.api(); }
@@ -46,7 +46,7 @@
           it.id = url ? id : ''; it.url = url || ''; it.aspect = url ? await measure(url) : 1;
         } catch (e) { /* luar talian: pratonton tiada, tetapi fail tidak hilang */ }
       }
-      if (!UI.dirty || UI.view !== 'imej') st.pos = AI.signPos(sk());
+      if (!UI.dirty || UI.view !== 'imej') { st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); }
       st.loaded = true;
       ctx.render();
     }
@@ -55,6 +55,7 @@
     // Untuk pratonton kepala dokumen di skrin lain
     const imgOf = (k) => { const it = item(k); const v = shown(k); return v && v.url ? { url: v.url, aspect: v.aspect || it.aspect || 1 } : null; };
     const signItems = () => ({ cop: imgOf('cop'), tt: imgOf('tt') });
+    const logoOverride = () => (UI.view === 'imej' && UI.img ? { logo_saiz: String(S().logoW) } : {});
     const signStatic = () => AI.signHtml(AI.signPos(sk()), signItems(), { static: true });
 
     // ---------- paparan ----------
@@ -106,6 +107,16 @@
       </div>`;
     }
 
+    function logoCard() {
+      const lg = imgOf('logo'), w = S().logoW, L = AI.LOGO;
+      if (!lg) return '';
+      return `<section class="card"><h2>Saiz logo</h2>
+        <p class="fine">Besarkan atau kecilkan logo pada kepala dokumen. Pratonton di sebelah dikemas kini terus. Pratonton ringkas ini mengikut nisbah; hasil sebenar boleh dilihat dalam editor dokumen.</p>
+        <div class="size"><label for="logoSize">Lebar logo <span id="logoSizeVal">${w}px</span></label>
+          <input id="logoSize" type="range" min="${L.min}" max="${L.max}" step="2" value="${w}" data-logosize></div>
+        <button type="button" class="btn ghost" data-act="logoReset">Reset saiz logo (${L.def}px)</button></section>`;
+    }
+
     function viewImej() {
       const st = S();
       return `<header class="page-head"><div><button class="link-back" data-act="backToSettings">${ctx.icon('back')}Tetapan</button><h1>Logo, Cop &amp; Tandatangan</h1><small class="muted">Gambar disimpan dalam folder _Tetapan di Drive anda</small></div></header>
@@ -113,6 +124,7 @@
         <div class="split">
           <div class="stack">
             <section class="card"><h2>Gambar</h2><div class="itiles">${KINDS.map(tile).join('')}</div></section>
+            ${logoCard()}
             <section class="card"><h2>Kedudukan cop &amp; tandatangan</h2>${editor()}</section>
             <div class="save-bar"><button type="button" class="btn" data-act="backToSettings">Batal</button><button type="button" class="btn primary" data-act="saveImej" ${st.busy ? 'disabled' : ''}>${st.busy ? 'Menyimpan...' : 'Simpan'}</button></div>
           </div>
@@ -157,7 +169,7 @@
 
     const actions = {
       openImej() {
-        const st = S(); st.pos = AI.signPos(sk()); st.sel = 'cop'; UI.dirty = false;
+        const st = S(); st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); st.sel = 'cop'; UI.dirty = false;
         KINDS.forEach((k) => { const it = item(k); it.pending = null; it.removed = false; });
         UI.view = 'imej'; ctx.render(); root.scrollTo(0, 0); loadAll();
       },
@@ -168,6 +180,7 @@
       },
       selSign(el) { S().sel = el.dataset.k; ctx.render(); },
       signReset() { S().pos = AI.signReset(); UI.dirty = true; ctx.render(); },
+      logoReset() { S().logoW = AI.LOGO.def; UI.dirty = true; ctx.render(); },
       async saveImej() {
         const st = S(); if (st.busy) return;
         st.busy = true; ctx.render();
@@ -184,7 +197,7 @@
               upd[AI.IMG_KEYS[k]] = ''; it.id = ''; it.url = ''; it.removed = false;
             }
           }
-          Object.assign(upd, AI.signToSettings(st.pos), { dikemaskini: new Date().toISOString() });
+          Object.assign(upd, AI.signToSettings(st.pos), { logo_saiz: String(st.logoW) }, { dikemaskini: new Date().toISOString() });
           ctx.store().setKV('Syarikat', upd);
           UI.data.syarikat = Object.assign({}, sk(), upd);
           await ctx.store().flush();
@@ -256,6 +269,12 @@
         const lbl = document.querySelector(`[data-tolval="${k}"]`); if (lbl) lbl.textContent = v;
         clearTimeout(onInput.t); onInput.t = setTimeout(() => reprocess(k), 120); return true;
       }
+      if (el.dataset && el.dataset.logosize !== undefined) {
+        S().logoW = AI.logoBox(Number(el.value)).w; UI.dirty = true;
+        const l = document.getElementById('logoSizeVal'); if (l) l.textContent = S().logoW + 'px';
+        document.querySelectorAll('[data-live="header"]').forEach((h) => { h.innerHTML = ctx.header(); });
+        return true;
+      }
       if (el.dataset && el.dataset.signsize !== undefined) {
         const k = S().sel; apply(k, AI.resizeItem(S().pos[k], k, Number(el.value), aspectOf(k)), true);
         const l = document.getElementById('sizeVal'); if (l) l.textContent = Math.round(S().pos[k].w) + 'px';
@@ -264,7 +283,7 @@
       return false;
     }
 
-    return { views: { imej: viewImej }, actions, bind, onChange, onInput, loadAll, reset, imgOf, signStatic };
+    return { views: { imej: viewImej }, actions, bind, onChange, onInput, loadAll, reset, imgOf, signStatic, logoOverride };
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = AI;

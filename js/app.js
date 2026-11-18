@@ -370,7 +370,7 @@
   }
 
   // ---------- gambar (js/ui-images.js) dan skrin tetapan (js/ui-settings.js) ----------
-  const I = AI.ImagesUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), header: () => S.docHeader(Object.assign({}, UI.data && UI.data.syarikat, UI.form)) });
+  const I = AI.ImagesUI({ UI, esc, icon, toast, render, store: () => store, api: () => api, email: () => auth.lastEmail(), header: () => S.docHeader(Object.assign({}, UI.data && UI.data.syarikat, UI.form, I.logoOverride())) });
   const S = AI.SettingsUI({ UI, esc, icon, toast, render, store: () => store, createWorkspace, renameWorkspace, saveBusinessName, email: () => auth.lastEmail(),
     imgOf: I.imgOf, signStatic: I.signStatic });
   // panggilan Worker dengan token Google pengguna

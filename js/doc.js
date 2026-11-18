@@ -124,7 +124,7 @@
       },
       notes: noteKeys[jenis].map((k) => str(sk[k])).filter(Boolean),
       bank: jenis === 'invoice' && (str(sk.bank_nama) || str(sk.bank_akaun)) ? { name: str(sk.bank_nama), acc: str(sk.bank_akaun), holder: str(sk.bank_pemegang) || str(sk.nama) } : null,
-      signer, received: doo
+      signer, received: doo, logo: AI.logoBox ? AI.logoBox(AI.logoSize(sk)) : { w: 96, h: 72 }
     };
   };
 
@@ -162,7 +162,7 @@
   AI.newDocId = () => (root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
 
   // ---------- pembahagian halaman A4 (anggaran tinggi; sama untuk pratonton & PDF) ----------
-  AI.PAGE = { first: 640, next: 880, rowPad: 10, lineH: 15 };
+  AI.PAGE = { first: 640, next: 880, rowPad: 10, lineH: 15, headBase: 84 };   // headBase: tinggi blok teks syarikat; logo lebih tinggi menolak jadual ke bawah
   AI.rowLines = (desc, cpl) => {
     const ls = String(desc || '').split('\n');
     return ls.reduce((n, l) => n + Math.max(1, Math.ceil(l.length / cpl)), 0);
@@ -177,7 +177,7 @@
     P = Object.assign({}, AI.PAGE, P || {});
     const cpl = v.showDisc || v.showTax ? 44 : 58;
     const hs = v.rows.map((r) => P.rowPad + P.lineH * AI.rowLines(r.desc, cpl));
-    const pages = []; let cur = [], used = 0, cap = P.first;
+    const pages = []; let cur = [], used = 0, cap = P.first - Math.max(0, ((v.logo && v.logo.h) || 0) - P.headBase);
     hs.forEach((h, i) => {
       if (cur.length && used + h > cap) { pages.push({ rows: cur }); cur = []; used = 0; cap = P.next; }
       cur.push(i); used += h;

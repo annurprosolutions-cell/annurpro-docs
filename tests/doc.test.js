@@ -107,3 +107,18 @@ test('renderDoc: halaman A4, lajur ikut jenis, escape HTML, tera DRAF', () => {
   const multi = AI.renderDoc(AI.docView(filled('quotation', 80), SK, CODES), {});
   assert.ok((multi.match(/class="a4"/g) || []).length >= 3); assert.match(multi, /\(continued\)/); assert.match(multi, /Page 1 of/);
 });
+
+
+test('logo: saiz dalam paparan, templat dan penolakan jadual bila logo tinggi', () => {
+  const v0 = AI.docView(filled('invoice', 2), SK, CODES);
+  assert.deepEqual(v0.logo, { w: 96, h: 72 });
+  assert.match(AI.renderDoc(v0, { logo: 'data:image/png;base64,AA==' }), /class="dv-logo" style="width:96px;height:72px"/);
+  const big = AI.docView(filled('invoice', 2), Object.assign({}, SK, { logo_saiz: '200' }), CODES);
+  assert.deepEqual(big.logo, { w: 200, h: 150 });
+  const html = AI.renderDoc(big, { logo: 'data:image/png;base64,AA==' });
+  assert.match(html, /style="width:200px;height:150px"/); assert.match(html, /max-width:200px;max-height:150px/);
+  // logo tinggi menolak baris ke halaman berikutnya lebih awal; logo lalai tidak mengubah apa-apa
+  const many = (sk) => AI.paginate(AI.docView(filled('invoice', 28), sk, CODES))[0].rows.length;
+  assert.ok(many(Object.assign({}, SK, { logo_saiz: '240' })) < many(SK), 'logo 240 = kurang baris pada halaman pertama');
+  assert.equal(many(Object.assign({}, SK, { logo_saiz: '96' })), many(SK));
+});

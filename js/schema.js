@@ -78,6 +78,7 @@
     ['warna_aksen', '#0f172a', 'Warna aksen dokumen (hex)'],
     ['kongsi_awam', 'YA', 'PDF boleh dibuka sesiapa dengan pautan'],
     ['logo_id', '', 'Fail logo (Drive)'],
+    ['logo_saiz', '96', 'Lebar maksimum logo pada dokumen (px, 40-240)'],
     ['cop_id', '', 'Fail cop (Drive)'],
     ['tt_gambar_id', '', 'Fail tandatangan (Drive)'],
     ['do_tt_gambar_id', '', 'Fail tandatangan DO (Drive)'],
