@@ -119,6 +119,7 @@
     const data = [];
     const fmtReqs = [];
     const headOf = {};
+    const grow = [];   // lebarkan grid dahulu: Google menolak tulis ke sel permulaan di luar grid ("exceeds grid limits")
     AI.TAB_ORDER.forEach((tab) => {
       const want = AI.TABS[tab];
       const cur = ((vals[tab] || [])[0] || []).map(str);
@@ -130,6 +131,8 @@
         const add = want.filter((h) => !cur.includes(h));
         head = cur.concat(add);
         if (add.length) {
+          const t = info.tabs.find((x) => x.title === tab), need = cur.length + add.length;
+          if (t && t.cols && t.cols < need) grow.push({ appendDimension: { sheetId: t.id, dimension: 'COLUMNS', length: need - t.cols } });
           data.push({ range: AI.range(tab, AI.colLetter(cur.length + 1) + '1'), values: [add] });
           out.migrated.push({ tab, cols: add });
         }
@@ -167,6 +170,7 @@
     if (out.created || missing.length || out.migrated.length || !meta.dikemaskini) Object.assign(metaUpd, { dikemaskini: nowIso, oleh: opts.email || '', penulis: opts.writer || '' });
     data.push(...AI.kvUpsert('Meta', withHead('Meta'), metaUpd));
 
+    if (grow.length) await api.batchUpdate(id, grow);
     if (data.length) await api.setValues(id, data);
     if (fmtReqs.length) await api.batchUpdate(id, fmtReqs);
     return Object.assign(out, { id, url: info.url, title: info.title });

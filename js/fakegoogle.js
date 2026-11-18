@@ -10,7 +10,7 @@ function fakeGoogle(token, opts) {
   let seq = 0, clock = 0, failQueue = [];
   const nid = (p) => p + (++seq) + 'x'.repeat(24);
   const resp = (status, body) => new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-  const err = (status, message) => resp(status, { error: { code: status, message } });
+  const err = (status, message, statusText) => resp(status, { error: { code: status, message, status: statusText || undefined } });
 
   const colNum = (s) => s.split('').reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0);
   const parseRange = (book, raw) => {
@@ -71,7 +71,7 @@ function fakeGoogle(token, opts) {
       files.set(id, { id, name: body.name, mimeType: body.mimeType, parents: body.parents || [], appProperties: body.appProperties || {}, trashed: false,
         webViewLink: 'https://drive.google.com/file/d/' + id + '/view', permissions: [] });
       touch(id);
-      if (isSheet) books.set(id, { title: body.name, tabs: [{ id: 0, title: 'Sheet1', rows: [] }], formats: [] });
+      if (isSheet) books.set(id, { title: body.name, tabs: [{ id: 0, title: 'Sheet1', rows: [], cols: 26 }], formats: [] });
       return resp(200, { id, name: body.name, webViewLink: files.get(id).webViewLink });
     }
     const pm = p.match(/^\/drive\/v3\/files\/([^/]+)\/permissions$/);
@@ -102,17 +102,20 @@ function fakeGoogle(token, opts) {
     const rest = decodeURIComponent(sm[2]);
     if (rest === '' && method === 'GET') {
       return resp(200, { spreadsheetId: id, spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/' + id + '/edit',
-        properties: { title: book.title }, sheets: book.tabs.map((t) => ({ properties: { sheetId: t.id, title: t.title } })) });
+        properties: { title: book.title }, sheets: book.tabs.map((t) => ({ properties: { sheetId: t.id, title: t.title, gridProperties: { rowCount: 1000, columnCount: t.cols || 26 } } })) });
     }
     if (rest === ':batchUpdate' && method === 'POST') {
       for (const r of body.requests) {
         if (r.addSheet) {
           const title = r.addSheet.properties.title;
           if (book.tabs.some((t) => t.title === title)) return err(400, 'A sheet with the name "' + title + '" already exists.');
-          book.tabs.push({ id: 1000 + (++seq), title, rows: [] });
+          book.tabs.push({ id: 1000 + (++seq), title, rows: [], cols: 26 });
         } else if (r.deleteSheet) {
           book.tabs = book.tabs.filter((t) => t.id !== r.deleteSheet.sheetId);
           if (!book.tabs.length) return err(400, 'cannot delete last sheet');
+        } else if (r.appendDimension) {
+          const t = book.tabs.find((x) => x.id === r.appendDimension.sheetId); if (!t) return err(400, 'No grid with id: ' + r.appendDimension.sheetId);
+          if (r.appendDimension.dimension === 'COLUMNS') t.cols = (t.cols || 26) + r.appendDimension.length;
         } else book.formats.push(r);
       }
       touch(id);
@@ -131,7 +134,10 @@ function fakeGoogle(token, opts) {
       if (body.valueInputOption !== 'RAW') return err(400, 'valueInputOption mesti RAW');
       for (const d of body.data) {
         const r = parseRange(book, d.range); if (!r) return err(400, 'Unable to parse range: ' + d.range);
-        d.values.forEach((row, i) => { const cur = r.tab.rows[r.row + i] || []; row.forEach((v, j) => { cur[r.col + j] = v; }); r.tab.rows[r.row + i] = cur; });
+        // seperti Google sebenar: sel permulaan di luar grid ditolak; data yang lebih lebar daripada grid melebarkan grid
+        const cols = r.tab.cols || 26;
+        if (r.col >= cols) return err(400, 'Invalid data[0]: Range (' + d.range + ') exceeds grid limits. Max rows: 1000, max columns: ' + cols, 'INVALID_ARGUMENT');
+        d.values.forEach((row, i) => { const cur = r.tab.rows[r.row + i] || []; row.forEach((v, j) => { cur[r.col + j] = v; }); r.tab.rows[r.row + i] = cur; r.tab.cols = Math.max(cols, r.col + row.length); });
       }
       touch(id);
       return resp(200, {});

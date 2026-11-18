@@ -100,9 +100,9 @@
 
     // ---------- Sheets ----------
     this.info = async (id) => {
-      const r = await req('GET', `${SHEETS}/${encodeURIComponent(id)}?fields=${encodeURIComponent('spreadsheetId,spreadsheetUrl,properties.title,sheets.properties(sheetId,title)')}`);
+      const r = await req('GET', `${SHEETS}/${encodeURIComponent(id)}?fields=${encodeURIComponent('spreadsheetId,spreadsheetUrl,properties.title,sheets.properties(sheetId,title,gridProperties(rowCount,columnCount))')}`);
       return { id: r.spreadsheetId || id, url: r.spreadsheetUrl, title: r.properties && r.properties.title,
-        tabs: (r.sheets || []).map((s) => ({ id: s.properties.sheetId, title: s.properties.title })) };
+        tabs: (r.sheets || []).map((s) => ({ id: s.properties.sheetId, title: s.properties.title, cols: (s.properties.gridProperties || {}).columnCount || 0 })) };
     };
     this.batchUpdate = (id, requests) => req('POST', `${SHEETS}/${encodeURIComponent(id)}:batchUpdate`, { requests });
     this.batchGet = async (id, tabs) => {

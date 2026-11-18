@@ -187,3 +187,22 @@ test('rowsToObjects / objectToRow / colLetter', () => {
   assert.deepEqual(AI.objectToRow(['a', 'b', 'c'], { b: 2 }, ['x', 'y', 'z']), ['x', 2, 'z']);
   assert.equal(AI.colLetter(1), 'A'); assert.equal(AI.colLetter(26), 'Z'); assert.equal(AI.colLetter(39), 'AM');
 });
+
+test('migrate lajur baharu pada Sheet lama: grid dilebarkan dahulu (ralat "exceeds grid limits")', async () => {
+  const g = fakeGoogle(TOKEN); const api = mkApi(g);
+  // cipta ruang kerja dengan skema LAMA (Dokumen tanpa 2 lajur akhir), seperti pengguna sebelum v0.12.0
+  const full = AI.TABS.Dokumen.slice();
+  AI.TABS.Dokumen = full.filter((c) => c !== 'status_bayaran' && c !== 'tarikh_bayar');
+  let a; try { a = await AI.ensureWorkspace(api, OPTS); } finally { AI.TABS.Dokumen = full; }
+  const book = g.books.get(a.id), dok = book.tabs.find((t) => t.title === 'Dokumen');
+  assert.equal(dok.cols, full.length - 2, 'grid lama sama dengan bilangan lajur lama');
+  g.edit(a.id, 'Dokumen', 1, 0, 'd-lama'); g.edit(a.id, 'Dokumen', 1, 2, 'APS/1126-001');   // satu baris data sedia ada
+  const b = await AI.ensureWorkspace(api, OPTS);                      // sebelum pembaikan: HTTP 400 exceeds grid limits
+  assert.ok(b.migrated.some((m) => m.tab === 'Dokumen' && m.cols.join() === 'status_bayaran,tarikh_bayar'));
+  const head = g.tab(a.id, 'Dokumen')[0];
+  assert.deepEqual(head.slice(-2), ['status_bayaran', 'tarikh_bayar']);
+  assert.equal(g.tab(a.id, 'Dokumen')[1][0], 'd-lama', 'data sedia ada tidak terjejas');
+  assert.ok(dok.cols >= full.length, 'grid cukup untuk semua lajur');
+  // ensureWorkspace kali ketiga: tiada migrasi lagi
+  const c = await AI.ensureWorkspace(api, OPTS); assert.equal(c.migrated.length, 0);
+});
