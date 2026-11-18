@@ -132,9 +132,9 @@
         if (pending.length) return doFlush();
       } catch (e) {
         if (e.conflict) setStatus('conflict', { remote: e.remote, message: e.message });
-        else if (e.needsLogin) setStatus('reconnect', { message: AI.googleErrorHint(e) });
-        else if (e.network) setStatus('offline', { message: AI.googleErrorHint(e) });
-        else setStatus('error', { message: AI.googleErrorHint(e) });
+        else if (e.needsLogin) setStatus('reconnect', AI.syncInfo(e));
+        else if (e.network) setStatus('offline', AI.syncInfo(e));
+        else setStatus('error', AI.syncInfo(e));
         settle(e);
         throw e;
       }

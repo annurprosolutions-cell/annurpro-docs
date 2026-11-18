@@ -422,3 +422,8 @@ table.ltab .neg { color: var(--red); } table.ltab .pos { color: var(--green); }
 @media (max-width: 520px) { .paybar { gap: 6px; } .pb { padding: 8px 8px; } .pb b { font-size: 13px; } .pb small { font-size: 10px; } }
 /* Baris rekod di telefon: maklumat penuh di atas, amaun dan lencana di bawah (elak bertindih) */
 @media (max-width: 520px) { .drow.rec { flex-direction: column; gap: 6px; } .drow.rec .dright { justify-content: flex-start; text-align: left; } .drow.rec .dright b { flex-basis: 100%; } }
+
+/* Butiran ralat storan */
+.syncerr { display: grid; gap: 8px; margin: 10px 0; }
+.syncerr ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.syncerr small { display: block; font-variant-numeric: tabular-nums; }

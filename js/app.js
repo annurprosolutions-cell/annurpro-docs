@@ -100,7 +100,7 @@
   const wsFail = async (e, email) => {
     const snap = await AI.idb.get('kv', 'snapshot:' + email);
     if (snap) UI.data = snap;
-    UI.sync = { state: e.needsLogin ? 'reconnect' : e.network ? 'offline' : 'error', info: { message: AI.googleErrorHint(e) } };
+    UI.sync = { state: e.needsLogin ? 'reconnect' : e.network ? 'offline' : 'error', info: AI.syncInfo(e) };
   };
 
   async function setupWorkspace(force) {
@@ -164,6 +164,12 @@
     async reconnect() {
       try { await auth.signIn(); } catch (e) { toast(e.message, true); return; }
       if (UI.ws && UI.ws.ready && store) store.flush().catch(() => {}); else setupWorkspace(true);
+    },
+    async copyDiag() {
+      const info = UI.sync.info || {}, d = info.detail || {};
+      const text = ['Annur Docs ' + (CFG.version || ''), 'Waktu: ' + new Date().toISOString(), 'Akaun: ' + (auth.lastEmail() || '-'), 'Status: ' + UI.sync.state, 'Mesej: ' + (info.message || ''),
+        'HTTP: ' + (d.status || '-'), 'Sebab: ' + (d.reason || '-'), 'Butiran: ' + (d.raw || '-'), 'Pelayar: ' + ((root.navigator && root.navigator.userAgent) || '-')].join('\n');
+      try { await root.navigator.clipboard.writeText(text); toast('Butiran disalin. Hantar kepada sokongan.'); } catch (e) { toast('Tidak dapat menyalin. Ambil tangkapan skrin skrin ini.', true); }
     },
     retrySync() { if (UI.ws && UI.ws.ready && store) store.flush().catch(() => {}); else setupWorkspace(true); },
     openConflict() { UI.modal = 'conflict'; render(); },
@@ -230,6 +236,7 @@
         : n.tone !== 'info' ? '<button class="btn sm" data-act="buy" data-k="sub">Langgan</button>' : ''}</div>` : '';
     return `<header class="page-head"><div><small class="muted">Selamat datang</small><h1>${esc((d && d.businessName) || 'Utama')}</h1></div></header>
       ${notice}
+      ${syncDetail()}
       ${UI.ws && UI.ws.ready && !AI.setupComplete(UI.data && UI.data.syarikat) ? '<div class="notice warn"><span>Persediaan syarikat belum lengkap.</span><button class="btn sm" data-act="resumeSetup">Teruskan</button></div>' : ''}
       ${licCard(d)}
       <section class="card">
@@ -264,6 +271,17 @@
     return act ? `<button class="pill ${cls}" data-act="${act}" title="${tip}"><i></i>${label}</button>`
       : `<span class="pill ${cls}" title="${tip}"><i></i>${label}</span>`;
   }
+  // Sebab ralat storan dipaparkan terus (telefon tiada tooltip): mesej, langkah, butang cuba lagi / log keluar / salin butiran
+  function syncDetail() {
+    const st = UI.sync.state;
+    if (st !== 'error' && st !== 'offline') return '';
+    const info = UI.sync.info || {}, d = info.detail || {};
+    const meta = [d.status ? 'HTTP ' + d.status : '', d.reason].filter(Boolean).join(' · ');
+    const ua = (root.navigator && root.navigator.userAgent) || '';
+    return `<div class="note warn syncerr" role="alert"><b>${esc(info.message || 'Tidak dapat menyimpan ke Google.')}</b>${meta ? `<small class="muted">Kod: ${esc(meta)}</small>` : ''}
+      <ul>${AI.syncAdvice(info, ua).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <div class="acts-row"><button class="btn sm primary" data-act="retrySync">Cuba lagi</button><button class="btn sm" data-act="signOut">Log keluar</button><button class="btn sm" data-act="copyDiag">Salin butiran</button></div></div>`;
+  }
   function modal() {
     if (UI.modal === 'issue' || UI.modal === 'paywall') return E.modal();
     if (UI.modal === 'docmenu' || UI.modal === 'pay' || UI.modal === 'void' || UI.modal === 'cust') return R.modal();
@@ -297,6 +315,7 @@
       <section class="card"><h2>Storan Google</h2>
         <p class="muted">Semua dokumen, pelanggan dan tetapan disimpan dalam Google Sheet dan folder Drive milik anda.</p>
         <div class="row">${syncPill()}</div>
+        ${syncDetail()}
         ${DEMO ? '<p class="note info">Dalam mod demo, "Google Sheet" dan "Drive" disimulasikan dalam memori pelayar.</p>' : UI.ws && UI.ws.ready ? `<div class="links">
           <a class="btn" href="${esc(UI.ws.url)}" target="_blank" rel="noopener">Buka Google Sheet</a>
           <a class="btn" href="https://drive.google.com/drive/folders/${esc(UI.ws.folders.root)}" target="_blank" rel="noopener">Buka folder Drive</a>

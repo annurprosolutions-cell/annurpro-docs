@@ -16,11 +16,30 @@
     const m = String((e && e.message) || '');
     if (e && e.status === 401) return 'Sesi Google tamat. Tekan "Sambung semula".';
     if (/has not been used|is disabled|SERVICE_DISABLED|accessNotConfigured/i.test(m)) return 'Google Sheets API atau Drive API belum diaktifkan dalam projek Google Cloud.';
+    if (e && e.status === 403 && /insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(String(e.reason) + ' ' + m)) return 'Kebenaran Drive belum lengkap. Akses perlu diberikan semula.';
+    if (e && e.status === 403 && /storageQuotaExceeded|quota.*(storage|drive)|storage quota/i.test(String(e.reason) + ' ' + m)) return 'Ruang Google Drive anda penuh.';
+    if (e && e.status === 403 && /rateLimit|userRateLimit|quotaExceeded/i.test(String(e.reason) + ' ' + m)) return 'Terlalu banyak permintaan ke Google. Cuba sebentar lagi.';
     if (e && e.status === 403) return 'Google menolak akses (403). Pastikan anda membenarkan akses Drive semasa log masuk.';
     if (e && e.status === 404) return 'Fail tidak dijumpai dalam Drive (mungkin dipadam).';
     if (e && e.status === 429) return 'Terlalu banyak permintaan ke Google. Cuba sebentar lagi.';
     if (e && e.network) return 'Tiada sambungan internet.';
     return m || 'Ralat Google';
+  };
+
+  // Maklumat ralat untuk dipaparkan (bukan tooltip): mesej, butiran teknikal dan langkah yang boleh dibuat pengguna
+  AI.syncInfo = (e) => ({ message: AI.googleErrorHint(e), detail: { status: (e && e.status) || 0, reason: String((e && e.reason) || ''), raw: String((e && e.message) || '').slice(0, 200) } });
+  AI.inAppBrowser = (ua) => /FBAN|FBAV|FB_IAB|Instagram|TikTok|musical_ly|BytedanceWebview|Line\/|MicroMessenger|; wv\)/i.test(String(ua || ''));
+  AI.syncAdvice = (info, ua) => {
+    const d = (info && info.detail) || {}, m = String((info && info.message) || ''), out = [];
+    if (AI.inAppBrowser(ua)) out.push('Anda mungkin membuka app dalam pelayar dalam aplikasi lain (Facebook, Instagram, TikTok, WhatsApp). Salin pautan dan buka dalam Chrome atau Safari.');
+    if (/Kebenaran Drive|menolak akses/.test(m)) out.push('Tekan Log keluar di bawah. Buka myaccount.google.com/permissions, pilih Annur Docs dan buang akses. Kemudian log masuk semula dan benarkan akses Drive.');
+    else if (/Ruang Google Drive/.test(m)) out.push('Kosongkan ruang pada drive.google.com/settings/storage, kemudian tekan Cuba lagi.');
+    else if (/Terlalu banyak|HTTP 5\d\d/.test(m) || d.status >= 500 || d.status === 429) out.push('Tunggu seminit, kemudian tekan Cuba lagi. Ini biasanya sementara.');
+    else if (/belum diaktifkan/.test(m)) out.push('Pemilik sistem: aktifkan Google Sheets API dan Google Drive API dalam Google Cloud Console (APIs & Services).');
+    else if (d.status === 404 || /tidak dijumpai/.test(m)) out.push('Semak sama ada folder atau Google Sheet Annur Docs masih ada dalam Drive anda (periksa juga Trash). Jika dipadam, pulihkan dari Trash.');
+    else if (/Tiada sambungan/.test(m)) out.push('Semak sambungan internet, kemudian tekan Cuba lagi.');
+    else out.push('Tekan Cuba lagi. Jika berulang, log keluar dan log masuk semula, atau hubungi sokongan dengan butang Salin butiran.');
+    return out;
   };
 
   /**
@@ -51,9 +70,9 @@
           return res.status === 204 ? {} : res.json();
         }
         if ([429, 500, 502, 503].includes(res.status) && attempt < retries) { await sleep(1000 * Math.pow(2, attempt)); continue; }
-        let msg = 'HTTP ' + res.status;
-        try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch (e) { /* bukan JSON */ }
-        const err = new Error(msg); err.status = res.status;
+        let msg = 'HTTP ' + res.status, reason = '';
+        try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; reason = String((((j || {}).error || {}).errors || [])[0] && j.error.errors[0].reason || ((j || {}).error || {}).status || ''); } catch (e) { /* bukan JSON */ }
+        const err = new Error(msg); err.status = res.status; err.reason = reason;
         if (res.status === 401) err.needsLogin = true;
         throw err;
       }
