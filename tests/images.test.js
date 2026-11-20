@@ -171,3 +171,9 @@ test('saiz logo: lalai, had, nilai teks Sheet, kotak (tinggi = 0.75 × lebar)', 
   assert.deepEqual(AI.logoBox(96), { w: 96, h: 72 }, 'lalai sama seperti sebelum ciri ini');
   assert.deepEqual(AI.logoBox(200), { w: 200, h: 150 }); assert.deepEqual(AI.logoBox(1000), { w: 240, h: 180 });
 });
+
+test('skala teks syarikat mengikut saiz logo: 96 = 1, 240 = 1.9, tidak melebihi 2', () => {
+  assert.equal(AI.headScale(96), 1); assert.equal(AI.headScale(40), 1, 'logo lebih kecil: teks tidak mengecil');
+  assert.equal(AI.headScale(150), 1.34); assert.equal(AI.headScale(240), 1.9); assert.equal(AI.headScale(9999), 1.9);
+  assert.equal(AI.headScale(undefined), 1);
+});

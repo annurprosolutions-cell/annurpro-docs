@@ -124,7 +124,7 @@
       },
       notes: noteKeys[jenis].map((k) => str(sk[k])).filter(Boolean),
       bank: jenis === 'invoice' && (str(sk.bank_nama) || str(sk.bank_akaun)) ? { name: str(sk.bank_nama), acc: str(sk.bank_akaun), holder: str(sk.bank_pemegang) || str(sk.nama) } : null,
-      signer, received: doo, logo: AI.logoBox ? AI.logoBox(AI.logoSize(sk)) : { w: 96, h: 72 }
+      signer, received: doo, logo: AI.logoBox ? AI.logoBox(AI.logoSize(sk)) : { w: 96, h: 72 }, hs: AI.headScale ? AI.headScale(AI.logoSize(sk)) : 1
     };
   };
 
@@ -162,7 +162,7 @@
   AI.newDocId = () => (root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
 
   // ---------- pembahagian halaman A4 (anggaran tinggi; sama untuk pratonton & PDF) ----------
-  AI.PAGE = { first: 640, next: 880, rowPad: 10, lineH: 15, headBase: 84 };   // headBase: tinggi blok teks syarikat; logo lebih tinggi menolak jadual ke bawah
+  AI.PAGE = { first: 640, next: 880, rowPad: 10, lineH: 15 };
   AI.rowLines = (desc, cpl) => {
     const ls = String(desc || '').split('\n');
     return ls.reduce((n, l) => n + Math.max(1, Math.ceil(l.length / cpl)), 0);
@@ -173,11 +173,24 @@
     return 60 + (1 + v.totals.taxes.length + 1) * 20 + 34 + notes + (v.bank ? 44 : 0) + 170;
   };
   // Pulang [{ rows:[...indeks], last }]. Jika ruang tidak cukup untuk jumlah/tandatangan, ia ke halaman baharu.
+  // Anggaran tinggi kepala dokumen (px): blok teks syarikat (diskala) atau logo, yang lebih tinggi. Untuk menolak jadual dengan betul.
+  AI.headHeight = (v, logo, hs) => {
+    const co = v.co || {}, avail = 794 - 88 - (logo.w + 16), W = (fs, n) => Math.max(8, Math.floor(avail / (fs * 0.5)));
+    const lines = (text, fs, lh) => Math.max(1, Math.ceil(String(text || '').length / W(fs))) * lh;
+    const f = 11.5 * hs, lh = 15 * hs;
+    let h = lines((co.name || '') + (co.reg ? ' ' + co.reg : ''), 17 * hs, 21 * hs) + 2;
+    (co.address || []).forEach((l) => { h += lines(l, f, lh); });
+    const contact = [co.tel && 'Tel: ' + co.tel, co.email, co.web].filter(Boolean).join('  |  '); if (contact) h += lines(contact, f, lh);
+    const ids = [co.sst && 'SST No: ' + co.sst, co.tin && 'TIN: ' + co.tin].filter(Boolean).join('  |  '); if (ids) h += lines(ids, f, lh);
+    return Math.max(logo.h, h);
+  };
   AI.paginate = (v, P) => {
     P = Object.assign({}, AI.PAGE, P || {});
     const cpl = v.showDisc || v.showTax ? 44 : 58;
     const hs = v.rows.map((r) => P.rowPad + P.lineH * AI.rowLines(r.desc, cpl));
-    const pages = []; let cur = [], used = 0, cap = P.first - Math.max(0, ((v.logo && v.logo.h) || 0) - P.headBase);
+    // logo/teks syarikat yang dibesarkan menolak jadual ke bawah: tolak tambahan tinggi berbanding saiz asal (96px, skala 1)
+    const extra = v.logo ? Math.max(0, AI.headHeight(v, v.logo, v.hs || 1) - AI.headHeight(v, AI.logoBox(AI.LOGO.def), 1)) : 0;
+    const pages = []; let cur = [], used = 0, cap = P.first - extra;
     hs.forEach((h, i) => {
       if (cur.length && used + h > cap) { pages.push({ rows: cur }); cur = []; used = 0; cap = P.next; }
       cur.push(i); used += h;

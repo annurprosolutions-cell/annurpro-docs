@@ -13,6 +13,8 @@
   // Saiz logo pada kepala dokumen: lebar maksimum (px dokumen A4). Tinggi maksimum = lebar × 0.75 (asal 96 × 72), imej kekal nisbah.
   AI.LOGO = { def: 96, min: 40, max: 240, ratio: 0.75 };
   AI.logoSize = (sk) => clamp(Math.round(num(sk && sk.logo_saiz, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max);
+  // Teks butiran syarikat membesar bersama logo (separuh lebih perlahan supaya muat): 96px = 1.00, 240px = 1.90
+  AI.headScale = (w) => { const W = clamp(Math.round(num(w, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max); return Math.round(Math.min(2, Math.max(1, 1 + 0.6 * (W / AI.LOGO.def - 1))) * 100) / 100; };
   AI.logoBox = (w) => { const W = clamp(Math.round(num(w, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max); return { w: W, h: Math.round(W * AI.LOGO.ratio) }; };
 
   // Daripada tab Syarikat (nilai teks) → { cop:{x,y,w}, tt:{x,y,w} } dalam had yang sah

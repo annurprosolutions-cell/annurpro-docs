@@ -122,3 +122,19 @@ test('logo: saiz dalam paparan, templat dan penolakan jadual bila logo tinggi', 
   assert.ok(many(Object.assign({}, SK, { logo_saiz: '240' })) < many(SK), 'logo 240 = kurang baris pada halaman pertama');
   assert.equal(many(Object.assign({}, SK, { logo_saiz: '96' })), many(SK));
 });
+
+test('teks syarikat diskala bersama logo (templat) dan menolak jadual', () => {
+  const v1 = AI.docView(filled('invoice', 2), SK, CODES);
+  assert.equal(v1.hs, 1);
+  const h1 = AI.renderDoc(v1, {});
+  assert.doesNotMatch(h1, /class="dv-co" style=/, 'saiz asal: tiada gaya tambahan (dokumen lama kekal sama)');
+  const big = AI.docView(filled('invoice', 2), Object.assign({}, SK, { logo_saiz: '240' }), CODES);
+  assert.equal(big.hs, 1.9);
+  const h2 = AI.renderDoc(big, {});
+  assert.match(h2, /class="dv-co" style="font-size:21.8px;line-height:28.5px"/);
+  assert.match(h2, /class="dv-coname" style="font-size:32.3px;line-height:39.9px"/);
+  assert.ok(AI.headHeight(big, big.logo, big.hs) > AI.headHeight(v1, v1.logo, 1), 'kepala lebih tinggi');
+  assert.equal(AI.headHeight(v1, AI.logoBox(96), 1), AI.headHeight(v1, v1.logo, v1.hs), 'saiz asal sama');
+  const many = (sk) => AI.paginate(AI.docView(filled('invoice', 28), sk, CODES))[0].rows.length;
+  assert.ok(many(Object.assign({}, SK, { logo_saiz: '160' })) < many(SK));
+});

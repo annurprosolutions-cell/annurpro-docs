@@ -22,9 +22,13 @@
 
     const coLine = [v.co.tel && 'Tel: ' + esc(v.co.tel), v.co.email && esc(v.co.email), v.co.web && esc(v.co.web)].filter(Boolean).join(' &nbsp;|&nbsp; ');
     const ids = [v.co.sst && 'SST No: ' + esc(v.co.sst), v.co.tin && 'TIN: ' + esc(v.co.tin)].filter(Boolean).join(' &nbsp;|&nbsp; ');
+    const k = v.hs || 1, px = (n) => (Math.round(n * k * 10) / 10) + 'px';
+    const hs = k > 1 ? ` style="font-size:${px(11.5)};line-height:${px(15)}"` : '';
+    const hsName = k > 1 ? ` style="font-size:${px(17)};line-height:${px(21)}"` : '';
+    const hsReg = k > 1 ? ` style="font-size:${px(11)}"` : '';
     const head = `<header class="dv-head">
         <div class="dv-logo" style="width:${v.logo.w}px;height:${v.logo.h}px">${assets.logo ? `<img src="${esc(assets.logo)}" alt="" style="max-width:${v.logo.w}px;max-height:${v.logo.h}px">` : ''}</div>
-        <div class="dv-co"><div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
+        <div class="dv-co"${hs}><div class="dv-coname"${hsName}>${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span${hsReg}>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
           ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}</div>
       </header>
       <div class="dv-titlebar"><h1>${esc(v.title)}</h1></div>`;

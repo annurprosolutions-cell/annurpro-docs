@@ -118,7 +118,7 @@ Sistem ini dibina berdasarkan seni bina Annur Time Table (rujuk skill `micro-saa
 | Tarikh | Perubahan |
 |--------|-----------|
 | 03/11/2026 | Versi 1.0 dicipta |
-| 19/11/2026 | v0.13: saiz logo pada kepala dokumen boleh diubah (gelangsar 40-240px, asal 96px; kunci `logo_saiz` dalam tab Syarikat), terpakai pada pratonton, PDF dan jadual halaman. Pembetulan v0.12.1-0.12.3: alih http ke https, paparan sebab ralat storan, grid Sheet dilebarkan sebelum menambah lajur |
+| 19/11/2026 | v0.13: saiz logo pada kepala dokumen boleh diubah (gelangsar 40-240px, asal 96px; kunci `logo_saiz` dalam tab Syarikat), terpakai pada pratonton, PDF dan jadual halaman. v0.13.1: nama, alamat dan butiran syarikat turut dibesarkan mengikut logo (skala 1.0 hingga 1.9, lebih perlahan daripada logo supaya muat). Pembetulan v0.12.1-0.12.3: alih http ke https, paparan sebab ralat storan, grid Sheet dilebarkan sebelum menambah lajur |
 | 16/11/2026 | Status bayaran invois (v0.12): Belum bayar / Dibayar dengan tarikh bayar, tertunggak dikira daripada terma, ringkasan dan penapis dalam Rekod. Lajur baharu `status_bayaran` dan `tarikh_bayar` dalam tab Dokumen (migrasi automatik, SHEET_FORMAT 2). Hanya invois; tiada bayaran separa |
 | 04/11/2026 | Fasa 11 (v1.1): pek kredit RM10 = 110, RM20 = 230, RM50 = 600 kredit dalam borang BCL yang sama; kad pek dalam S-11 dan S-12, notis kredit rendah dengan butang Beli kredit; bilangan kredit dibaca daripada nama item (cth `PEK 110 KREDIT`) |
 | 04/11/2026 | Nama produk ditukar kepada **Annur Docs** (Invois, Quotation, DO); domain `docs.annurpro.com`. Folder & Sheet baharu: `[Nama Syarikat] – Annur Docs`. Nama dalaman (Worker `annur-invoice`, D1, kunci `annurInvoice`) dikekalkan |
