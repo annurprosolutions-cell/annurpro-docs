@@ -47,8 +47,9 @@
       const hasImgs = /class="sitem/.test(imgSign);
       const sign = str(v.tt_nama) || hasImgs ? `<div class="dh-sign">${hasImgs ? imgSign : '<span></span>'}${str(v.tt_nama) ? `<b>${esc(v.tt_nama)}</b><small>${esc(v.tt_jawatan)}</small>` : ''}</div>` : '';
       const lg = ctx.imgOf && ctx.imgOf('logo');
+      const ctr = str(v.kepala_tengah).toUpperCase() === 'YA';
       return `<div class="dh" style="--acc:${esc(accent)}" aria-label="Pratonton dokumen">
-        <div class="dh-top"><div class="dh-logo ${lg ? 'has' : ''}" style="${lg ? `width:${Math.round(56 * AI.logoSize(v) / 96)}px;height:${Math.round(56 * AI.logoSize(v) / 96)}px;position:relative;left:${Math.round(AI.logoPos(v).x * 56 / 96)}px;top:${Math.round(AI.logoPos(v).y * 56 / 96)}px` : ''}">${lg ? `<img src="${esc(lg.url)}" alt="Logo">` : 'LOGO'}</div><div class="dh-co">
+        <div class="dh-top"${ctr ? ' style="position:relative;display:block;text-align:center;min-height:' + Math.round(56 * AI.logoSize(v) / 96 * 0.75 + Math.max(0, AI.logoPos(v).y * 56 / 96)) + 'px"' : ''}><div class="dh-logo ${lg ? 'has' : ''}" style="${lg ? `width:${Math.round(56 * AI.logoSize(v) / 96)}px;height:${Math.round(56 * AI.logoSize(v) / 96)}px;position:${ctr ? 'absolute' : 'relative'};left:${Math.round(AI.logoPos(v).x * 56 / 96)}px;top:${Math.round(AI.logoPos(v).y * 56 / 96)}px` : ctr ? 'position:absolute;left:0;top:0' : ''}">${lg ? `<img src="${esc(lg.url)}" alt="Logo">` : 'LOGO'}</div><div class="dh-co">
           <b>${esc(str(v.nama) || 'NAMA SYARIKAT ANDA')}</b> <small>${reg}</small>
           ${addr.map((l) => `<div>${esc(l)}</div>`).join('') || '<div class="muted">Alamat syarikat</div>'}
           ${contact ? `<div>${contact}</div>` : ''}${sst}

@@ -22,11 +22,20 @@
 
     const coLine = [v.co.tel && 'Tel: ' + esc(v.co.tel), v.co.email && esc(v.co.email), v.co.web && esc(v.co.web)].filter(Boolean).join(' &nbsp;|&nbsp; ');
     const ids = [v.co.sst && 'SST No: ' + esc(v.co.sst), v.co.tin && 'TIN: ' + esc(v.co.tin)].filter(Boolean).join(' &nbsp;|&nbsp; ');
-    const head = `<header class="dv-head">
-        <div class="dv-logo" style="width:${v.logo.w}px;height:${v.logo.h}px${v.logo.x || v.logo.y ? `;position:relative;left:${v.logo.x || 0}px;top:${v.logo.y || 0}px` : ''}">${assets.logo ? `<img src="${esc(assets.logo)}" alt="" style="max-width:${v.logo.w}px;max-height:${v.logo.h}px">` : ''}</div>
-        <div class="dv-co"><div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
-          ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}</div>
-      </header>
+    const logoImg = assets.logo ? `<img src="${esc(assets.logo)}" alt="" style="max-width:${v.logo.w}px;max-height:${v.logo.h}px">` : '';
+    const coHtml = `<div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
+          ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}`;
+    // Dua susun atur: (1) logo di kiri, butiran di sebelahnya; (2) butiran di tengah halaman, logo di tepi (kedudukan bebas, tidak menolak teks)
+    const head = v.center
+      ? `<header class="dv-head center" style="position:relative;min-height:${v.logo.h + Math.max(0, v.logo.y || 0)}px">
+        <div class="dv-logo" style="position:absolute;left:${v.logo.x || 0}px;top:${v.logo.y || 0}px;width:${v.logo.w}px;height:${v.logo.h}px">${logoImg}</div>
+        <div class="dv-co" style="text-align:center">${coHtml}</div>
+      </header>`
+      : `<header class="dv-head">
+        <div class="dv-logo" style="width:${v.logo.w}px;height:${v.logo.h}px${v.logo.x || v.logo.y ? `;position:relative;left:${v.logo.x || 0}px;top:${v.logo.y || 0}px` : ''}">${logoImg}</div>
+        <div class="dv-co">${coHtml}</div>
+      </header>`;
+    const headFull = head + `
       <div class="dv-titlebar"><h1>${esc(v.title)}</h1></div>`;
     const party = (label, p) => `<div class="dv-party"><div class="dv-lbl">${label}</div><div class="dv-pname">${esc(p.name)}</div>${p.address.map((l) => `<div>${esc(l)}</div>`).join('')}
       ${p.tel ? `<div>Tel: ${esc(p.tel)}</div>` : ''}${p.attn ? `<div>Attn: ${esc(p.attn)}</div>` : ''}</div>`;
@@ -51,7 +60,7 @@
     const foot = `<section class="dv-foot">${totals}<div class="dv-fgrid">${notes}${bank}</div>${sign}</section>`;
 
     return pages.map((p) => `<div class="a4" style="--acc:${AI.esc(v.accent)}"><div class="dv-page">
-        ${p.no === 1 ? head + meta : compact(p)}
+        ${p.no === 1 ? headFull + meta : compact(p)}
         ${p.rows.length || p.no === 1 ? `<table class="dv-items"><thead><tr>${cols.map(([t, c]) => `<th class="${c}">${t}</th>`).join('')}</tr></thead>
           <tbody>${p.rows.map((i) => row(v.rows[i])).join('') || `<tr><td class="dv-empty" colspan="${cols.length}">No items yet</td></tr>`}</tbody></table>` : ''}
         ${p.last ? foot : ''}

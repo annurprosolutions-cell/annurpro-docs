@@ -140,3 +140,22 @@ test('logo: anjakan dalam templat; teks syarikat TIDAK berubah saiz bila logo di
   const many = (sk) => AI.paginate(AI.docView(filled('invoice', 28), sk, CODES))[0].rows.length;
   assert.ok(many(Object.assign({}, SK, { logo_saiz: '240' })) < many(SK), 'logo besar tetap menolak jadual');
 });
+
+
+test('susun atur butiran di tengah: logo mutlak di tepi, teks di tengah dan tidak ditolak logo', () => {
+  const logo = { logo: 'data:image/png;base64,AA==' };
+  const normal = AI.renderDoc(AI.docView(filled('invoice', 2), SK, CODES), logo);
+  assert.doesNotMatch(normal, /dv-head center/, 'lalai: susun atur sedia ada kekal');
+  const sk = Object.assign({}, SK, { kepala_tengah: 'YA', logo_saiz: '150', logo_x: '-10', logo_y: '5' });
+  const v = AI.docView(filled('invoice', 2), sk, CODES);
+  assert.equal(v.center, true);
+  const html = AI.renderDoc(v, logo);
+  assert.match(html, /<header class="dv-head center" style="position:relative;min-height:118px">/, 'tinggi = logo 113 + anjakan 5');
+  assert.match(html, /class="dv-logo" style="position:absolute;left:-10px;top:5px;width:150px;height:113px"/);
+  assert.match(html, /<div class="dv-co" style="text-align:center"><div class="dv-coname">/);
+  assert.equal(AI.docView(filled('invoice', 2), Object.assign({}, SK, { kepala_tengah: 'TIDAK' }), CODES).center, false);
+  // teks lebih lebar tersedia (tiada tolak logo): alamat panjang tidak menambah baris berbanding susun atur sisi
+  const long = Object.assign({}, SK, { alamat: 'No 32 Lorong 12 Taman Halaman Indah 14200 Sungai Jawi Pulau Pinang Malaysia', logo_saiz: '200' });
+  const side = AI.docView(filled('invoice', 2), long, CODES), mid = AI.docView(filled('invoice', 2), Object.assign({}, long, { kepala_tengah: 'YA' }), CODES);
+  assert.ok(AI.headHeight(mid, mid.logo) <= AI.headHeight(side, side.logo));
+});

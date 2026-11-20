@@ -342,6 +342,10 @@ try {
       assert.equal(await page.evaluate(() => [window.AI.app.UI.img.logoX, window.AI.app.UI.img.logoY].join()), '-25,10');
       assert.equal(await page.locator('#logoXVal').innerText(), '-25px');
       assert.equal(await coFont(), coBefore, 'saiz teks syarikat tidak berubah');
+      // susun atur butiran di tengah halaman
+      await page.getByLabel('Letak butiran syarikat di tengah halaman').check();
+      assert.equal(await page.evaluate(() => window.AI.app.UI.img.center), true);
+      assert.match(await page.locator('[data-live="header"] .dh-top').getAttribute('style'), /text-align:center/);
       await page.getByRole('button', { name: 'Tandatangan', exact: true }).click();
       await page.locator('[data-sitem="tt"]').waitFor();
       await shot('s09-b', true);
@@ -353,7 +357,7 @@ try {
       await until(() => kv(sid, 'Syarikat').cop_id && kv(sid, 'Syarikat').tt_gambar_id && kv(sid, 'Syarikat').logo_id, 6000, 'id gambar dalam Sheet');
       let sy = kv(sid, 'Syarikat');
       assert.equal(sy.do_tt_gambar_id, '');
-      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36'); assert.equal(sy.logo_saiz, '180', 'saiz logo disimpan dalam Sheet'); assert.equal(sy.logo_x, '-25'); assert.equal(sy.logo_y, '10');
+      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36'); assert.equal(sy.logo_saiz, '180', 'saiz logo disimpan dalam Sheet'); assert.equal(sy.logo_x, '-25'); assert.equal(sy.logo_y, '10'); assert.equal(sy.kepala_tengah, 'YA');
       const oldCop = sy.cop_id;
 
       // muat semula: gambar dimuat dari cache/Drive, kedudukan kekal

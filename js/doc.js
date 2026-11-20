@@ -124,7 +124,7 @@
       },
       notes: noteKeys[jenis].map((k) => str(sk[k])).filter(Boolean),
       bank: jenis === 'invoice' && (str(sk.bank_nama) || str(sk.bank_akaun)) ? { name: str(sk.bank_nama), acc: str(sk.bank_akaun), holder: str(sk.bank_pemegang) || str(sk.nama) } : null,
-      signer, received: doo, logo: AI.logoFull ? AI.logoFull(sk) : { w: 96, h: 72, x: 0, y: 0 }
+      signer, received: doo, logo: AI.logoFull ? AI.logoFull(sk) : { w: 96, h: 72, x: 0, y: 0 }, center: str(sk.kepala_tengah).toUpperCase() === 'YA'
     };
   };
 
@@ -175,7 +175,7 @@
   // Pulang [{ rows:[...indeks], last }]. Jika ruang tidak cukup untuk jumlah/tandatangan, ia ke halaman baharu.
   // Anggaran tinggi kepala dokumen (px): blok teks syarikat atau logo, yang lebih tinggi. Untuk menolak jadual dengan betul.
   AI.headHeight = (v, logo) => {
-    const co = v.co || {}, avail = 794 - 88 - (logo.w + 16), W = (fs, n) => Math.max(8, Math.floor(avail / (fs * 0.5)));
+    const co = v.co || {}, avail = v.center ? 794 - 88 : 794 - 88 - (logo.w + 16), W = (fs, n) => Math.max(8, Math.floor(avail / (fs * 0.5)));
     const lines = (text, fs, lh) => Math.max(1, Math.ceil(String(text || '').length / W(fs))) * lh;
     const f = 11.5, lh = 15;
     let h = lines((co.name || '') + (co.reg ? ' ' + co.reg : ''), 17, 21) + 2;

@@ -81,6 +81,7 @@
     ['logo_saiz', '96', 'Lebar maksimum logo pada dokumen (px, 40-240)'],
     ['logo_x', '0', 'Anjakan logo kiri(-)/kanan(+) (px)'],
     ['logo_y', '0', 'Anjakan logo atas(-)/bawah(+) (px)'],
+    ['kepala_tengah', 'TIDAK', 'Butiran syarikat di tengah halaman, logo di tepi (YA/TIDAK)'],
     ['cop_id', '', 'Fail cop (Drive)'],
     ['tt_gambar_id', '', 'Fail tandatangan (Drive)'],
     ['do_tt_gambar_id', '', 'Fail tandatangan DO (Drive)'],
