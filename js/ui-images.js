@@ -114,7 +114,7 @@
           <input id="${id}" type="range" min="${min}" max="${max}" step="1" value="${val}" ${attr}></div>`;
       return `<section class="card"><h2>Saiz &amp; kedudukan logo</h2>
         <label class="sw"><input type="checkbox" data-logocenter ${st.center ? 'checked' : ''}> Letak butiran syarikat di tengah halaman</label>
-        <p class="fine">Besarkan atau alihkan logo pada kepala dokumen. Saiz butiran syarikat tidak berubah. Dengan butiran di tengah, logo diletak di tepi dan tidak menolak teks: jika menyentuh butiran, kecilkan atau alihkan logo. Pratonton ringkas ini mengikut nisbah; hasil sebenar boleh dilihat dalam editor dokumen.</p>
+        <p class="fine">Besarkan atau alihkan logo pada kepala dokumen. Saiz butiran syarikat tidak berubah. Dengan butiran di tengah, logo berada di atas teks dan tidak menolak apa-apa pun walaupun dibesarkan: alihkan atau kecilkan jika menutup butiran. Pratonton ringkas ini mengikut nisbah; hasil sebenar boleh dilihat dalam editor dokumen.</p>
         ${sl('logoSize', 'Lebar logo', w, L.min, L.max, 'step="2" data-logosize')}
         ${sl('logoX', 'Kiri ◂ ▸ kanan', st.logoX, P.x.min, P.x.max, 'data-logox')}
         ${sl('logoY', 'Atas ◂ ▸ bawah', st.logoY, P.y.min, P.y.max, 'data-logoy')}

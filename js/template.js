@@ -25,10 +25,10 @@
     const logoImg = assets.logo ? `<img src="${esc(assets.logo)}" alt="" style="max-width:${v.logo.w}px;max-height:${v.logo.h}px">` : '';
     const coHtml = `<div class="dv-coname">${esc(v.co.name || 'COMPANY NAME')}${v.co.reg ? ` <span>${/\(/.test(v.co.reg) ? esc(v.co.reg) : '(' + esc(v.co.reg) + ')'}</span>` : ''}</div>
           ${v.co.address.map((l) => `<div>${esc(l)}</div>`).join('')}${coLine ? `<div>${coLine}</div>` : ''}${ids ? `<div>${ids}</div>` : ''}`;
-    // Dua susun atur: (1) logo di kiri, butiran di sebelahnya; (2) butiran di tengah halaman, logo di tepi (kedudukan bebas, tidak menolak teks)
+    // Dua susun atur: (1) logo di kiri, butiran di sebelahnya; (2) butiran di tengah halaman, logo di ATAS teks (position:absolute, z-index): tidak menolak apa-apa walaupun besar
     const head = v.center
-      ? `<header class="dv-head center" style="position:relative;min-height:${v.logo.h + Math.max(0, v.logo.y || 0)}px">
-        <div class="dv-logo" style="position:absolute;left:${v.logo.x || 0}px;top:${v.logo.y || 0}px;width:${v.logo.w}px;height:${v.logo.h}px">${logoImg}</div>
+      ? `<header class="dv-head center" style="position:relative">
+        <div class="dv-logo" style="position:absolute;z-index:3;left:${v.logo.x || 0}px;top:${v.logo.y || 0}px;width:${v.logo.w}px;height:${v.logo.h}px">${logoImg}</div>
         <div class="dv-co" style="text-align:center">${coHtml}</div>
       </header>`
       : `<header class="dv-head">

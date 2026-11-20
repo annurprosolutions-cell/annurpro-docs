@@ -182,6 +182,7 @@
     (co.address || []).forEach((l) => { h += lines(l, f, lh); });
     const contact = [co.tel && 'Tel: ' + co.tel, co.email, co.web].filter(Boolean).join('  |  '); if (contact) h += lines(contact, f, lh);
     const ids = [co.sst && 'SST No: ' + co.sst, co.tin && 'TIN: ' + co.tin].filter(Boolean).join('  |  '); if (ids) h += lines(ids, f, lh);
+    if (v.center) return h;   // logo di atas teks (mutlak): tidak menambah tinggi kepala
     return Math.max(logo.h + Math.max(0, logo.y || 0), h);
   };
   AI.paginate = (v, P) => {

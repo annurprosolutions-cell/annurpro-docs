@@ -150,12 +150,16 @@ test('susun atur butiran di tengah: logo mutlak di tepi, teks di tengah dan tida
   const v = AI.docView(filled('invoice', 2), sk, CODES);
   assert.equal(v.center, true);
   const html = AI.renderDoc(v, logo);
-  assert.match(html, /<header class="dv-head center" style="position:relative;min-height:118px">/, 'tinggi = logo 113 + anjakan 5');
-  assert.match(html, /class="dv-logo" style="position:absolute;left:-10px;top:5px;width:150px;height:113px"/);
+  assert.match(html, /<header class="dv-head center" style="position:relative">/, 'tiada min-height: logo tidak menolak apa-apa');
+  assert.match(html, /class="dv-logo" style="position:absolute;z-index:3;left:-10px;top:5px;width:150px;height:113px"/);
   assert.match(html, /<div class="dv-co" style="text-align:center"><div class="dv-coname">/);
   assert.equal(AI.docView(filled('invoice', 2), Object.assign({}, SK, { kepala_tengah: 'TIDAK' }), CODES).center, false);
   // teks lebih lebar tersedia (tiada tolak logo): alamat panjang tidak menambah baris berbanding susun atur sisi
   const long = Object.assign({}, SK, { alamat: 'No 32 Lorong 12 Taman Halaman Indah 14200 Sungai Jawi Pulau Pinang Malaysia', logo_saiz: '200' });
   const side = AI.docView(filled('invoice', 2), long, CODES), mid = AI.docView(filled('invoice', 2), Object.assign({}, long, { kepala_tengah: 'YA' }), CODES);
   assert.ok(AI.headHeight(mid, mid.logo) <= AI.headHeight(side, side.logo));
+  // konsep "di hadapan teks": saiz atau anjakan logo apa pun tidak mengubah tinggi kepala atau pemisahan halaman
+  const tall = (o) => { const w = AI.docView(filled('invoice', 28), Object.assign({}, SK, { kepala_tengah: 'YA' }, o), CODES); return [AI.headHeight(w, w.logo), AI.paginate(w)[0].rows.length]; };
+  assert.deepEqual(tall({ logo_saiz: '240', logo_y: '40' }), tall({ logo_saiz: '40' }), 'logo 240 dan 40: kepala dan baris halaman sama');
+  assert.deepEqual(tall({ logo_saiz: '240', logo_y: '40' }), tall({}));
 });
