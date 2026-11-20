@@ -124,7 +124,7 @@
       },
       notes: noteKeys[jenis].map((k) => str(sk[k])).filter(Boolean),
       bank: jenis === 'invoice' && (str(sk.bank_nama) || str(sk.bank_akaun)) ? { name: str(sk.bank_nama), acc: str(sk.bank_akaun), holder: str(sk.bank_pemegang) || str(sk.nama) } : null,
-      signer, received: doo, logo: AI.logoBox ? AI.logoBox(AI.logoSize(sk)) : { w: 96, h: 72 }, hs: AI.headScale ? AI.headScale(AI.logoSize(sk)) : 1
+      signer, received: doo, logo: AI.logoFull ? AI.logoFull(sk) : { w: 96, h: 72, x: 0, y: 0 }
     };
   };
 
@@ -173,23 +173,23 @@
     return 60 + (1 + v.totals.taxes.length + 1) * 20 + 34 + notes + (v.bank ? 44 : 0) + 170;
   };
   // Pulang [{ rows:[...indeks], last }]. Jika ruang tidak cukup untuk jumlah/tandatangan, ia ke halaman baharu.
-  // Anggaran tinggi kepala dokumen (px): blok teks syarikat (diskala) atau logo, yang lebih tinggi. Untuk menolak jadual dengan betul.
-  AI.headHeight = (v, logo, hs) => {
+  // Anggaran tinggi kepala dokumen (px): blok teks syarikat atau logo, yang lebih tinggi. Untuk menolak jadual dengan betul.
+  AI.headHeight = (v, logo) => {
     const co = v.co || {}, avail = 794 - 88 - (logo.w + 16), W = (fs, n) => Math.max(8, Math.floor(avail / (fs * 0.5)));
     const lines = (text, fs, lh) => Math.max(1, Math.ceil(String(text || '').length / W(fs))) * lh;
-    const f = 11.5 * hs, lh = 15 * hs;
-    let h = lines((co.name || '') + (co.reg ? ' ' + co.reg : ''), 17 * hs, 21 * hs) + 2;
+    const f = 11.5, lh = 15;
+    let h = lines((co.name || '') + (co.reg ? ' ' + co.reg : ''), 17, 21) + 2;
     (co.address || []).forEach((l) => { h += lines(l, f, lh); });
     const contact = [co.tel && 'Tel: ' + co.tel, co.email, co.web].filter(Boolean).join('  |  '); if (contact) h += lines(contact, f, lh);
     const ids = [co.sst && 'SST No: ' + co.sst, co.tin && 'TIN: ' + co.tin].filter(Boolean).join('  |  '); if (ids) h += lines(ids, f, lh);
-    return Math.max(logo.h, h);
+    return Math.max(logo.h + Math.max(0, logo.y || 0), h);
   };
   AI.paginate = (v, P) => {
     P = Object.assign({}, AI.PAGE, P || {});
     const cpl = v.showDisc || v.showTax ? 44 : 58;
     const hs = v.rows.map((r) => P.rowPad + P.lineH * AI.rowLines(r.desc, cpl));
-    // logo/teks syarikat yang dibesarkan menolak jadual ke bawah: tolak tambahan tinggi berbanding saiz asal (96px, skala 1)
-    const extra = v.logo ? Math.max(0, AI.headHeight(v, v.logo, v.hs || 1) - AI.headHeight(v, AI.logoBox(AI.LOGO.def), 1)) : 0;
+    // logo yang dibesarkan atau diturunkan menolak jadual ke bawah: tolak tambahan tinggi berbanding saiz asal (96px)
+    const extra = v.logo ? Math.max(0, AI.headHeight(v, v.logo) - AI.headHeight(v, AI.logoBox(AI.LOGO.def))) : 0;
     const pages = []; let cur = [], used = 0, cap = P.first - extra;
     hs.forEach((h, i) => {
       if (cur.length && used + h > cap) { pages.push({ rows: cur }); cur = []; used = 0; cap = P.next; }

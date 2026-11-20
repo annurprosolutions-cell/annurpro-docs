@@ -13,9 +13,16 @@
   // Saiz logo pada kepala dokumen: lebar maksimum (px dokumen A4). Tinggi maksimum = lebar × 0.75 (asal 96 × 72), imej kekal nisbah.
   AI.LOGO = { def: 96, min: 40, max: 240, ratio: 0.75 };
   AI.logoSize = (sk) => clamp(Math.round(num(sk && sk.logo_saiz, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max);
-  // Teks butiran syarikat membesar bersama logo (separuh lebih perlahan supaya muat): 96px = 1.00, 240px = 1.90
-  AI.headScale = (w) => { const W = clamp(Math.round(num(w, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max); return Math.round(Math.min(2, Math.max(1, 1 + 0.6 * (W / AI.LOGO.def - 1))) * 100) / 100; };
   AI.logoBox = (w) => { const W = clamp(Math.round(num(w, AI.LOGO.def)), AI.LOGO.min, AI.LOGO.max); return { w: W, h: Math.round(W * AI.LOGO.ratio) }; };
+
+  // Anjakan logo (px) daripada kedudukan asal: kiri/kanan dan atas/bawah. Teks syarikat tidak bergerak.
+  AI.LOGO_POS = { x: { min: -40, max: 60 }, y: { min: -20, max: 40 } };
+  AI.logoPos = (sk) => ({
+    x: clamp(Math.round(num(sk && sk.logo_x, 0)), AI.LOGO_POS.x.min, AI.LOGO_POS.x.max),
+    y: clamp(Math.round(num(sk && sk.logo_y, 0)), AI.LOGO_POS.y.min, AI.LOGO_POS.y.max)
+  });
+  // Kotak logo lengkap untuk dokumen: lebar, tinggi dan anjakan
+  AI.logoFull = (sk) => Object.assign(AI.logoBox(AI.logoSize(sk)), AI.logoPos(sk));
 
   // Daripada tab Syarikat (nilai teks) → { cop:{x,y,w}, tt:{x,y,w} } dalam had yang sah
   AI.signPos = (sk) => {

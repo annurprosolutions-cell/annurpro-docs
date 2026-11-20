@@ -335,6 +335,13 @@ try {
       assert.equal(await page.evaluate(() => window.AI.app.UI.img.logoW), 180);
       assert.equal(await page.locator('#logoSizeVal').innerText(), '180px');
       assert.ok((await dhLogoW()) > dhBefore + 20, 'pratonton logo membesar');
+      // anjakan logo (kiri/kanan, atas/bawah); butiran syarikat tidak berubah saiz
+      const coFont = () => page.evaluate(() => getComputedStyle(document.querySelector('[data-live="header"] .dh-co')).fontSize);
+      const coBefore = await coFont();
+      await page.locator('#logoX').fill('-25'); await page.locator('#logoY').fill('10');
+      assert.equal(await page.evaluate(() => [window.AI.app.UI.img.logoX, window.AI.app.UI.img.logoY].join()), '-25,10');
+      assert.equal(await page.locator('#logoXVal').innerText(), '-25px');
+      assert.equal(await coFont(), coBefore, 'saiz teks syarikat tidak berubah');
       await page.getByRole('button', { name: 'Tandatangan', exact: true }).click();
       await page.locator('[data-sitem="tt"]').waitFor();
       await shot('s09-b', true);
@@ -346,7 +353,7 @@ try {
       await until(() => kv(sid, 'Syarikat').cop_id && kv(sid, 'Syarikat').tt_gambar_id && kv(sid, 'Syarikat').logo_id, 6000, 'id gambar dalam Sheet');
       let sy = kv(sid, 'Syarikat');
       assert.equal(sy.do_tt_gambar_id, '');
-      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36'); assert.equal(sy.logo_saiz, '180', 'saiz logo disimpan dalam Sheet');
+      assert.equal(sy.cop_saiz, '120'); assert.notEqual(sy.cop_x, '36'); assert.equal(sy.logo_saiz, '180', 'saiz logo disimpan dalam Sheet'); assert.equal(sy.logo_x, '-25'); assert.equal(sy.logo_y, '10');
       const oldCop = sy.cop_id;
 
       // muat semula: gambar dimuat dari cache/Drive, kedudukan kekal
@@ -358,6 +365,7 @@ try {
       await page.locator('[data-sitem="cop"]').waitFor();
       assert.equal(await page.evaluate(() => Math.round(window.AI.app.UI.img.pos.cop.w)), 120);
       assert.equal(await page.evaluate(() => window.AI.app.UI.img.logoW), 180, 'saiz logo kekal selepas muat semula');
+      assert.equal(await page.evaluate(() => window.AI.app.UI.img.logoX), -25, 'anjakan logo kekal selepas muat semula');
 
       // ganti cop: fail lama ke tong sampah selepas rujukan baharu disimpan
       await page.locator('[data-imgfile="cop"]').setInputFiles({ name: 'cop2.png', mimeType: 'image/png', buffer: STAMP2 });

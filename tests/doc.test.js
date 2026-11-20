@@ -111,10 +111,10 @@ test('renderDoc: halaman A4, lajur ikut jenis, escape HTML, tera DRAF', () => {
 
 test('logo: saiz dalam paparan, templat dan penolakan jadual bila logo tinggi', () => {
   const v0 = AI.docView(filled('invoice', 2), SK, CODES);
-  assert.deepEqual(v0.logo, { w: 96, h: 72 });
+  assert.deepEqual(v0.logo, { w: 96, h: 72, x: 0, y: 0 });
   assert.match(AI.renderDoc(v0, { logo: 'data:image/png;base64,AA==' }), /class="dv-logo" style="width:96px;height:72px"/);
   const big = AI.docView(filled('invoice', 2), Object.assign({}, SK, { logo_saiz: '200' }), CODES);
-  assert.deepEqual(big.logo, { w: 200, h: 150 });
+  assert.deepEqual(big.logo, { w: 200, h: 150, x: 0, y: 0 });
   const html = AI.renderDoc(big, { logo: 'data:image/png;base64,AA==' });
   assert.match(html, /style="width:200px;height:150px"/); assert.match(html, /max-width:200px;max-height:150px/);
   // logo tinggi menolak baris ke halaman berikutnya lebih awal; logo lalai tidak mengubah apa-apa
@@ -123,18 +123,20 @@ test('logo: saiz dalam paparan, templat dan penolakan jadual bila logo tinggi', 
   assert.equal(many(Object.assign({}, SK, { logo_saiz: '96' })), many(SK));
 });
 
-test('teks syarikat diskala bersama logo (templat) dan menolak jadual', () => {
-  const v1 = AI.docView(filled('invoice', 2), SK, CODES);
-  assert.equal(v1.hs, 1);
-  const h1 = AI.renderDoc(v1, {});
-  assert.doesNotMatch(h1, /class="dv-co" style=/, 'saiz asal: tiada gaya tambahan (dokumen lama kekal sama)');
-  const big = AI.docView(filled('invoice', 2), Object.assign({}, SK, { logo_saiz: '240' }), CODES);
-  assert.equal(big.hs, 1.9);
-  const h2 = AI.renderDoc(big, {});
-  assert.match(h2, /class="dv-co" style="font-size:21.8px;line-height:28.5px"/);
-  assert.match(h2, /class="dv-coname" style="font-size:32.3px;line-height:39.9px"/);
-  assert.ok(AI.headHeight(big, big.logo, big.hs) > AI.headHeight(v1, v1.logo, 1), 'kepala lebih tinggi');
-  assert.equal(AI.headHeight(v1, AI.logoBox(96), 1), AI.headHeight(v1, v1.logo, v1.hs), 'saiz asal sama');
+test('logo: anjakan dalam templat; teks syarikat TIDAK berubah saiz bila logo dibesarkan', () => {
+  const plain = AI.renderDoc(AI.docView(filled('invoice', 2), SK, CODES), { logo: 'data:image/png;base64,AA==' });
+  assert.doesNotMatch(plain, /position:relative;left/, 'tiada anjakan: dokumen lama kekal sama');
+  const sk2 = Object.assign({}, SK, { logo_saiz: '240', logo_x: '-20', logo_y: '15' });
+  const v = AI.docView(filled('invoice', 2), sk2, CODES);
+  assert.deepEqual(v.logo, { w: 240, h: 180, x: -20, y: 15 });
+  const html = AI.renderDoc(v, { logo: 'data:image/png;base64,AA==' });
+  assert.match(html, /class="dv-logo" style="width:240px;height:180px;position:relative;left:-20px;top:15px"/);
+  assert.match(html, /<div class="dv-co"><div class="dv-coname">/, 'teks syarikat tanpa gaya saiz tambahan');
+  assert.doesNotMatch(html, /dv-co" style=|dv-coname" style=/);
+  // anjakan ke bawah menambah tinggi kepala; ke atas tidak mengurangkan
+  const h = (sk) => AI.headHeight(AI.docView(filled('invoice', 2), sk, CODES), AI.docView(filled('invoice', 2), sk, CODES).logo);
+  assert.ok(h(Object.assign({}, SK, { logo_saiz: '120', logo_y: '30' })) > h(Object.assign({}, SK, { logo_saiz: '120' })));
+  assert.equal(h(Object.assign({}, SK, { logo_saiz: '120', logo_y: '-20' })), h(Object.assign({}, SK, { logo_saiz: '120' })));
   const many = (sk) => AI.paginate(AI.docView(filled('invoice', 28), sk, CODES))[0].rows.length;
-  assert.ok(many(Object.assign({}, SK, { logo_saiz: '160' })) < many(SK));
+  assert.ok(many(Object.assign({}, SK, { logo_saiz: '240' })) < many(SK), 'logo besar tetap menolak jadual');
 });

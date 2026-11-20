@@ -172,8 +172,10 @@ test('saiz logo: lalai, had, nilai teks Sheet, kotak (tinggi = 0.75 × lebar)', 
   assert.deepEqual(AI.logoBox(200), { w: 200, h: 150 }); assert.deepEqual(AI.logoBox(1000), { w: 240, h: 180 });
 });
 
-test('skala teks syarikat mengikut saiz logo: 96 = 1, 240 = 1.9, tidak melebihi 2', () => {
-  assert.equal(AI.headScale(96), 1); assert.equal(AI.headScale(40), 1, 'logo lebih kecil: teks tidak mengecil');
-  assert.equal(AI.headScale(150), 1.34); assert.equal(AI.headScale(240), 1.9); assert.equal(AI.headScale(9999), 1.9);
-  assert.equal(AI.headScale(undefined), 1);
+test('anjakan logo: lalai 0, had, nilai teks Sheet, kotak penuh', () => {
+  assert.deepEqual(AI.logoPos({}), { x: 0, y: 0 }); assert.deepEqual(AI.logoPos(null), { x: 0, y: 0 });
+  assert.deepEqual(AI.logoPos({ logo_x: '-15', logo_y: '12' }), { x: -15, y: 12 });
+  assert.deepEqual(AI.logoPos({ logo_x: '-999', logo_y: '999' }), { x: -40, y: 40 }, 'dalam had');
+  assert.deepEqual(AI.logoPos({ logo_x: 'abc', logo_y: '' }), { x: 0, y: 0 });
+  assert.deepEqual(AI.logoFull({ logo_saiz: '150', logo_x: '10', logo_y: '-5' }), { w: 150, h: 113, x: 10, y: -5 });
 });

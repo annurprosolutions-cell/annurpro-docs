@@ -19,7 +19,7 @@
     const { UI, esc } = ctx;
     let imgStore = null;
     const origs = {};                       // gambar asal (belum diproses) untuk proses semula bila toleransi diubah
-    const S = () => UI.img || (UI.img = { items: {}, pos: AI.signPos({}), logoW: AI.LOGO.def, sel: 'cop', loaded: false, busy: false });
+    const S = () => UI.img || (UI.img = { items: {}, pos: AI.signPos({}), logoW: AI.LOGO.def, logoX: 0, logoY: 0, sel: 'cop', loaded: false, busy: false });
     const sk = () => (UI.data && UI.data.syarikat) || {};
     const store = () => {
       if (!imgStore || imgStore.api !== ctx.api()) { imgStore = new AI.ImageStore({ api: ctx.api(), idb: AI.idb, folderId: UI.ws && UI.ws.folders.settings }); imgStore.api = ctx.api(); }
@@ -46,7 +46,7 @@
           it.id = url ? id : ''; it.url = url || ''; it.aspect = url ? await measure(url) : 1;
         } catch (e) { /* luar talian: pratonton tiada, tetapi fail tidak hilang */ }
       }
-      if (!UI.dirty || UI.view !== 'imej') { st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); }
+      if (!UI.dirty || UI.view !== 'imej') { st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); st.logoX = AI.logoPos(sk()).x; st.logoY = AI.logoPos(sk()).y; }
       st.loaded = true;
       ctx.render();
     }
@@ -55,7 +55,7 @@
     // Untuk pratonton kepala dokumen di skrin lain
     const imgOf = (k) => { const it = item(k); const v = shown(k); return v && v.url ? { url: v.url, aspect: v.aspect || it.aspect || 1 } : null; };
     const signItems = () => ({ cop: imgOf('cop'), tt: imgOf('tt') });
-    const logoOverride = () => (UI.view === 'imej' && UI.img ? { logo_saiz: String(S().logoW) } : {});
+    const logoOverride = () => (UI.view === 'imej' && UI.img ? { logo_saiz: String(S().logoW), logo_x: String(S().logoX), logo_y: String(S().logoY) } : {});
     const signStatic = () => AI.signHtml(AI.signPos(sk()), signItems(), { static: true });
 
     // ---------- paparan ----------
@@ -108,13 +108,16 @@
     }
 
     function logoCard() {
-      const lg = imgOf('logo'), w = S().logoW, L = AI.LOGO;
+      const lg = imgOf('logo'), st = S(), w = st.logoW, L = AI.LOGO, P = AI.LOGO_POS;
       if (!lg) return '';
-      return `<section class="card"><h2>Saiz logo</h2>
-        <p class="fine">Besarkan atau kecilkan logo pada kepala dokumen. Pratonton di sebelah dikemas kini terus. Pratonton ringkas ini mengikut nisbah; hasil sebenar boleh dilihat dalam editor dokumen.</p>
-        <div class="size"><label for="logoSize">Lebar logo <span id="logoSizeVal">${w}px</span></label>
-          <input id="logoSize" type="range" min="${L.min}" max="${L.max}" step="2" value="${w}" data-logosize></div>
-        <button type="button" class="btn ghost" data-act="logoReset">Reset saiz logo (${L.def}px)</button></section>`;
+      const sl = (id, label, val, min, max, attr) => `<div class="size"><label for="${id}">${label} <span id="${id}Val">${val}px</span></label>
+          <input id="${id}" type="range" min="${min}" max="${max}" step="1" value="${val}" ${attr}></div>`;
+      return `<section class="card"><h2>Saiz &amp; kedudukan logo</h2>
+        <p class="fine">Besarkan atau alihkan logo pada kepala dokumen. Saiz dan butiran syarikat tidak terjejas: hanya logo yang bergerak. Jika logo menyentuh butiran syarikat, alihkan ke kiri atau naik. Pratonton ringkas ini mengikut nisbah; hasil sebenar boleh dilihat dalam editor dokumen.</p>
+        ${sl('logoSize', 'Lebar logo', w, L.min, L.max, 'step="2" data-logosize')}
+        ${sl('logoX', 'Kiri ◂ ▸ kanan', st.logoX, P.x.min, P.x.max, 'data-logox')}
+        ${sl('logoY', 'Atas ◂ ▸ bawah', st.logoY, P.y.min, P.y.max, 'data-logoy')}
+        <button type="button" class="btn ghost" data-act="logoReset">Reset logo (saiz ${L.def}px, kedudukan asal)</button></section>`;
     }
 
     function viewImej() {
@@ -169,7 +172,7 @@
 
     const actions = {
       openImej() {
-        const st = S(); st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); st.sel = 'cop'; UI.dirty = false;
+        const st = S(); st.pos = AI.signPos(sk()); st.logoW = AI.logoSize(sk()); st.logoX = AI.logoPos(sk()).x; st.logoY = AI.logoPos(sk()).y; st.sel = 'cop'; UI.dirty = false;
         KINDS.forEach((k) => { const it = item(k); it.pending = null; it.removed = false; });
         UI.view = 'imej'; ctx.render(); root.scrollTo(0, 0); loadAll();
       },
@@ -180,7 +183,7 @@
       },
       selSign(el) { S().sel = el.dataset.k; ctx.render(); },
       signReset() { S().pos = AI.signReset(); UI.dirty = true; ctx.render(); },
-      logoReset() { S().logoW = AI.LOGO.def; UI.dirty = true; ctx.render(); },
+      logoReset() { const st = S(); st.logoW = AI.LOGO.def; st.logoX = 0; st.logoY = 0; UI.dirty = true; ctx.render(); },
       async saveImej() {
         const st = S(); if (st.busy) return;
         st.busy = true; ctx.render();
@@ -197,7 +200,7 @@
               upd[AI.IMG_KEYS[k]] = ''; it.id = ''; it.url = ''; it.removed = false;
             }
           }
-          Object.assign(upd, AI.signToSettings(st.pos), { logo_saiz: String(st.logoW) }, { dikemaskini: new Date().toISOString() });
+          Object.assign(upd, AI.signToSettings(st.pos), { logo_saiz: String(st.logoW), logo_x: String(st.logoX), logo_y: String(st.logoY) }, { dikemaskini: new Date().toISOString() });
           ctx.store().setKV('Syarikat', upd);
           UI.data.syarikat = Object.assign({}, sk(), upd);
           await ctx.store().flush();
@@ -269,9 +272,12 @@
         const lbl = document.querySelector(`[data-tolval="${k}"]`); if (lbl) lbl.textContent = v;
         clearTimeout(onInput.t); onInput.t = setTimeout(() => reprocess(k), 120); return true;
       }
-      if (el.dataset && el.dataset.logosize !== undefined) {
-        S().logoW = AI.logoBox(Number(el.value)).w; UI.dirty = true;
-        const l = document.getElementById('logoSizeVal'); if (l) l.textContent = S().logoW + 'px';
+      if (el.dataset && (el.dataset.logosize !== undefined || el.dataset.logox !== undefined || el.dataset.logoy !== undefined)) {
+        const st = S(), v = Number(el.value);
+        if (el.dataset.logosize !== undefined) { st.logoW = AI.logoBox(v).w; const l = document.getElementById('logoSizeVal'); if (l) l.textContent = st.logoW + 'px'; }
+        else if (el.dataset.logox !== undefined) { st.logoX = AI.logoPos({ logo_x: v }).x; const l = document.getElementById('logoXVal'); if (l) l.textContent = st.logoX + 'px'; }
+        else { st.logoY = AI.logoPos({ logo_y: v }).y; const l = document.getElementById('logoYVal'); if (l) l.textContent = st.logoY + 'px'; }
+        UI.dirty = true;
         document.querySelectorAll('[data-live="header"]').forEach((h) => { h.innerHTML = ctx.header(); });
         return true;
       }

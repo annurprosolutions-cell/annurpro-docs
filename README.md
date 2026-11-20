@@ -20,7 +20,7 @@ Dokumen perancangan: [`docs/`](docs/) (PRD, TRD, AFD, DBD, BSD, IPD). Rujukan se
 | 9 | Pengukuhan: luar talian, had kadar, header keselamatan, E2E, mod demo `/?demo`, halaman jualan `salepage/`, panduan `panduan/` (HTML + PDF) | Siap (verifikasi OAuth & UAT: langkah 7 di bawah) |
 | 10 | Pelancaran: nama Annur Docs, domain `docs.annurpro.com`, OAuth Production, ujian bayaran RM1, UAT | Domain, OAuth & bayaran siap; UAT oleh pemilik (`docs/10-LANCAR.md`) |
 | 11 | v1.1 pek kredit: kad pek S-11/S-12, notis kredit rendah, kredit ikut nama item BCL | Siap (pemilik tambah item pek dalam BCL) |
-| v0.13 | Saiz logo pada kepala dokumen boleh dilaras (gelangsar, 40-240px) | Siap |
+| v0.13 | Saiz logo (40-240px) dan anjakan kiri/kanan, atas/bawah pada kepala dokumen; butiran syarikat tidak berubah saiz | Siap |
 | v0.12 | Status bayaran invois: Belum bayar / Dibayar, tertunggak automatik, ringkasan dan penapis dalam Rekod | Siap |
 
 ## Struktur
